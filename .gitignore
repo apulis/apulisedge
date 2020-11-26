@@ -1,0 +1,9 @@
+logs/
+config.yaml
+tmp/
+.idea
+*.py
+__pycache__
+venv
+*.sql
+*.json

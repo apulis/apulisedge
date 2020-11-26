@@ -1,0 +1,16 @@
+portal:
+  http:
+    address: 0.0.0.0
+    enable: true
+    port: 32767
+
+cloudhub:
+  websocket:
+    address: 0.0.0.0
+    enable: true
+    port: 32768
+
+log:
+  writefile: true
+  filedir: logs
+  filename: apulis_edge_cloud.log
