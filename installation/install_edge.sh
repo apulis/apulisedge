@@ -140,6 +140,10 @@ main()
     for i in "${!process[@]}";do
         LOG_INFO "process ${i} begin"
         ${process[${i}]}
+        if [ $? -ne 0 ]; then
+            LOG_ERROR "process-${process[${i}]} failed"
+            exit 1
+        fi
     done
     LOG_INFO "=== edge node install completed"
 }
