@@ -11,3 +11,8 @@ const (
 	StatusOnline  string = "Online"
 	StatusOffline string = "Offline"
 )
+
+//
+const (
+	EdgeRoleKey string = "node-role.kubernetes.io/edge"
+)

@@ -26,6 +26,10 @@ func ListEdgeNodes() ([]*nodeentity.NodeBasicInfo, error) {
 
 	nodes := make([]*nodeentity.NodeBasicInfo, 0)
 	for _, v := range nodeList.Items {
+		if !isEdgeNode(&v) {
+			continue
+		}
+
 		// get address
 		for _, addr := range v.Status.Addresses {
 			if addr.Type == v1.NodeInternalIP {
@@ -61,6 +65,14 @@ func ListEdgeNodes() ([]*nodeentity.NodeBasicInfo, error) {
 	}
 
 	return nodes, nil
+}
+
+func isEdgeNode(v *v1.Node) bool {
+	if _, ok := v.Labels[constants.EdgeRoleKey]; ok {
+		return true
+	}
+
+	return false
 }
 
 func DescribeEdgeNode(name string) (*nodeentity.NodeDetailInfo, error) {
