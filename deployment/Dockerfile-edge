@@ -9,17 +9,18 @@ RUN mkdir -p /etc/kubeedge
 RUN apk update
 RUN apk --no-cache add curl git build-base
 RUN chmod +x /download_kubeedge.sh;
-RUN /download_kubeedge.sh arm64
-RUN /download_kubeedge.sh amd64
+RUN /download_kubeedge.sh $(uname -m)
+RUN tar -zxvf kubeedgeRuntime-$(uname -m).tar.gz -C /etc/kubeedge
+RUN copy 
 
 RUN git clone git@apulis-gitlab.apulis.cn:apulis/apulisedge.git /
 RUN go get -u github.com/swaggo/swag/cmd/swag
-RUN cd /apulisedge/cloud; swag init; GO111MODULE=${GO111MODULE} go build -o /go/bin/ApulisEdgeCloud;
+RUN cd /apulisedge/agent; swag init; GO111MODULE=${GO111MODULE} go build -o /go/bin/ApulisEdgeAgent;
 
 
 FROM alpine:3.11 as server
 RUN apk --no-cache add ca-certificates libdrm
 WORKDIR /root/
-COPY --from=0 /go/bin/ApulisEdgeCloud .
+COPY --from=0 /go/bin/ApulisEdgeAgent .
 
-CMD ["./ApulisEdgeCloud"]
+CMD ["./ApulisEdgeAgent"]

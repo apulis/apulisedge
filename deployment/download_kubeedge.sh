@@ -40,5 +40,8 @@ if [ ${ARCH} == "" ]; then
     echo "ERROR: architecture error"
     exit
 fi
-curl -fOL https://github.com/kubeedge/kubeedge/releases/download/v$version/kubeedge-v${version}-linux-$ARCH.tar.gz
-mv kubeedge-v${version}-linux-$ARCH.tar.gz kubeedgeRuntime-${ARCH}.tar.gz
+curl -fOL https://github.com/kubeedge/kubeedge/releases/download/v$version/kubeedge-v${version}-linux-${ARCH}.tar.gz
+tar -zxvf kubeedge-v${version}-linux-${ARCH}.tar.gz
+rm kubeedge-v${version}-linux-${ARCH}.tar.gz
+mv kubeedge-v${version}-linux-${ARCH} kubeedgeRuntime-${ARCH}
+tar -zxcf kubeedgeRuntime-${ARCH}.tar.gz ./kubeedgeRuntime-${ARCH}
