@@ -8,6 +8,7 @@ EDGECORE_LOG_FILE=${LOG_DIR}/edgecore.log
 APULISEDGE_PACKAGE_DOWNLOAD_PATH=/tmp
 KUBEEDGE_TAR_FILE= # need arch, will be init later
 KUBEEDGE_HOME_PATH=/etc/kubeedge
+DESIRE_DOCKER_VERSION=17.06
 
 
 # ===
@@ -49,10 +50,33 @@ LOG_ERROR()
 
 envCheck()
 {
+    # === check docker install status and version
     if [[ ! command -v docker ]]; then
         LOG_ERROR "ERROR !!!"
         LOG_ERROR "Docker is not found but is required on node."
         LOG_ERROR "Please install docker and then try again."
+    fi
+    result=$(docker info 2>&1 | sed -n '1p' | grep Cannot | grep connect | grep Docker)
+    if [ -n "${result}" ]; then
+        LOG_ERROR "ERROR !!!"
+        LOG_ERROR "docker is not start, please start first."
+        return 1
+    fi
+    result=$(docker info 2>&1 | sed -n "/Version/p" | grep Server)
+    if [ -n "${result}" ]; then
+        LOG_INFO "got docker ${result}"
+        version=$(echo ${result} | awk '{print $3}')
+        big_version=$(echo ${version} | awk -F '[.]' '{print $1}')
+        small_version=$(echo ${version} | awk -F '[.]' '{print $2}')
+        docker_verison="${big_version}.${small_version}"
+        if [ $(expr ${docker_verison} \>= ${DESIRE_DOCKER_VERSION}) -eq 1 ]; then
+            LOG_INFO "check docker version success"
+            return 0
+        else
+            LOG_ERROR "docker version is too low, mini support version is ${DESIRE_DOCKER_VERSION}."
+            LOG_ERROR "docker version is too low, mini support version is ${DESIRE_DOCKER_VERSION}."
+            return 1
+        fi
     fi
 
     if [[ ! -e ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/kubeedge.tar.gz ]];then
