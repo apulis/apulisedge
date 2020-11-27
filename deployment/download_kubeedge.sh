@@ -41,3 +41,4 @@ if [ ${ARCH} == "" ]; then
     exit
 fi
 curl -fOL https://github.com/kubeedge/kubeedge/releases/download/v$version/kubeedge-v${version}-linux-$ARCH.tar.gz
+mv kubeedge-v${version}-linux-$ARCH.tar.gz kubeedgeRuntime-${ARCH}.tar.gz
