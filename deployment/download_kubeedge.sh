@@ -35,7 +35,7 @@ fi
 version="$(curl -fsSLI -o /dev/null -w "%{url_effective}" https://github.com/kubeedge/kubeedge/releases/latest)"
 version="${version#https://github.com/kubeedge/kubeedge/releases/tag/}"
 version="${version#v}"
-ARCH="$(arch)"
+ARCH="$(arch $1)"
 if [ ${ARCH} == "" ]; then
     echo "ERROR: architecture error"
     exit
