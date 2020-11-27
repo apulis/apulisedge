@@ -9,6 +9,7 @@ APULISEDGE_PACKAGE_DOWNLOAD_PATH=/tmp
 KUBEEDGE_TAR_FILE= # need arch, will be init later
 KUBEEDGE_HOME_PATH=/etc/kubeedge
 DESIRE_DOCKER_VERSION=17.06
+APULISEDGE_IMAGE=apulis/apulisedge
 
 
 # ===
@@ -122,7 +123,9 @@ runEdgecore()
     sed -i "s#httpServer:\ .*10002#httpServer: https://${SERVER_DOMAIN}:10002#g" config/edgecore.yaml
     sed -i "s#server:\ .*10001#server: ${SERVER_DOMAIN}:10001#g" config/edgecore.yaml
     sed -i "s#server:\ .*10000#server: ${SERVER_DOMAIN}:10000#g" config/edgecore.yaml
-    nohup edgecore --config config/edgecore.yaml > ${EDGECORE_LOG_FILE} 2>&1 &
+    systemctl enable docker.service
+    docker pull ${APULISEDGE_IMAGE}
+    docker run --restart=always ${APULISEDGE_IMAGE} -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH}
 }
 
 main()
@@ -139,6 +142,11 @@ main()
             case "$1" in
                 -d)
                 SERVER_DOMAIN="$2"
+                shift;
+                shift;
+                ;;
+                -i)
+                APULISEDGE_IMAGE="$2"
                 shift;
                 shift;
                 ;;
