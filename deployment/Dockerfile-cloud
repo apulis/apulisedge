@@ -21,5 +21,6 @@ FROM alpine:3.11 as server
 RUN apk --no-cache add ca-certificates libdrm
 WORKDIR /root/
 COPY --from=0 /go/bin/ApulisEdgeCloud .
+COPY --from=0 /usr/local/bin/cloudcore /usr/local/bin/
 
 CMD ["./ApulisEdgeCloud"]

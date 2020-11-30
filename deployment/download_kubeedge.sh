@@ -45,3 +45,7 @@ tar -zxvf kubeedge-v${version}-linux-${ARCH}.tar.gz
 rm kubeedge-v${version}-linux-${ARCH}.tar.gz
 mv kubeedge-v${version}-linux-${ARCH} kubeedgeRuntime-${ARCH}
 tar -zxcf kubeedgeRuntime-${ARCH}.tar.gz ./kubeedgeRuntime-${ARCH}
+chmod +x kubeedgeRuntime-${ARCH}/cloud/cloudcore/cloudcore
+cp kubeedgeRuntime-${ARCH}/cloud/cloudcore/cloudcore /usr/local/bin
+chmod +x kubeedgeRuntime-${ARCH}/edge/edgecore
+cp kubeedgeRuntime-${ARCH}/edge/edgecore /usr/local/bin
