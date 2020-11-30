@@ -3,10 +3,12 @@
 package framework
 
 import (
+	"context"
 	"github.com/apulis/ApulisEdge/cloud/configs"
 	"github.com/apulis/ApulisEdge/cloud/database"
 	"github.com/apulis/ApulisEdge/cloud/loggers"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/node/entity"
+	nodeservice "github.com/apulis/ApulisEdge/cloud/node/service"
 	"github.com/apulis/ApulisEdge/cloud/servers/httpserver"
 	"github.com/urfave/cli/v2"
 	"os"
@@ -18,10 +20,12 @@ import (
 var logger = loggers.LogInstance()
 
 type CloudApp struct {
-	internalApp *cli.App
-	flags       []cli.Flag
-	configFile  string
-	cloudConfig configs.EdgeCloudConfig
+	internalApp      *cli.App
+	flags            []cli.Flag
+	configFile       string
+	cloudConfig      configs.EdgeCloudConfig
+	tickerCancelFunc context.CancelFunc
+	tickerCtx        context.Context
 }
 
 var once sync.Once
@@ -37,7 +41,6 @@ func CloudAppInstance() *CloudApp {
 }
 
 func (app *CloudApp) Init(appName string, appUsage string) error {
-	// init config file
 	app.flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:        "config",
@@ -55,6 +58,7 @@ func (app *CloudApp) Init(appName string, appUsage string) error {
 		return app.MainLoop()
 	}
 
+	app.tickerCtx, app.tickerCancelFunc = context.WithCancel(context.Background())
 	return nil
 }
 
@@ -81,6 +85,9 @@ func (app *CloudApp) MainLoop() error {
 	// init tables
 	app.InitTables()
 
+	// init ticker
+	go nodeservice.CreateNodeCheckLoop(app.tickerCtx, app.cloudConfig.Portal.NodeCheckerInterval)
+
 	// quit when signal notifys
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -90,6 +97,7 @@ func (app *CloudApp) MainLoop() error {
 
 	select {
 	case <-quit:
+		app.tickerCancelFunc()
 		httpserver.StopApiServer(srv)
 	}
 

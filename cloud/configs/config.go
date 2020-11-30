@@ -21,7 +21,8 @@ type HttpConfig struct {
 }
 
 type PortalConfig struct {
-	Http HttpConfig
+	NodeCheckerInterval int32
+	Http                HttpConfig
 }
 
 type WebsocketConfig struct {
