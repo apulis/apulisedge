@@ -28,7 +28,7 @@ arch() {
 # === main code start here
 # ===
 # params checks
-if [ ! "$1" = "" ]; then
+if [ "$1" = "" ]; then
     echo "ERROR: need to specify a target architecture"
     exit
 fi
