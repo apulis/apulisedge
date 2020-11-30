@@ -1,4 +1,4 @@
-module github.com/apulis/ApulisEdge
+module github.com/apulis/ApulisEdge/cloud
 
 go 1.14
 
@@ -8,8 +8,10 @@ require (
 	github.com/gin-contrib/sessions v0.0.3
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.2.0
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/jinzhu/gorm v1.9.14
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.3.3

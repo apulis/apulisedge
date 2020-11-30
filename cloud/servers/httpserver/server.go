@@ -5,17 +5,14 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"github.com/apulis/ApulisEdge/configs"
-	"github.com/apulis/ApulisEdge/loggers"
+	"github.com/apulis/ApulisEdge/cloud/configs"
 	"net/http"
 	"time"
 )
 
-var logger = loggers.Log
-
 // Start API server for portal
-func StartApiServer() *http.Server {
-	port := configs.CloudConfig.Portal.Http.Port
+func StartApiServer(config *configs.EdgeCloudConfig) *http.Server {
+	port := config.Portal.Http.Port
 	router := NewRouter()
 
 	logger.Info("ApulisEdgeCloud started, listening and serving HTTP on: ", port)

@@ -7,16 +7,27 @@ import (
 	"io"
 	"os"
 	"path"
+	"sync"
 
-	"github.com/apulis/ApulisEdge/configs"
+	"github.com/apulis/ApulisEdge/cloud/configs"
 	"github.com/sirupsen/logrus"
 )
 
-var Log = logrus.New()
+var once sync.Once
+var instance *logrus.Logger
 
-func init() {
-	logConf := configs.CloudConfig.Log
-	Log.Formatter = new(Formatter)
+var logger = LogInstance()
+
+func LogInstance() *logrus.Logger {
+	once.Do(func() {
+		instance = logrus.New()
+	})
+	return instance
+}
+
+func InitLogger(config *configs.EdgeCloudConfig) {
+	logConf := config.Log
+	logger.Formatter = new(Formatter)
 
 	if logConf.WriteFile {
 		if err := os.Mkdir(logConf.FileDir, 0755); err != nil {
@@ -34,6 +45,6 @@ func init() {
 		}
 
 		writers := io.MultiWriter(os.Stdout, writeToFile)
-		Log.Out = writers
+		logger.Out = writers
 	}
 }

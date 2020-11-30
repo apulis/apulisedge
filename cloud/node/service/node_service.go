@@ -3,15 +3,31 @@
 package nodeservice
 
 import (
-	"github.com/apulis/ApulisEdge/loggers"
-	constants "github.com/apulis/ApulisEdge/node"
-	nodeentity "github.com/apulis/ApulisEdge/node/entity"
-	"github.com/apulis/ApulisEdge/utils"
+	"github.com/apulis/ApulisEdge/cloud/loggers"
+	constants "github.com/apulis/ApulisEdge/cloud/node"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/node/entity"
+	"github.com/apulis/ApulisEdge/cloud/utils"
 	v1 "k8s.io/api/core/v1"
 	"time"
 )
 
-var logger = loggers.Log
+var logger = loggers.LogInstance()
+
+func CreateEdgeNode(name string) (*nodeentity.NodeBasicInfo, error) {
+	node := &nodeentity.NodeBasicInfo{
+		Name:             name,
+		Status:           constants.StatusNotInstalled,
+		Roles:            "",
+		ContainerRuntime: "",
+		OsImage:          "",
+		ProviderId:       "",
+		InterIp:          "",
+		OuterIp:          "",
+		CreateTime:       time.Now().UTC().String(),
+	}
+
+	return node, nodeentity.CreateNode(node)
+}
 
 func ListEdgeNodes() ([]*nodeentity.NodeBasicInfo, error) {
 	var interIp string
@@ -20,7 +36,7 @@ func ListEdgeNodes() ([]*nodeentity.NodeBasicInfo, error) {
 
 	nodeList, err := utils.ListNodes()
 	if err != nil {
-		logger.Info("Failed to listEdgeNodes, err = [%v]", err)
+		logger.Infof("Failed to listEdgeNodes, err = [%v]", err)
 		return nil, err
 	}
 
@@ -82,7 +98,7 @@ func DescribeEdgeNode(name string) (*nodeentity.NodeDetailInfo, error) {
 
 	nodeInfo, err := utils.DescribeNode(name)
 	if err != nil {
-		logger.Info("Failed to listEdgeNodes, err = [%v]", err)
+		logger.Infof("Failed to listEdgeNodes, err = [%v]", err)
 		return nil, err
 	}
 
