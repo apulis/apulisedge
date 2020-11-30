@@ -1,0 +1,20 @@
+FROM golang:1.13.7-alpine3.11 as builder
+
+ENV GO111MODULE on
+RUN umask 022
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+
+RUN apk update
+RUN apk --no-cache add git build-base
+
+RUN git clone git@apulis-gitlab.apulis.cn:apulis/apulisedge.git /
+RUN go get -u github.com/swaggo/swag/cmd/swag
+RUN cd /apulisedge/agent; swag init; GO111MODULE=${GO111MODULE} go build -o /go/bin/ApulisEdgeAgent;
+
+
+FROM alpine:3.11 as server
+RUN apk --no-cache add ca-certificates libdrm
+WORKDIR /root/
+COPY --from=0 /go/bin/ApulisEdgeAgent .
+
+CMD ["./ApulisEdgeAgent"]
