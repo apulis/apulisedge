@@ -2,7 +2,10 @@ FROM alpine:3.11
 
 WORKDIR /root/
 ENV CLOUD_ARCH amd64
-COPY ./images/download_kubeedge.sh /
+ARG downloadscript_path=download_kubeedge.sh
+ENV downloadscript_path ${downloadscript_path}
+
+COPY ${downloadscript_path} /
 RUN umask 022
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
@@ -12,4 +15,4 @@ RUN apk --no-cache add curl ca-certificates libdrm
 RUN chmod +x /download_kubeedge.sh;
 RUN /download_kubeedge.sh ${CLOUD_ARCH}
 
-CMD ["nohup cloudcore --config /etc/kubeedge/config/cloudcore.yaml > /var/log/kubeedge/cloudcore.log 2>&1 &"]
+CMD ["cloudcore --config /etc/kubeedge/config/cloudcore.yaml > /var/log/kubeedge/cloudcore.log 2>&1"]
