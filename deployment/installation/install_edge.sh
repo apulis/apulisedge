@@ -103,13 +103,6 @@ envInit()
     ARCH="$(getArch $(uname -m))"
     KUBEEDGE_TAR_FILE=kubeedgeRuntime-${ARCH}.tar.gz
 
-    # === init log
-    mkdir -p ${LOG_DIR}
-    if [ -e "${INSTALL_LOG_FILE}}" ]; then
-        rm "${INSTALL_LOG_FILE}"
-    fi
-    touch "${INSTALL_LOG_FILE}"
-
     # === init edgecore env
     mkdir -p ${KUBEEDGE_HOME_PATH}
     mkdir -p ${KUBEEDGE_LOG_DIR}
@@ -179,9 +172,12 @@ main()
         done
     fi
 
-    if [ ! -e ${INSTALL_LOG_FILE} ]; then
-        touch ${INSTALL_LOG_FILE}
+    # === init log
+    mkdir -p ${LOG_DIR}
+    if [ -e "${INSTALL_LOG_FILE}}" ]; then
+        rm "${INSTALL_LOG_FILE}"
     fi
+    touch "${INSTALL_LOG_FILE}"
 
     process=(
         envCheck
@@ -191,7 +187,7 @@ main()
 
     LOG_INFO "=== edge node install begin"
     for i in "${!process[@]}";do
-        LOG_INFO "process ${i} begin"
+        LOG_INFO "process ${process[${i}]} begin"
         ${process[${i}]}
         if [ $? -ne 0 ]; then
             LOG_ERROR "process-${process[${i}]} failed"
