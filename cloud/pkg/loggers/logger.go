@@ -28,6 +28,7 @@ func LogInstance() *logrus.Logger {
 func InitLogger(config *configs.EdgeCloudConfig) {
 	logConf := config.Log
 	logger.Formatter = new(Formatter)
+	logger.SetLevel(config.Log.Level)
 
 	if logConf.WriteFile {
 		if err := os.Mkdir(logConf.FileDir, 0755); err != nil {

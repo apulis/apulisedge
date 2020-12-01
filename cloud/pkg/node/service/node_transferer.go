@@ -4,7 +4,6 @@ package nodeservice
 
 import (
 	"context"
-	"fmt"
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/node"
@@ -12,9 +11,6 @@ import (
 	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	v1 "k8s.io/api/core/v1"
 	"strings"
-
-	//"github.com/apulis/ApulisEdge/cloud/utils"
-	//v1 "k8s.io/api/core/v1"
 	"time"
 )
 
@@ -42,11 +38,13 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 	var total int
 	offset := 0
 	var k8sInfo *nodeentity.NodeBasicInfo
+	var dbInfo *nodeentity.NodeBasicInfo
 	var err error
 
-	whereQueryStr := fmt.Sprintf("Status = '%s'", constants.StatusNotInstalled)
-	apulisdb.Db.Model(&nodeentity.NodeBasicInfo{}).Where(whereQueryStr).Count(&totalTmp)
+	apulisdb.Db.Model(&nodeentity.NodeBasicInfo{}).Count(&totalTmp)
 	total = int(totalTmp)
+
+	logger.Debugf("NodeTicker total node count = %d", total)
 	if total == 0 {
 		return
 	} else if total < constants.TransferCountEach {
@@ -54,22 +52,36 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 	}
 
 	for total >= constants.TransferCountEach {
-		res := apulisdb.Db.Offset(offset).Limit(constants.TransferCountEach).Where(whereQueryStr).Find(&nodeInfos)
+		res := apulisdb.Db.Offset(offset).Limit(constants.TransferCountEach).Find(&nodeInfos)
 		if res.Error != nil {
-			logger.Errorf("query node failed. queryStr = %s, err = %v", whereQueryStr, res.Error)
+			logger.Errorf("query node failed. err = %v", res.Error)
 		} else {
-			if config.DebugModel {
-				// debug print
-				for i := 0; i < int(res.RowsAffected); i++ {
-					logger.Infof("node ===> %s", nodeInfos[i].Name)
-				}
-			}
 			for i := 0; i < int(res.RowsAffected); i++ {
-				k8sInfo, err = NodeUpdate(&nodeInfos[i])
-				if err != nil {
-					logger.Infof("NodeTicker update node failed! err = %v", err)
-				} else {
-					logger.Infof("NodeTicker update node success! node = %s, status = %s", k8sInfo.Name, k8sInfo.Status)
+				logger.Debugf("NodeTicker handle node = %v", nodeInfos[i])
+
+				k8sInfo, err = GetK8sNodeInfo(&nodeInfos[i])
+				dbInfo = new(nodeentity.NodeBasicInfo)
+				if err != nil && nodeInfos[i].Status != constants.StatusNotInstalled { // uninstall node
+					logger.Infof("NodeTicker get k8sNodeInfo failed, so kick it. err = %v", err)
+					dbInfo.ID = nodeInfos[i].ID
+					dbInfo.UserId = nodeInfos[i].UserId
+					dbInfo.Name = nodeInfos[i].Name
+					dbInfo.Status = constants.StatusNotInstalled
+					dbInfo.CreateAt = nodeInfos[i].CreateAt
+					dbInfo.UpdateAt = time.Now()
+					err = nodeentity.UpdateNode(dbInfo)
+					if err != nil {
+						logger.Infof("NodeTicker kick node failed, node = %s, err = %v", dbInfo.Name, err)
+					} else {
+						logger.Infof("NodeTicker kick node succ, node = %s", dbInfo.Name)
+					}
+				} else if err == nil && nodeInfos[i].Status == constants.StatusNotInstalled { // install node
+					err = nodeentity.UpdateNode(k8sInfo)
+					if err != nil {
+						logger.Infof("NodeTicker install node failed, node = %s, err = %v", k8sInfo.Name, err)
+					} else {
+						logger.Infof("NodeTicker install node succ, node = %s", k8sInfo.Name)
+					}
 				}
 			}
 		}
@@ -79,7 +91,7 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 	}
 }
 
-func NodeUpdate(dbInfo *nodeentity.NodeBasicInfo) (*nodeentity.NodeBasicInfo, error) {
+func GetK8sNodeInfo(dbInfo *nodeentity.NodeBasicInfo) (*nodeentity.NodeBasicInfo, error) {
 	var interIp string
 	var outerIp string
 	var nodeStatus string
@@ -87,6 +99,7 @@ func NodeUpdate(dbInfo *nodeentity.NodeBasicInfo) (*nodeentity.NodeBasicInfo, er
 
 	nodeInfo, err := utils.DescribeNode(dbInfo.Name)
 	if err != nil {
+		logger.Debugf("GetK8sNodeInfo DescribeNode failed. name = %s", dbInfo.Name)
 		return nil, err
 	}
 
@@ -122,6 +135,8 @@ func NodeUpdate(dbInfo *nodeentity.NodeBasicInfo) (*nodeentity.NodeBasicInfo, er
 	roles = strings.TrimSuffix(roles, ",")
 
 	k8sInfo := &nodeentity.NodeBasicInfo{
+		ID:               dbInfo.ID,
+		UserId:           dbInfo.UserId,
 		Name:             nodeInfo.Name,
 		Status:           nodeStatus,
 		Roles:            roles,
@@ -134,7 +149,5 @@ func NodeUpdate(dbInfo *nodeentity.NodeBasicInfo) (*nodeentity.NodeBasicInfo, er
 		UpdateAt:         time.Now(),
 	}
 
-	k8sInfo.ID = dbInfo.ID
-	k8sInfo.UserId = dbInfo.UserId
-	return k8sInfo, nodeentity.UpdateNode(k8sInfo)
+	return k8sInfo, nil
 }

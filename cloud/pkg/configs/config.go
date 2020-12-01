@@ -4,6 +4,7 @@ package configs
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -37,6 +38,7 @@ type CloudHubConfig struct {
 }
 
 type LogConfig struct {
+	Level     logrus.Level
 	WriteFile bool
 	FileDir   string
 	FileName  string
