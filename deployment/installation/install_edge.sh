@@ -84,12 +84,14 @@ envCheck()
         fi
     fi
 
+    # === check download package
     if [[ ! -e ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/kubeedge.tar.gz ]];then
         LOG_ERROR "ERROR !!!"
         LOG_ERROR "Can't find kubeedge.tar.gz"
         LOG_ERROR "Please fix and then try again."
     fi
 
+    # === check input params
     if [[ "${SERVER_DOMAIN}" = "" ]]; then
         LOG_ERROR "ERROR !!!"
         LOG_ERROR "Cloud server domain is not specified."
