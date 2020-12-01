@@ -2,10 +2,16 @@
 
 package configs
 
+import (
+	"fmt"
+	"github.com/spf13/viper"
+)
+
 type EdgeCloudConfig struct {
 	Portal   PortalConfig
 	CloudHub CloudHubConfig
 	Log      LogConfig
+	Db       DbConfig
 }
 
 type HttpConfig struct {
@@ -34,4 +40,26 @@ type LogConfig struct {
 	FileName  string
 }
 
-var CloudConfig EdgeCloudConfig
+type DbConfig struct {
+	Username     string
+	Password     string
+	Host         string
+	Port         int
+	Database     string
+	MaxOpenConns int
+	MaxIdleConns int
+}
+
+func InitConfig(configFile string, config *EdgeCloudConfig) {
+	viper.SetConfigFile(configFile)
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("Fatal error read config file: %s \n", err))
+	}
+
+	if err := viper.Unmarshal(&config); err != nil {
+		panic(fmt.Errorf("Fatal error unmarshal config file: %s \n", err))
+	}
+
+	fmt.Println(config.CloudHub.Websocket)
+}

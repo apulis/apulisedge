@@ -3,10 +3,13 @@
 package httpserver
 
 import (
-	proto "github.com/apulis/ApulisEdge/protocol"
+	"github.com/apulis/ApulisEdge/cloud/loggers"
+	proto "github.com/apulis/ApulisEdge/cloud/protocol"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
+
+var logger = loggers.LogInstance()
 
 type HandlerFunc func(c *gin.Context) error
 

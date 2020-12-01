@@ -3,15 +3,31 @@
 package nodeservice
 
 import (
-	"github.com/apulis/ApulisEdge/loggers"
-	constants "github.com/apulis/ApulisEdge/node"
-	nodeentity "github.com/apulis/ApulisEdge/node/entity"
-	"github.com/apulis/ApulisEdge/utils"
+	"github.com/apulis/ApulisEdge/cloud/loggers"
+	constants "github.com/apulis/ApulisEdge/cloud/node"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/node/entity"
+	"github.com/apulis/ApulisEdge/cloud/utils"
 	v1 "k8s.io/api/core/v1"
 	"time"
 )
 
-var logger = loggers.Log
+var logger = loggers.LogInstance()
+
+func CreateEdgeNode(name string) (*nodeentity.NodeBasicInfo, error) {
+	node := &nodeentity.NodeBasicInfo{
+		Name:             name,
+		Status:           constants.StatusNotInstalled,
+		Roles:            "",
+		ContainerRuntime: "",
+		OsImage:          "",
+		ProviderId:       "",
+		InterIp:          "",
+		OuterIp:          "",
+		CreateTime:       time.Now().UTC().String(),
+	}
+
+	return node, nodeentity.CreateNode(node)
+}
 
 func ListEdgeNodes() ([]*nodeentity.NodeBasicInfo, error) {
 	var interIp string
@@ -20,12 +36,16 @@ func ListEdgeNodes() ([]*nodeentity.NodeBasicInfo, error) {
 
 	nodeList, err := utils.ListNodes()
 	if err != nil {
-		logger.Info("Failed to listEdgeNodes, err = [%v]", err)
+		logger.Infof("Failed to listEdgeNodes, err = [%v]", err)
 		return nil, err
 	}
 
 	nodes := make([]*nodeentity.NodeBasicInfo, 0)
 	for _, v := range nodeList.Items {
+		if !isEdgeNode(&v) {
+			continue
+		}
+
 		// get address
 		for _, addr := range v.Status.Addresses {
 			if addr.Type == v1.NodeInternalIP {
@@ -63,6 +83,14 @@ func ListEdgeNodes() ([]*nodeentity.NodeBasicInfo, error) {
 	return nodes, nil
 }
 
+func isEdgeNode(v *v1.Node) bool {
+	if _, ok := v.Labels[constants.EdgeRoleKey]; ok {
+		return true
+	}
+
+	return false
+}
+
 func DescribeEdgeNode(name string) (*nodeentity.NodeDetailInfo, error) {
 	var interIp string
 	var outerIp string
@@ -70,7 +98,7 @@ func DescribeEdgeNode(name string) (*nodeentity.NodeDetailInfo, error) {
 
 	nodeInfo, err := utils.DescribeNode(name)
 	if err != nil {
-		logger.Info("Failed to listEdgeNodes, err = [%v]", err)
+		logger.Infof("Failed to listEdgeNodes, err = [%v]", err)
 		return nil, err
 	}
 

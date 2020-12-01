@@ -14,3 +14,12 @@ log:
   writefile: true
   filedir: logs
   filename: apulis_edge_cloud.log
+
+db:
+  username: root
+  password: root@123
+  host: 127.0.0.1
+  port: 3306
+  database: ApulisEdgeCloudDB
+  maxopenconns: 10
+  maxidleconns: 2

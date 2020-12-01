@@ -4,7 +4,7 @@ package utils
 
 import (
 	"context"
-	"github.com/apulis/ApulisEdge/loggers"
+	"github.com/apulis/ApulisEdge/cloud/loggers"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-var logger = loggers.Log
+var logger = loggers.LogInstance()
 
 // replace this with the K8s Master IP
 var KubeMaster = "https://cls-f4x353m8.ccs.tencent-cloud.com"

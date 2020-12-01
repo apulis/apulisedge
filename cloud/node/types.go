@@ -8,6 +8,12 @@ import (
 
 // node status
 const (
-	StatusOnline  string = "Online"
-	StatusOffline string = "Offline"
+	StatusOnline       string = "Online"
+	StatusOffline      string = "Offline"
+	StatusNotInstalled string = "NotInstalled"
+)
+
+//
+const (
+	EdgeRoleKey string = "node-role.kubernetes.io/edge"
 )
