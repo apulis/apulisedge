@@ -5,6 +5,7 @@
 ARCH= # will be init latter
 LOG_DIR=/var/log/apulisedge
 KUBEEDGE_LOG_DIR=/var/log/kubeedge
+KUBEEDGE_DATABASES_DIR=/var/lib/kubeedge
 INSTALL_LOG_FILE=${LOG_DIR}/installer.log
 EDGECORE_LOG_FILE=${LOG_DIR}/edgecore.log
 APULISEDGE_PACKAGE_DOWNLOAD_PATH=/tmp/apulisedge
@@ -112,6 +113,7 @@ envInit()
     # === init edgecore env
     mkdir -p ${KUBEEDGE_HOME_PATH}
     mkdir -p ${KUBEEDGE_LOG_DIR}
+    mkdir -p ${KUBEEDGE_DATABASES_DIR}
     cd ${KUBEEDGE_HOME_PATH}
     cp ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE} ${KUBEEDGE_HOME_PATH}
     tar -zxf ${KUBEEDGE_HOME_PATH}/${KUBEEDGE_TAR_FILE}
@@ -131,7 +133,16 @@ runEdgecore()
     # run edgecore image
     systemctl enable docker.service
     systemctl start docker
-    docker run -d -P --restart=always --privileged=true --network=host -v ${KUBEEDGE_LOG_DIR}:${KUBEEDGE_LOG_DIR} -v /var/run/docker.sock:/var/run/docker.sock -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH} ${APULISEDGE_IMAGE}
+    docker run -d -P \
+    --restart=always \
+    --privileged=true \
+    --network=host \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /var/run/dockershim.sock:/var/run/dockershim.sock \
+    -v ${KUBEEDGE_DATABASES_DIR}:${KUBEEDGE_DATABASES_DIR} \
+    -v ${KUBEEDGE_LOG_DIR}:${KUBEEDGE_LOG_DIR} \
+    -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH} \
+    ${APULISEDGE_IMAGE}
 }
 
 main()
