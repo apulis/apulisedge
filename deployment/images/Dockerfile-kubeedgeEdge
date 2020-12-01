@@ -17,5 +17,7 @@ RUN /download_kubeedge.sh ${EDGE_ARCH}
 
 FROM ubuntu:18.04 as server
 COPY --from=0 /usr/local/bin/edgecore /usr/local/bin
+RUN apt-get update -y
+RUN apt-get install -y iptables
 
 CMD ["/bin/bash","-c","edgecore --config /etc/kubeedge/config/edgecore.yaml > /var/log/kubeedge/edgecore.log 2>&1"]
