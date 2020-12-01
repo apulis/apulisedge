@@ -111,23 +111,26 @@ envInit()
 
     # === init edgecore env
     mkdir -p ${KUBEEDGE_HOME_PATH}
+    mkdir -p ${KUBEEDGE_LOG_DIR}
     cd ${KUBEEDGE_HOME_PATH}
     cp ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE} ${KUBEEDGE_HOME_PATH}
     tar -zxf ${KUBEEDGE_HOME_PATH}/${KUBEEDGE_TAR_FILE}
-    cp kubeedgeRuntime/edge/edgecore /usr/local/bin
 
 }
 
 runEdgecore()
 {
+    docker pull ${KUBEEDGE_EDGE_IMAGE}
     cd ${KUBEEDGE_HOME_PATH}
+    # generate edgecore runtime config
     mkdir -p config
-    edgecore --minconfig > config/edgecore.yaml
+    docker run ${KUBEEDGE_EDGE_IMAGE} /bin/bash -c "edgecore --minconfig" | tee config/edgecore.yaml
     sed -i "s#httpServer:\ .*10002#httpServer: https://${SERVER_DOMAIN}:10002#g" config/edgecore.yaml
     sed -i "s#server:\ .*10001#server: ${SERVER_DOMAIN}:10001#g" config/edgecore.yaml
     sed -i "s#server:\ .*10000#server: ${SERVER_DOMAIN}:10000#g" config/edgecore.yaml
+    # run edgecore image
     systemctl enable docker.service
-    docker pull ${KUBEEDGE_EDGE_IMAGE}
+    systemctl start docker
     docker run -d -P --restart=always --privileged=true --network=host -v ${KUBEEDGE_LOG_DIR}:${KUBEEDGE_LOG_DIR} -v /var/run/docker.sock:/var/run/docker.sock -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH} ${APULISEDGE_IMAGE}
 }
 
