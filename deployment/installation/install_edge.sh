@@ -84,6 +84,7 @@ envCheck()
     fi
 
     # === check download package
+    LOG_INFO "check download package:${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE}"
     if [[ ! -e ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE} ]];then
         LOG_ERROR "ERROR !!!"
         LOG_ERROR "Can't find kubeedge.tar.gz"
@@ -92,6 +93,7 @@ envCheck()
     fi
 
     # === check input params
+    LOG_INFO "check input params:SERVER_DOMAIN"
     if [[ "${SERVER_DOMAIN}" = "" ]]; then
         LOG_ERROR "ERROR !!!"
         LOG_ERROR "Cloud server domain is not specified."
@@ -103,28 +105,39 @@ envCheck()
 envInit()
 {
     # === init edgecore env
+    LOG_INFO "Initializing environment......"
+    LOG_INFO "create directory..."
     mkdir -p ${KUBEEDGE_HOME_PATH}
     mkdir -p ${KUBEEDGE_LOG_DIR}
     mkdir -p ${KUBEEDGE_DATABASES_DIR}
+    LOG_INFO "directory ready."
     cd ${KUBEEDGE_HOME_PATH}
+    LOG_INFO "decompress file..."
     cp ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE} ${KUBEEDGE_HOME_PATH}
-    tar -zxf ${KUBEEDGE_HOME_PATH}/${KUBEEDGE_TAR_FILE}
+    tar -zxvf ${KUBEEDGE_HOME_PATH}/${KUBEEDGE_TAR_FILE}
+    LOG_INFO "file decompressed."
+    LOG_INFO "Initializing completed."
 
 }
 
 runEdgecore()
 {
+    LOG_INFO "pulling images..."
     docker pull ${KUBEEDGE_EDGE_IMAGE}
+    LOG_INFO "images ready."
     cd ${KUBEEDGE_HOME_PATH}
     # generate edgecore runtime config
     mkdir -p config
+    LOG_INFO "create edgecore config file..."
     docker run ${KUBEEDGE_EDGE_IMAGE} /bin/bash -c "edgecore --minconfig" | tee config/edgecore.yaml
     sed -i "s#httpServer:\ .*10002#httpServer: https://${SERVER_DOMAIN}:10002#g" config/edgecore.yaml
     sed -i "s#server:\ .*10001#server: ${SERVER_DOMAIN}:10001#g" config/edgecore.yaml
     sed -i "s#server:\ .*10000#server: ${SERVER_DOMAIN}:10000#g" config/edgecore.yaml
     # run edgecore image
+    LOG_INFO "config file generated."
     systemctl enable docker.service
     systemctl start docker
+    LOG_INFO "run edgecore container..."
     docker run -d -P \
     --restart=always \
     --privileged=true \
@@ -134,6 +147,7 @@ runEdgecore()
     -v ${KUBEEDGE_LOG_DIR}:${KUBEEDGE_LOG_DIR} \
     -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH} \
     ${KUBEEDGE_EDGE_IMAGE}
+    LOG_INFO "container started"
 }
 
 main()
