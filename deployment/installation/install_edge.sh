@@ -55,7 +55,7 @@ LOG_ERROR()
 envCheck()
 {
     # === check docker install status and version
-    if [[ ! command -v docker ]]; then
+    if [[ ! `command -v docker` ]]; then
         LOG_ERROR "ERROR !!!"
         LOG_ERROR "Docker is not found but is required on node."
         LOG_ERROR "Please install docker and then try again."
