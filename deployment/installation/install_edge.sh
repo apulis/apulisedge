@@ -179,6 +179,10 @@ main()
         done
     fi
 
+    if [ ! -e ${INSTALL_LOG_FILE} ]; then
+        touch ${INSTALL_LOG_FILE}
+    fi
+
     process=(
         envCheck
         envInit
