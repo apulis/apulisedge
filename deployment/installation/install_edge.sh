@@ -85,7 +85,7 @@ envCheck()
     fi
 
     # === check download package
-    if [[ ! -e ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/kubeedge.tar.gz ]];then
+    if [[ ! -e ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE} ]];then
         LOG_ERROR "ERROR !!!"
         LOG_ERROR "Can't find kubeedge.tar.gz"
         LOG_ERROR "Please fix and then try again."
@@ -101,10 +101,6 @@ envCheck()
 
 envInit()
 {
-    # === init some variables
-    ARCH="$(getArch $(uname -m))"
-    KUBEEDGE_TAR_FILE=kubeedgeRuntime-${ARCH}.tar.gz
-
     # === init edgecore env
     mkdir -p ${KUBEEDGE_HOME_PATH}
     mkdir -p ${KUBEEDGE_LOG_DIR}
@@ -173,6 +169,10 @@ main()
             esac
         done
     fi
+
+    # === init some variables
+    ARCH="$(getArch $(uname -m))"
+    KUBEEDGE_TAR_FILE=kubeedgeRuntime-${ARCH}.tar.gz
 
     # === init log
     mkdir -p ${LOG_DIR}
