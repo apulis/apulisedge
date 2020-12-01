@@ -130,11 +130,10 @@ runEdgecore()
     --privileged=true \
     --network=host \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -v /var/run/dockershim.sock:/var/run/dockershim.sock \
     -v ${KUBEEDGE_DATABASES_DIR}:${KUBEEDGE_DATABASES_DIR} \
     -v ${KUBEEDGE_LOG_DIR}:${KUBEEDGE_LOG_DIR} \
     -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH} \
-    ${APULISEDGE_IMAGE}
+    ${KUBEEDGE_EDGE_IMAGE}
 }
 
 main()
