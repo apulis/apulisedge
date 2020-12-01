@@ -3,13 +3,15 @@
 # ===
 ARCH= # will be init latter
 LOG_DIR=/var/log/apulisedge
+KUBEEDGE_LOG_DIR=/var/log/kubeedge
 INSTALL_LOG_FILE=${LOG_DIR}/installer.log
 EDGECORE_LOG_FILE=${LOG_DIR}/edgecore.log
 APULISEDGE_PACKAGE_DOWNLOAD_PATH=/tmp
 KUBEEDGE_TAR_FILE= # need arch, will be init later
 KUBEEDGE_HOME_PATH=/etc/kubeedge
 DESIRE_DOCKER_VERSION=17.06
-APULISEDGE_IMAGE=apulis/apulisedge
+APULISEDGE_IMAGE=apulisedge-agent:1.0
+KUBEEDGE_EDGE_IMAGE=apulis/kubeedge-edge:1.0
 
 
 # ===
@@ -124,14 +126,14 @@ runEdgecore()
     sed -i "s#server:\ .*10001#server: ${SERVER_DOMAIN}:10001#g" config/edgecore.yaml
     sed -i "s#server:\ .*10000#server: ${SERVER_DOMAIN}:10000#g" config/edgecore.yaml
     systemctl enable docker.service
-    docker pull ${APULISEDGE_IMAGE}
-    docker run --restart=always ${APULISEDGE_IMAGE} -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH}
+    docker pull ${KUBEEDGE_EDGE_IMAGE}
+    docker run -d -P --restart=always --privileged=true --network=host -v ${KUBEEDGE_LOG_DIR}:${KUBEEDGE_LOG_DIR} -v /var/run/docker.sock:/var/run/docker.sock -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH} ${APULISEDGE_IMAGE}
 }
 
 main()
 {
     if which getopt > /dev/null 2>&1; then
-        OPTS=$(getopt d:n:r:m:ulhez "$*" 2>/dev/null)
+        OPTS=$(getopt d:i: "$*" 2>/dev/null)
         if [ ! $? ]; then
             printf "%s\\n" "$USAGE"
             exit 2
