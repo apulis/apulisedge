@@ -18,4 +18,4 @@ RUN /download_kubeedge.sh ${CLOUD_ARCH}
 FROM ubuntu:18.04 as server
 COPY --from=0 /usr/local/bin/cloudcore /usr/local/bin
 
-CMD ["cloudcore --config /etc/kubeedge/config/cloudcore.yaml > /var/log/kubeedge/cloudcore.log 2>&1"]
+CMD ["/bin/bash","-c","cloudcore --config /etc/kubeedge/config/cloudcore.yaml > /var/log/kubeedge/cloudcore.log 2>&1"]
