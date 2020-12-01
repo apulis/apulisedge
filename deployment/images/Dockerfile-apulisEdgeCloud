@@ -10,8 +10,7 @@ RUN apk --no-cache add curl git build-base
 
 RUN mkdir -p /go/src/apulis
 ADD ./cloud /go/src/apulis/apulisedge-cloud
-RUN go get -u github.com/swaggo/swag/cmd/swag
-RUN cd /go/src/apulis/apulisedge-cloud; swag init; GO111MODULE=${GO111MODULE} go build -o /go/bin/ApulisEdgeCloud;
+RUN cd /go/src/apulis/apulisedge-cloud; GO111MODULE=${GO111MODULE} go build -o /go/bin/ApulisEdgeCloud;
 
 
 FROM alpine:3.11 as server
