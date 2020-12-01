@@ -76,7 +76,6 @@ envCheck()
         docker_verison="${big_version}.${small_version}"
         if [ $(expr ${docker_verison} \>= ${DESIRE_DOCKER_VERSION}) -eq 1 ]; then
             LOG_INFO "check docker version success"
-            return 0
         else
             LOG_ERROR "docker version is too low, mini support version is ${DESIRE_DOCKER_VERSION}."
             LOG_ERROR "docker version is too low, mini support version is ${DESIRE_DOCKER_VERSION}."
@@ -89,6 +88,7 @@ envCheck()
         LOG_ERROR "ERROR !!!"
         LOG_ERROR "Can't find kubeedge.tar.gz"
         LOG_ERROR "Please fix and then try again."
+        return 1
     fi
 
     # === check input params
@@ -96,6 +96,7 @@ envCheck()
         LOG_ERROR "ERROR !!!"
         LOG_ERROR "Cloud server domain is not specified."
         LOG_ERROR "Please fix and then try again."
+        return 1
     fi
 }
 
