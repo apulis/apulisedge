@@ -1,4 +1,4 @@
-FROM alpine:3.11
+FROM alpine:3.11 as builder
 
 WORKDIR /root/
 ENV CLOUD_ARCH amd64
@@ -14,5 +14,8 @@ RUN apk update
 RUN apk --no-cache add curl ca-certificates libdrm
 RUN chmod +x /download_kubeedge.sh;
 RUN /download_kubeedge.sh ${CLOUD_ARCH}
+
+FROM alpine:3.11 as server
+COPY --from=0 /usr/local/bin/cloudcore /usr/local/bin
 
 CMD ["cloudcore --config /etc/kubeedge/config/cloudcore.yaml > /var/log/kubeedge/cloudcore.log 2>&1"]
