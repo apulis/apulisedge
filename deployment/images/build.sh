@@ -1,38 +1,48 @@
 # ===
+# === ENV variables
+# ===
+DOCKERFILE_DIR=deployment/images/
+APULISEDGE_AGENT_DOCKERFLE=Dockerfile-apulisEdgeAgent
+APULISEDGE_CLOUD_DOCKERFLE=Dockerfile-apulisEdgeCloud
+KUBEEDGE_EDGE_DOCKERFLE=Dockerfile-kubeedgeEdge
+KUBEEDGE_CLOUD_DOCKERFLE=Dockerfile-kubeedgeCloud
+
+
+# ===
 # === function statement
 # ===
-buildAgentDocer()
+buildAll()
 {
-    
+    buildAgent
+    buildCloud
+    buildKubeedgeEdge
+    buildKubeedgeCloud
 }
 
-buildCloudDocer()
+buildAgent()
 {
+    docker build . -f ${DOCKERFILE_DIR}/${APULISEDGE_AGENT_DOCKERFLE} -t apulis/apulisedge-agent:1.0
+}
 
+buildCloud()
+{
+    docker build . -f ${DOCKERFILE_DIR}/${APULISEDGE_CLOUD_DOCKERFLE} -t apulis/apulisedge-cloud:1.0
+}
+
+buildKubeedgeEdge()
+{
+    docker build . -f ${DOCKERFILE_DIR}/${KUBEEDGE_EDGE_DOCKERFLE} -t apulis/kubeedge-edge:1.0
+}
+
+buildKubeedgeCloud()
+{
+    docker build . -f ${DOCKERFILE_DIR}/${KUBEEDGE_CLOUD_DOCKERFLE} -t apulis/kubeedge-cloud:1.0
 }
 
 main()
 {
-    case "$1" in
-        cloud)
-        SERVER_DOMAIN="$2"
-        shift;
-        shift;
-        ;;
-        agent)
-        APULISEDGE_IMAGE="$2"
-        shift;
-        shift;
-        ;;
-        --)
-        shift
-        break
-        ;;
-        *)
-        printf "ERROR: did not recognize option '%s'\\n" "$1"
-        exit 1
-        ;;
-    esac
+    cd ../..
+    $1 $2
 }
 
 
