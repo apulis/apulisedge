@@ -15,7 +15,7 @@ RUN mkdir -p /etc/kubeedge
 RUN chmod +x /download_kubeedge.sh;
 RUN /download_kubeedge.sh ${EDGE_ARCH}
 
-FROM alpine:3.11 as server
+FROM ubuntu:18.04 as server
 COPY --from=0 /usr/local/bin/cloudcore /usr/local/bin
 
 CMD ["edgecore --config /etc/kubeedge/config/edgecore.yaml > /var/log/kubeedge/edgecore.log 2>&1"]
