@@ -1,5 +1,5 @@
 portal:
-  nodeCheckerInterval: 5
+  nodeCheckerInterval: 10
   http:
     address: 0.0.0.0
     enable: true

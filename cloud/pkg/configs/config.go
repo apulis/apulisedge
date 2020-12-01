@@ -8,10 +8,11 @@ import (
 )
 
 type EdgeCloudConfig struct {
-	Portal   PortalConfig
-	CloudHub CloudHubConfig
-	Log      LogConfig
-	Db       DbConfig
+	DebugModel bool
+	Portal     PortalConfig
+	CloudHub   CloudHubConfig
+	Log        LogConfig
+	Db         DbConfig
 }
 
 type HttpConfig struct {
@@ -53,6 +54,10 @@ type DbConfig struct {
 
 func InitConfig(configFile string, config *EdgeCloudConfig) {
 	viper.SetConfigFile(configFile)
+
+	// set default
+	viper.SetDefault("DebugModel", false)
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error read config file: %s \n", err))

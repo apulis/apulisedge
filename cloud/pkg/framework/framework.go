@@ -4,12 +4,12 @@ package framework
 
 import (
 	"context"
-	"github.com/apulis/ApulisEdge/cloud/configs"
-	"github.com/apulis/ApulisEdge/cloud/database"
-	"github.com/apulis/ApulisEdge/cloud/loggers"
-	nodeentity "github.com/apulis/ApulisEdge/cloud/node/entity"
-	nodeservice "github.com/apulis/ApulisEdge/cloud/node/service"
-	"github.com/apulis/ApulisEdge/cloud/servers/httpserver"
+	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
+	"github.com/apulis/ApulisEdge/cloud/pkg/database"
+	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/node/entity"
+	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/node/service"
+	"github.com/apulis/ApulisEdge/cloud/pkg/servers/httpserver"
 	"github.com/urfave/cli/v2"
 	"os"
 	"os/signal"
@@ -86,7 +86,7 @@ func (app *CloudApp) MainLoop() error {
 	app.InitTables()
 
 	// init ticker
-	go nodeservice.CreateNodeCheckLoop(app.tickerCtx, app.cloudConfig.Portal.NodeCheckerInterval)
+	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
 
 	// quit when signal notifys
 	quit := make(chan os.Signal)

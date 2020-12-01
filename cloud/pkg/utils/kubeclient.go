@@ -4,7 +4,7 @@ package utils
 
 import (
 	"context"
-	"github.com/apulis/ApulisEdge/cloud/loggers"
+	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -50,12 +50,12 @@ func GetNodeClient() typedv1.NodeInterface {
 
 func ListNodes() (result *v1.NodeList, err error) {
 	nodeClient := GetNodeClient()
-	result, err = nodeClient.List(context.TODO(), metav1.ListOptions{})
+	result, err = nodeClient.List(context.Background(), metav1.ListOptions{})
 	return result, err
 }
 
 func DescribeNode(name string) (result *v1.Node, err error) {
 	nodeClient := GetNodeClient()
-	result, err = nodeClient.Get(context.TODO(), name, metav1.GetOptions{})
+	result, err = nodeClient.Get(context.Background(), name, metav1.GetOptions{})
 	return result, err
 }

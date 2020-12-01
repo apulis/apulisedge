@@ -9,7 +9,7 @@ import (
 	"path"
 	"sync"
 
-	"github.com/apulis/ApulisEdge/cloud/configs"
+	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"github.com/sirupsen/logrus"
 )
 
