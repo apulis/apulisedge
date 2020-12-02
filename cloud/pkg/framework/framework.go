@@ -46,7 +46,8 @@ func (app *CloudApp) Init(appName string, appUsage string) error {
 			Name:        "config",
 			Aliases:     []string{"c"},
 			Usage:       "assign config file `PATH`",
-			Required:    true,
+			Value:       "/etc/apulisedge/cloud/cloud.yaml",
+			EnvVars:     []string{"APULIS_EDGE_CLOUD_CONFIG"},
 			Destination: &app.configFile,
 		},
 	}
