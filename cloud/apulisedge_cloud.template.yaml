@@ -13,7 +13,7 @@ cloudhub:
 
 log:
   # 6: trace, 5: debug, 4: info
-  level: 5
+  level: 4
   writefile: true
   filedir: logs
   filename: apulis_edge_cloud.log

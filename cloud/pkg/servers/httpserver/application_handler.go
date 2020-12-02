@@ -15,7 +15,7 @@ import (
 func ApplicationHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/application")
 
-	group.POST("/createNode", wrapper(CreateEdgeApplication))
+	group.POST("/createApplication", wrapper(CreateEdgeApplication))
 
 }
 
