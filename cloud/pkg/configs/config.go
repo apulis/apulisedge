@@ -4,14 +4,16 @@ package configs
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 type EdgeCloudConfig struct {
-	Portal   PortalConfig
-	CloudHub CloudHubConfig
-	Log      LogConfig
-	Db       DbConfig
+	DebugModel bool
+	Portal     PortalConfig
+	CloudHub   CloudHubConfig
+	Log        LogConfig
+	Db         DbConfig
 }
 
 type HttpConfig struct {
@@ -21,7 +23,8 @@ type HttpConfig struct {
 }
 
 type PortalConfig struct {
-	Http HttpConfig
+	NodeCheckerInterval int32
+	Http                HttpConfig
 }
 
 type WebsocketConfig struct {
@@ -35,6 +38,7 @@ type CloudHubConfig struct {
 }
 
 type LogConfig struct {
+	Level     logrus.Level
 	WriteFile bool
 	FileDir   string
 	FileName  string
@@ -52,6 +56,10 @@ type DbConfig struct {
 
 func InitConfig(configFile string, config *EdgeCloudConfig) {
 	viper.SetConfigFile(configFile)
+
+	// set default
+	viper.SetDefault("DebugModel", false)
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error read config file: %s \n", err))

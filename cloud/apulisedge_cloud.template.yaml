@@ -1,4 +1,5 @@
 portal:
+  nodeCheckerInterval: 5
   http:
     address: 0.0.0.0
     enable: true
@@ -11,6 +12,8 @@ cloudhub:
     port: 32768
 
 log:
+  # 6: trace, 5: debug, 4: info
+  level: 4
   writefile: true
   filedir: logs
   filename: apulis_edge_cloud.log

@@ -5,7 +5,7 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"github.com/apulis/ApulisEdge/cloud/configs"
+	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"net/http"
 	"time"
 )
@@ -15,7 +15,7 @@ func StartApiServer(config *configs.EdgeCloudConfig) *http.Server {
 	port := config.Portal.Http.Port
 	router := NewRouter()
 
-	logger.Info("ApulisEdgeCloud started, listening and serving HTTP on: ", port)
+	logger.Infof("ApulisEdgeCloud started, listening and serving HTTP on: %d, DebugModel: %t", port, config.DebugModel)
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: router,

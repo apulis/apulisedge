@@ -13,7 +13,14 @@ const (
 	StatusNotInstalled string = "NotInstalled"
 )
 
-//
+// node roles
 const (
-	EdgeRoleKey string = "node-role.kubernetes.io/edge"
+	EdgeRoleKey  string = "node-role.kubernetes.io/edge"
+	AgentRoleKey string = "node-role.kubernetes.io/agent"
+	EdgeRole     string = "edge"
+	AgentRole    string = "agent"
+)
+
+const (
+	TransferCountEach int = 10
 )

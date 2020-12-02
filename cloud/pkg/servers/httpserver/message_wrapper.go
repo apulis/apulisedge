@@ -3,8 +3,8 @@
 package httpserver
 
 import (
-	"github.com/apulis/ApulisEdge/cloud/loggers"
-	proto "github.com/apulis/ApulisEdge/cloud/protocol"
+	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
+	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

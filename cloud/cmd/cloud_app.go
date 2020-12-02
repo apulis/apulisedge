@@ -3,8 +3,8 @@
 package main
 
 import (
-	"github.com/apulis/ApulisEdge/cloud/framework"
-	"github.com/apulis/ApulisEdge/cloud/loggers"
+	"github.com/apulis/ApulisEdge/cloud/pkg/framework"
+	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	"os"
 )
 

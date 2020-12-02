@@ -4,7 +4,7 @@ package utils
 
 import (
 	"context"
-	"github.com/apulis/ApulisEdge/cloud/loggers"
+	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -34,28 +34,38 @@ func KubeConfig() (conf *rest.Config, err error) {
 	return kubeConfig, err
 }
 
-func GetNodeClient() typedv1.NodeInterface {
+func GetNodeClient() (typedv1.NodeInterface, error) {
 	kubeConfig, err := KubeConfig()
 	if err != nil {
 		logger.Error("Failed to create KubeConfig , error : %v", err)
+		return nil, err
 	}
 
 	clientSet, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
 		logger.Error("Failed to create clientset , error : %v", err)
+		return nil, err
 	}
 
-	return clientSet.CoreV1().Nodes()
+	return clientSet.CoreV1().Nodes(), nil
 }
 
 func ListNodes() (result *v1.NodeList, err error) {
-	nodeClient := GetNodeClient()
-	result, err = nodeClient.List(context.TODO(), metav1.ListOptions{})
+	nodeClient, err := GetNodeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err = nodeClient.List(context.Background(), metav1.ListOptions{})
 	return result, err
 }
 
 func DescribeNode(name string) (result *v1.Node, err error) {
-	nodeClient := GetNodeClient()
-	result, err = nodeClient.Get(context.TODO(), name, metav1.GetOptions{})
+	nodeClient, err := GetNodeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err = nodeClient.Get(context.Background(), name, metav1.GetOptions{})
 	return result, err
 }
