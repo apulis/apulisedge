@@ -29,5 +29,6 @@ func NewRouter() *gin.Engine {
 	r.Use(gin.Recovery())
 
 	NodeHandlerRoutes(r)
+	ApplicationHandlerRoutes(r)
 	return r
 }

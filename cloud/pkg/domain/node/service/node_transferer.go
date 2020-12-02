@@ -6,8 +6,8 @@ import (
 	"context"
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
-	constants "github.com/apulis/ApulisEdge/cloud/pkg/node"
-	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/node/entity"
+	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	v1 "k8s.io/api/core/v1"
 	"strings"
@@ -23,7 +23,7 @@ func CreateNodeTickerLoop(ctx context.Context, config *configs.EdgeCloudConfig) 
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Infof("CreateNodeCheckLoop was terminated")
+			logger.Infof("CreateNodeTickerLoop was terminated")
 			return
 		case <-checkTicker.C:
 			NodeTicker(config)
@@ -66,22 +66,22 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 					dbInfo.ID = nodeInfos[i].ID
 					dbInfo.UserId = nodeInfos[i].UserId
 					dbInfo.UserName = nodeInfos[i].UserName
-					dbInfo.Name = nodeInfos[i].Name
+					dbInfo.NodeName = nodeInfos[i].NodeName
 					dbInfo.Status = constants.StatusNotInstalled
 					dbInfo.CreateAt = nodeInfos[i].CreateAt
 					dbInfo.UpdateAt = time.Now()
 					err = nodeentity.UpdateNode(dbInfo)
 					if err != nil {
-						logger.Infof("NodeTicker kick node failed, node = %s, err = %v", dbInfo.Name, err)
+						logger.Infof("NodeTicker kick node failed, node = %s, err = %v", dbInfo.NodeName, err)
 					} else {
-						logger.Infof("NodeTicker kick node succ, node = %s", dbInfo.Name)
+						logger.Infof("NodeTicker kick node succ, node = %s", dbInfo.NodeName)
 					}
 				} else if err == nil && nodeInfos[i].Status == constants.StatusNotInstalled { // install node
 					err = nodeentity.UpdateNode(k8sInfo)
 					if err != nil {
-						logger.Infof("NodeTicker install node failed, node = %s, err = %v", k8sInfo.Name, err)
+						logger.Infof("NodeTicker install node failed, node = %s, err = %v", k8sInfo.NodeName, err)
 					} else {
-						logger.Infof("NodeTicker install node succ, node = %s", k8sInfo.Name)
+						logger.Infof("NodeTicker install node succ, node = %s", k8sInfo.NodeName)
 					}
 				}
 			}
@@ -98,9 +98,9 @@ func GetK8sNodeInfo(dbInfo *nodeentity.NodeBasicInfo) (*nodeentity.NodeBasicInfo
 	var nodeStatus string
 	var roles string
 
-	nodeInfo, err := utils.DescribeNode(dbInfo.Name)
+	nodeInfo, err := utils.DescribeNode(dbInfo.NodeName)
 	if err != nil {
-		logger.Debugf("GetK8sNodeInfo DescribeNode failed. name = %s", dbInfo.Name)
+		logger.Debugf("GetK8sNodeInfo DescribeNode failed. name = %s", dbInfo.NodeName)
 		return nil, err
 	}
 
@@ -139,7 +139,7 @@ func GetK8sNodeInfo(dbInfo *nodeentity.NodeBasicInfo) (*nodeentity.NodeBasicInfo
 		ID:               dbInfo.ID,
 		UserId:           dbInfo.UserId,
 		UserName:         dbInfo.UserName,
-		Name:             nodeInfo.Name,
+		NodeName:         nodeInfo.Name,
 		Status:           nodeStatus,
 		Roles:            roles,
 		ContainerRuntime: nodeInfo.Status.NodeInfo.ContainerRuntimeVersion,

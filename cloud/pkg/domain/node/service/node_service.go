@@ -5,19 +5,19 @@ package nodeservice
 import (
 	"fmt"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
+	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
-	constants "github.com/apulis/ApulisEdge/cloud/pkg/node"
-	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/node/entity"
 	"time"
 )
 
 var logger = loggers.LogInstance()
 
-func CreateEdgeNode(userId int64, userName string, name string) (*nodeentity.NodeBasicInfo, error) {
+func CreateEdgeNode(userId int64, userName string, nodeName string) (*nodeentity.NodeBasicInfo, error) {
 	node := &nodeentity.NodeBasicInfo{
 		UserId:           userId,
 		UserName:         userName,
-		Name:             name,
+		NodeName:         nodeName,
 		Status:           constants.StatusNotInstalled,
 		Roles:            "",
 		ContainerRuntime: "",

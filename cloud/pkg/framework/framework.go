@@ -6,9 +6,10 @@ import (
 	"context"
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"github.com/apulis/ApulisEdge/cloud/pkg/database"
+	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
-	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/node/entity"
-	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/node/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/servers/httpserver"
 	"github.com/urfave/cli/v2"
 	"os"
@@ -120,4 +121,5 @@ func (app *CloudApp) InitDatabase() {
 
 func (app *CloudApp) InitTables() {
 	database.CreateTableIfNotExists(nodeentity.NodeBasicInfo{})
+	database.CreateTableIfNotExists(appentity.ApplicationBasicInfo{})
 }
