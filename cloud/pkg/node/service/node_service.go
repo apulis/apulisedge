@@ -13,9 +13,10 @@ import (
 
 var logger = loggers.LogInstance()
 
-func CreateEdgeNode(userId int64, name string) (*nodeentity.NodeBasicInfo, error) {
+func CreateEdgeNode(userId int64, userName string, name string) (*nodeentity.NodeBasicInfo, error) {
 	node := &nodeentity.NodeBasicInfo{
 		UserId:           userId,
+		UserName:         userName,
 		Name:             name,
 		Status:           constants.StatusNotInstalled,
 		Roles:            "",

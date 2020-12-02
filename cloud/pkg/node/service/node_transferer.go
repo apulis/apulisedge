@@ -65,6 +65,7 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 					logger.Infof("NodeTicker get k8sNodeInfo failed, so kick it. err = %v", err)
 					dbInfo.ID = nodeInfos[i].ID
 					dbInfo.UserId = nodeInfos[i].UserId
+					dbInfo.UserName = nodeInfos[i].UserName
 					dbInfo.Name = nodeInfos[i].Name
 					dbInfo.Status = constants.StatusNotInstalled
 					dbInfo.CreateAt = nodeInfos[i].CreateAt
@@ -137,6 +138,7 @@ func GetK8sNodeInfo(dbInfo *nodeentity.NodeBasicInfo) (*nodeentity.NodeBasicInfo
 	k8sInfo := &nodeentity.NodeBasicInfo{
 		ID:               dbInfo.ID,
 		UserId:           dbInfo.UserId,
+		UserName:         dbInfo.UserName,
 		Name:             nodeInfo.Name,
 		Status:           nodeStatus,
 		Roles:            roles,

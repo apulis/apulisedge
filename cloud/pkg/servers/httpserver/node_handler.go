@@ -22,8 +22,8 @@ func NodeHandlerRoutes(r *gin.Engine) {
 
 // Create edge node
 type CreateEdgeNodeReq struct {
-	proto.ApulisHeader
-	NodeName string `json:"nodeName"`
+	proto.ApulisHeader `mapstructure:",squash"`
+	NodeName           string `json:"nodeName"`
 }
 
 type CreateEdgeNodesRsp struct {
@@ -32,9 +32,9 @@ type CreateEdgeNodesRsp struct {
 
 // List edge nodes
 type ListEdgeNodesReq struct {
-	proto.ApulisHeader
-	PageNum  int `json:"pageNum"`
-	PageSize int `json:"pageSize"`
+	proto.ApulisHeader `mapstructure:",squash"`
+	PageNum            int `json:"pageNum"`
+	PageSize           int `json:"pageSize"`
 }
 
 type ListEdgeNodesRsp struct {
@@ -44,8 +44,8 @@ type ListEdgeNodesRsp struct {
 
 // Describe edge node proto
 type DescribeEdgeNodesReq struct {
-	proto.ApulisHeader
-	NodeName string `json:"nodeName"`
+	proto.ApulisHeader `mapstructure:",squash"`
+	NodeName           string `json:"nodeName"`
 }
 
 type DescribeEdgeNodesRsp struct {
@@ -70,7 +70,7 @@ func CreateEdgeNode(c *gin.Context) error {
 	// TODO validate reqContent
 
 	// create node
-	node, err = nodeservice.CreateEdgeNode(reqContent.UserId, reqContent.NodeName)
+	node, err = nodeservice.CreateEdgeNode(reqContent.UserId, reqContent.UserName, reqContent.NodeName)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}

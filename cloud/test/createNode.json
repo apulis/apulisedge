@@ -8,6 +8,8 @@
     "operation": "insert"
   },
   "content": {
+    "userId": 0,
+    "userName": "test",
     "nodeName": "master"
   }
 }
