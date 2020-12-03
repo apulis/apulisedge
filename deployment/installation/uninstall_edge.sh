@@ -33,11 +33,13 @@ doubleCheck()
 stopEdgecore()
 {
     containerID=`docker ps | grep ${KUBEEDGE_EDGE_IMAGE} | awk '{print $1}'`
-    docker stop ${containerID}
+    if [[ "$containerID" != "" ]]; then
+        docker stop ${containerID}
+    fi
     # with multi times system restart, there might be couple stop containers
-    for containerIDs in `docker ps -a | grep ${KUBEEDGE_EDGE_IMAGE} | awk '{print $1}'`
+    for stopedContainerID in `docker ps -a | grep ${KUBEEDGE_EDGE_IMAGE} | awk '{print $1}'`
     do
-        docker rm ${containerID}
+        docker rm ${stopedContainerID}
     done
 }
 
