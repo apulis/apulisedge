@@ -2,6 +2,7 @@
 # ===
 # === ENV variables
 # ===
+. /opt/apulisedge/install_edge.sh --source-only
 
 
 # ===
@@ -73,5 +74,4 @@ main()
 # ===
 # === main code start here
 # ===
-. /opt/apulisedge/install_edge.sh --source-only
 main "$@"
