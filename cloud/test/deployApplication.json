@@ -11,12 +11,12 @@
     "userId": 0,
     "userName": "test",
     "appName": "nginx",
-    "archType": 1,
-    "Version": "1.0",
-    "ContainerImage": "nginx",
-    "ContainerImageVersion": "1.9",
-    "ContainerImagePath": "ccr.ccs.tencentyun.com/qcloud/nginx:1.9",
-    "CpuQuota": 1.0,
-    "MemoryQuota": 256
+    "nodeName": "lab1",
+    "namespaceName": "default",
+    "containerPort": 80,
+    "portMapping": {
+      "enable": false,
+      "hostPort": 0
+    }
   }
 }

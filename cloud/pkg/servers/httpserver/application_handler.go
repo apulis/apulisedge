@@ -16,6 +16,7 @@ func ApplicationHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/application")
 
 	group.POST("/createApplication", wrapper(CreateEdgeApplication))
+	group.POST("/deployApplication", wrapper(DeployEdgeApplication))
 
 }
 
@@ -36,7 +37,7 @@ func CreateEdgeApplication(c *gin.Context) error {
 
 	// TODO validate reqContent
 
-	// create node
+	// create application
 	app, err = appservice.CreateEdgeApplication(&reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
@@ -45,5 +46,31 @@ func CreateEdgeApplication(c *gin.Context) error {
 	data := appmodule.CreateEdgeApplicationRsp{
 		Application: app,
 	}
+
 	return SuccessResp(c, &req, data)
+}
+
+// deploy edge application
+func DeployEdgeApplication(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent appmodule.DeployEdgeApplicationReq
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// TODO validate reqContent
+
+	// deploy application
+	err = appservice.DeployEdgeApplication(&reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	return SuccessResp(c, &req, "OK")
 }

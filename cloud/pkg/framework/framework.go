@@ -7,6 +7,7 @@ import (
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"github.com/apulis/ApulisEdge/cloud/pkg/database"
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
+	applicationservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/service"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
@@ -89,6 +90,7 @@ func (app *CloudApp) MainLoop() error {
 
 	// init ticker
 	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
+	go applicationservice.CreateApplicationTickerLoop(app.tickerCtx, &app.cloudConfig)
 
 	// quit when signal notifys
 	quit := make(chan os.Signal)
@@ -122,4 +124,5 @@ func (app *CloudApp) InitDatabase() {
 func (app *CloudApp) InitTables() {
 	database.CreateTableIfNotExists(nodeentity.NodeBasicInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationBasicInfo{})
+	database.CreateTableIfNotExists(appentity.ApplicationDeployInfo{})
 }

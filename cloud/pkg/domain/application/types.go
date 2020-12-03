@@ -11,3 +11,14 @@ const (
 	StatusUnPublished string = "UnPublished"
 	StatusPublished   string = "Published"
 )
+
+// deploy status
+const (
+	StatusInit      string = "Init"
+	StatusDeploying string = "Deploying"
+	StatusRunning   string = "Running"
+)
+
+const (
+	TransferCountEach int = 10
+)

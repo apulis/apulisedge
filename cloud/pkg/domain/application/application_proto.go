@@ -23,3 +23,21 @@ type CreateEdgeApplicationReq struct {
 type CreateEdgeApplicationRsp struct {
 	Application *appentity.ApplicationBasicInfo `json:"application"`
 }
+
+// Deploy edge application
+type DeployEdgeApplicationReq struct {
+	proto.ApulisHeader `mapstructure:",squash"`
+	AppName            string `json:"appName"`
+	NodeName           string `json:"nodeName"`
+	NamespaceName      string `json:"namespaceName"`
+	Version            string `json:"version"`
+	RestartPolicy      int    `json:"restartPolicy"`
+	ContainerPort      int    `json:"containerPort"`
+	PortMapping        struct {
+		Enable   bool `json:"enable"`
+		HostPort int  `json:"hostPort"`
+	} `json:"portMapping"`
+}
+
+type DeployEdgeApplicationRsp struct {
+}

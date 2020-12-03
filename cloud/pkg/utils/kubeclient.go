@@ -8,7 +8,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	appsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -34,7 +35,7 @@ func KubeConfig() (conf *rest.Config, err error) {
 	return kubeConfig, err
 }
 
-func GetNodeClient() (typedv1.NodeInterface, error) {
+func GetNodeClient() (corev1.NodeInterface, error) {
 	kubeConfig, err := KubeConfig()
 	if err != nil {
 		logger.Error("Failed to create KubeConfig , error : %v", err)
@@ -48,6 +49,22 @@ func GetNodeClient() (typedv1.NodeInterface, error) {
 	}
 
 	return clientSet.CoreV1().Nodes(), nil
+}
+
+func GetDeploymentClient(namespace string) (appsv1.DeploymentInterface, error) {
+	kubeConfig, err := KubeConfig()
+	if err != nil {
+		logger.Error("Failed to create KubeConfig , error : %v", err)
+		return nil, err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(kubeConfig)
+	if err != nil {
+		logger.Error("Failed to create clientset , error : %v", err)
+		return nil, err
+	}
+
+	return clientSet.AppsV1().Deployments(namespace), nil
 }
 
 func ListNodes() (result *v1.NodeList, err error) {
