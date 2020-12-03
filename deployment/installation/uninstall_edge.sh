@@ -15,7 +15,7 @@ doubleCheck()
     printf "Is it right to continue? [y/N(default)] >>>"
 
 	read -r ans
-	while [ "$ans" != "y" ] && [ "$ans" != "N" ]
+	while [ "$ans" != "y" ] && [ "$ans" != "N" ] && [ "$ans" != "N" ]
 	do
 		printf "Please answer 'y' or 'N':'\\n"
 		printf ">>> "
