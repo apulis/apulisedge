@@ -18,7 +18,7 @@ type ApplicationBasicInfo struct {
 	UserId                int64     `gorm:"uniqueIndex:user_app;column:UserId;not null"           json:"userId" binding:"required"`
 	UserName              string    `gorm:"column:UserName;size:255;not null"                     json:"userName" binding:"required"`
 	ArchType              int       `gorm:"column:ArchType;not null"                              json:"archType" binding:"required"`
-	Version               string    `gorm:"column:Version;size:255;not null"                      json:"version" binding:"required"`
+	Version               string    `gorm:"uniqueIndex:user_app;column:Version;size:255;not null" json:"version" binding:"required"`
 	ContainerImage        string    `gorm:"column:containerImage;size:255;not null"               json:"containerImage" binding:"required"`
 	ContainerImageVersion string    `gorm:"column:containerImageVersion;size:255;not null"        json:"containerImageVersion" binding:"required"`
 	ContainerImagePath    string    `gorm:"column:containerImagePath;size:255;not null"           json:"containerImagePath" binding:"required"`
@@ -32,6 +32,15 @@ func (ApplicationBasicInfo) TableName() string {
 	return TableApplicationBasicInfo
 }
 
+func GetApplication(userId int64, appName string, version string) (*ApplicationBasicInfo, error) {
+	appInfo := ApplicationBasicInfo{UserId: userId, AppName: appName, Version: version}
+	res := apulisdb.Db.First(&appInfo)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return &appInfo, nil
+}
+
 func CreateApplication(appInfo *ApplicationBasicInfo) error {
 	return apulisdb.Db.Create(appInfo).Error
 }
@@ -40,4 +49,6 @@ func UpdateApplication(appInfo *ApplicationBasicInfo) error {
 	return apulisdb.Db.Save(appInfo).Error
 }
 
-// TODO delete app
+func DeleteApplication(appInfo *ApplicationBasicInfo) error {
+	return apulisdb.Db.Delete(appInfo).Error
+}

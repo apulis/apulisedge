@@ -25,6 +25,8 @@ type CloudApp struct {
 	internalApp      *cli.App
 	flags            []cli.Flag
 	configFile       string
+	kubeConfFile     string
+	kubeMaster       string
 	cloudConfig      configs.EdgeCloudConfig
 	tickerCancelFunc context.CancelFunc
 	tickerCtx        context.Context
@@ -44,6 +46,14 @@ func CloudAppInstance() *CloudApp {
 
 func (app *CloudApp) Init(appName string, appUsage string) error {
 	app.flags = []cli.Flag{
+		&cli.StringFlag{
+			Name:        "config",
+			Aliases:     []string{"c"},
+			Usage:       "assign config file `PATH`",
+			Value:       "/etc/apulisedge/cloud/cloud.yaml",
+			EnvVars:     []string{"APULIS_EDGE_CLOUD_CONFIG"},
+			Destination: &app.configFile,
+		},
 		&cli.StringFlag{
 			Name:        "config",
 			Aliases:     []string{"c"},

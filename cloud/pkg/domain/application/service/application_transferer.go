@@ -17,6 +17,16 @@ import (
 	"time"
 )
 
+type statusHandler func(appDeployInfo *applicationentity.ApplicationDeployInfo)
+
+// status transfer
+var statusHandlerMap = map[string]statusHandler{
+	constants.StatusInit:      handleStatusInit,
+	constants.StatusDeploying: handleStatusDeploying,
+	constants.StatusRunning:   handleStatusRunning,
+	constants.StatusDeleting:  handleStatusDeleting,
+}
+
 // CreateNodeCheckLoop transferer of edge application status
 func CreateApplicationTickerLoop(ctx context.Context, config *configs.EdgeCloudConfig) {
 	duration := time.Duration(config.Portal.ApplicationCheckerInterval) * time.Second
@@ -40,7 +50,6 @@ func ApplicationTicker(config *configs.EdgeCloudConfig) {
 	var totalTmp int64
 	var total int
 	offset := 0
-	var err error
 
 	apulisdb.Db.Model(&applicationentity.ApplicationDeployInfo{}).Count(&totalTmp)
 	total = int(totalTmp)
@@ -59,33 +68,80 @@ func ApplicationTicker(config *configs.EdgeCloudConfig) {
 		} else {
 			for i := 0; i < int(res.RowsAffected); i++ {
 				logger.Debugf("ApplicationTicker handle application = %v", appDeployInfos[i])
-				if appDeployInfos[i].Status == constants.StatusInit {
-					// first: update status
-					appDeployInfos[i].Status = constants.StatusDeploying
-					appDeployInfos[i].UpdateAt = time.Now()
-					err = applicationentity.UpdateAppDeploy(&appDeployInfos[i])
-					if err != nil {
-						logger.Infof("update deployment failed when deploying!")
-						continue
-					}
-
-					// second: deploy to k8s
-					err = CreateK8sDeployment(&appDeployInfos[i])
-					if err != nil {
-						logger.Infof("create deployment failed! err = %v", err)
-						continue
-					}
-
-					logger.Infof("create deployment succ! status to %s", constants.StatusDeploying)
-				} else if appDeployInfos[i].Status == constants.StatusDeploying {
-					// TODO check deployment status, if ok, transfer to StatusRunning; if failed, retry
-				}
+				statusHandlerMap[appDeployInfos[i].Status](&appDeployInfos[i])
 			}
 		}
 
 		offset += constants.TransferCountEach
 		total -= constants.TransferCountEach
 	}
+}
+
+func handleStatusInit(appDeployInfo *applicationentity.ApplicationDeployInfo) {
+	// first: update status
+	appDeployInfo.Status = constants.StatusDeploying
+	appDeployInfo.UpdateAt = time.Now()
+	err := applicationentity.UpdateAppDeploy(appDeployInfo)
+	if err != nil {
+		logger.Infof("update deployment failed when deploying!")
+		return
+	}
+
+	// second: deploy to k8s
+	err = CreateK8sDeployment(appDeployInfo)
+	if err != nil {
+		logger.Infof("create deployment failed! err = %v", err)
+		return
+	}
+
+	logger.Infof("create deployment succ! status to %s", constants.StatusDeploying)
+}
+
+func handleStatusDeploying(appDeployInfo *applicationentity.ApplicationDeployInfo) {
+	// check deployment status, if ok, transfer to StatusRunning; if failed, retry
+	deploy, err := GetK8sDeployment(appDeployInfo)
+	if err != nil { // if failed, try next time
+		return
+	}
+
+	// TODO add replicas to db info
+	if deploy.Status.ReadyReplicas == 1 {
+		appDeployInfo.Status = constants.StatusRunning
+		appDeployInfo.UpdateAt = time.Now()
+		err := applicationentity.UpdateAppDeploy(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusDeploying update deployment failed!")
+		}
+	}
+}
+
+func handleStatusRunning(appDeployInfo *applicationentity.ApplicationDeployInfo) {
+
+}
+
+func handleStatusDeleting(appDeployInfo *applicationentity.ApplicationDeployInfo) {
+	// first: undeploy to k8s
+	_, err := GetK8sDeployment(appDeployInfo)
+	if err != nil { // if failed, try next time
+		// metav1.StatusReasonNotFound
+		logger.Infof("handleStatusDeleting, GetK8sDeployment err, err = %v", err)
+		return
+	}
+
+	err = DeleteK8sDeployment(appDeployInfo)
+	if err != nil { // if failed, try next time
+		return
+	}
+
+	// second: db record delete
+	err = applicationentity.DeleteAppDeploy(appDeployInfo)
+	if err == nil {
+		logger.Infof("handleStatusDeleting, DeleteAppDeploy err, err = %v", err)
+	}
+}
+
+func deploymentName(appName string, userId int64) string {
+	return appName + "-" + strconv.FormatInt(userId, 10) + "-" + "deployment"
 }
 
 func CreateK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error {
@@ -96,7 +152,7 @@ func CreateK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error 
 
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: dbInfo.AppName + "-" + strconv.FormatInt(dbInfo.UserId, 10) + "-" + "deployment", // deployment名字
+			Name: deploymentName(dbInfo.AppName, dbInfo.UserId), // deployment名字
 		},
 		Spec: v1.DeploymentSpec{
 			Replicas: pointer.Int32Ptr(1), // 指定副本数
@@ -137,4 +193,27 @@ func CreateK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error 
 	}
 
 	return nil
+}
+
+func GetK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) (*v1.Deployment, error) {
+	deployClient, err := utils.GetDeploymentClient(dbInfo.Namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	deploy, err := deployClient.Get(context.Background(), deploymentName(dbInfo.AppName, dbInfo.UserId), metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return deploy, nil
+}
+
+func DeleteK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error {
+	deployClient, err := utils.GetDeploymentClient(dbInfo.Namespace)
+	if err != nil {
+		return err
+	}
+
+	return deployClient.Delete(context.Background(), deploymentName(dbInfo.AppName, dbInfo.UserId), metav1.DeleteOptions{})
 }

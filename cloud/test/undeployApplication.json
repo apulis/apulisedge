@@ -5,18 +5,13 @@
     "source": "portal"
   },
   "route": {
-    "operation": "insert"
+    "operation": "delete"
   },
   "content": {
     "userId": 0,
     "userName": "test",
     "appName": "nginx",
     "nodeName": "lab1",
-    "namespaceName": "default",
-    "containerPort": 80,
-    "portMapping": {
-      "enable": false,
-      "hostPort": 0
-    }
+    "version": "1.0"
   }
 }

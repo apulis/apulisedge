@@ -17,6 +17,7 @@ const (
 	StatusInit      string = "Init"
 	StatusDeploying string = "Deploying"
 	StatusRunning   string = "Running"
+	StatusDeleting  string = "Deleting"
 )
 
 const (

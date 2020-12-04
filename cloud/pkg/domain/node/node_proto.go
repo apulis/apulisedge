@@ -38,3 +38,12 @@ type DescribeEdgeNodesReq struct {
 type DescribeEdgeNodesRsp struct {
 	Node *nodeentity.NodeBasicInfo `json:"node"`
 }
+
+// Delete edge node
+type DeleteEdgeNodeReq struct {
+	proto.ApulisHeader `mapstructure:",squash"`
+	NodeName           string `json:"nodeName"`
+}
+
+type DeleteEdgeNodeRsp struct {
+}

@@ -45,4 +45,6 @@ func UpdateAppDeploy(deployInfo *ApplicationDeployInfo) error {
 	return apulisdb.Db.Save(deployInfo).Error
 }
 
-// TODO delete deploy
+func DeleteAppDeploy(deployInfo *ApplicationDeployInfo) error {
+	return apulisdb.Db.Delete(deployInfo).Error
+}

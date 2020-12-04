@@ -5,18 +5,12 @@
     "source": "portal"
   },
   "route": {
-    "operation": "insert"
+    "operation": "query"
   },
   "content": {
     "userId": 0,
     "userName": "test",
-    "appName": "nginx",
-    "nodeName": "lab1",
-    "namespaceName": "default",
-    "containerPort": 80,
-    "portMapping": {
-      "enable": false,
-      "hostPort": 0
-    }
+    "pageNum": 0,
+    "pageSize": 100
   }
 }

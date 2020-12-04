@@ -5,7 +5,10 @@ package nodeservice
 import (
 	"fmt"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
+	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
+	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
+	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	"time"
@@ -49,7 +52,7 @@ func ListEdgeNodes(userId int64, offset int, limit int) (*[]nodeentity.NodeBasic
 func DescribeEdgeNode(userId int64, nodeName string) (*nodeentity.NodeBasicInfo, error) {
 	var nodeInfo nodeentity.NodeBasicInfo
 
-	whereQueryStr := fmt.Sprintf("UserId = '%s' and Name = '%s'", userId, nodeName)
+	whereQueryStr := fmt.Sprintf("UserId = '%s' and NodeName = '%s'", userId, nodeName)
 	res := apulisdb.Db.Where(whereQueryStr).First(&nodeInfo)
 
 	if res.Error != nil {
@@ -57,4 +60,29 @@ func DescribeEdgeNode(userId int64, nodeName string) (*nodeentity.NodeBasicInfo,
 	}
 
 	return &nodeInfo, nil
+}
+
+// delete edge node
+func DeleteEdgeNode(req *nodemodule.DeleteEdgeNodeReq) error {
+	// first: check if any deploy exist
+	var total int64
+	whereQueryStr := fmt.Sprintf("UserId = '%s' and NodeName = '%s'", req.UserId, req.NodeName)
+	apulisdb.Db.Model(&appentity.ApplicationDeployInfo{}).Where(whereQueryStr).Count(&total)
+	if total != 0 {
+		return appmodule.ErrDeployExist
+	}
+
+	// second: check if any node exist
+	whereQueryStr = fmt.Sprintf("UserId = '%s' and NodeName = '%s'", req.UserId, req.NodeName)
+	apulisdb.Db.Model(&nodeentity.NodeBasicInfo{}).Where(whereQueryStr).Count(&total)
+	if total != 0 {
+		return nodemodule.ErrNodeExist
+	}
+
+	nodeInfo, err := nodeentity.GetNode(req.UserId, req.NodeName)
+	if err != nil {
+		return err
+	}
+
+	return nodeentity.DeleteNode(nodeInfo)
 }

@@ -16,9 +16,9 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/node")
 
 	group.POST("/createNode", wrapper(CreateEdgeNode))
-	group.POST("/listNodes", wrapper(ListEdgeNodes))
+	group.POST("/listNode", wrapper(ListEdgeNodes))
 	group.POST("/desNode", wrapper(DescribeEgeNode))
-
+	group.POST("/deleteNode", wrapper(DeleteEdgeNode))
 }
 
 // create edge node
@@ -108,4 +108,29 @@ func DescribeEgeNode(c *gin.Context) error {
 		Node: nodeInfo,
 	}
 	return SuccessResp(c, &req, data)
+}
+
+// delete edge node
+func DeleteEdgeNode(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent nodemodule.DeleteEdgeNodeReq
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// TODO validate reqContent
+
+	// delete application
+	err = nodeservice.DeleteEdgeNode(&reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	return SuccessResp(c, &req, "OK")
 }

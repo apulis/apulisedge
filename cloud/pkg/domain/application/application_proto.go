@@ -7,6 +7,18 @@ import (
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 )
 
+// List edge application
+type ListEdgeApplicationReq struct {
+	proto.ApulisHeader `mapstructure:",squash"`
+	PageNum            int `json:"pageNum"`
+	PageSize           int `json:"pageSize"`
+}
+
+type ListEdgeApplicationRsp struct {
+	Total int
+	Apps  *[]appentity.ApplicationBasicInfo `json:"apps"`
+}
+
 // Create edge application
 type CreateEdgeApplicationReq struct {
 	proto.ApulisHeader    `mapstructure:",squash"`
@@ -22,6 +34,30 @@ type CreateEdgeApplicationReq struct {
 
 type CreateEdgeApplicationRsp struct {
 	Application *appentity.ApplicationBasicInfo `json:"application"`
+}
+
+// Delete edge application
+type DeleteEdgeApplicationReq struct {
+	proto.ApulisHeader `mapstructure:",squash"`
+	AppName            string `json:"appName"`
+	Version            string `json:"version"`
+}
+
+type DeleteEdgeApplicationRsp struct {
+}
+
+// List edge application
+type ListEdgeAppDeployReq struct {
+	proto.ApulisHeader `mapstructure:",squash"`
+	AppName            string `json:"appName"`
+	Version            string `json:"version"`
+	PageNum            int    `json:"pageNum"`
+	PageSize           int    `json:"pageSize"`
+}
+
+type ListEdgeAppDeployRsp struct {
+	Total      int
+	AppDeploys *[]appentity.ApplicationDeployInfo `json:"appDeploys"`
 }
 
 // Deploy edge application
@@ -40,4 +76,15 @@ type DeployEdgeApplicationReq struct {
 }
 
 type DeployEdgeApplicationRsp struct {
+}
+
+// undeploy edge application
+type UnDeployEdgeApplicationReq struct {
+	proto.ApulisHeader `mapstructure:",squash"`
+	AppName            string `json:"appName"`
+	NodeName           string `json:"nodeName"`
+	Version            string `json:"version"`
+}
+
+type UnDeployEdgeApplicationRsp struct {
 }
