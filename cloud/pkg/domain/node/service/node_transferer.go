@@ -100,7 +100,7 @@ func GetK8sNodeInfo(dbInfo *nodeentity.NodeBasicInfo) (*nodeentity.NodeBasicInfo
 
 	nodeInfo, err := utils.DescribeNode(dbInfo.NodeName)
 	if err != nil {
-		logger.Debugf("GetK8sNodeInfo DescribeNode failed. name = %s", dbInfo.NodeName)
+		logger.Debugf("GetK8sNodeInfo DescribeNode failed. name = %s, err = %v", dbInfo.NodeName, err)
 		return nil, err
 	}
 
