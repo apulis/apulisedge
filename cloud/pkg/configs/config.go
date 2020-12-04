@@ -9,11 +9,13 @@ import (
 )
 
 type EdgeCloudConfig struct {
-	DebugModel bool
-	Portal     PortalConfig
-	CloudHub   CloudHubConfig
-	Log        LogConfig
-	Db         DbConfig
+	DebugModel   bool
+	Portal       PortalConfig
+	CloudHub     CloudHubConfig
+	Log          LogConfig
+	Db           DbConfig
+	KubeConfFile string
+	KubeMaster   string
 }
 
 type HttpConfig struct {

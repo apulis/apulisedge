@@ -14,7 +14,7 @@ cloudhub:
 
 log:
   # 6: trace, 5: debug, 4: info
-  level: 4
+  level: 5
   writefile: true
   filedir: logs
   filename: apulis_edge_cloud.log
@@ -27,3 +27,6 @@ db:
   database: ApulisEdgeCloudDB
   maxopenconns: 10
   maxidleconns: 2
+
+kubemaster: "https://cls-f4x353m8.ccs.tencent-cloud.com"
+KubeConfFile: "/.kube/config"

@@ -12,6 +12,7 @@ import (
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	"github.com/apulis/ApulisEdge/cloud/pkg/servers/httpserver"
+	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	"github.com/urfave/cli/v2"
 	"os"
 	"os/signal"
@@ -25,8 +26,6 @@ type CloudApp struct {
 	internalApp      *cli.App
 	flags            []cli.Flag
 	configFile       string
-	kubeConfFile     string
-	kubeMaster       string
 	cloudConfig      configs.EdgeCloudConfig
 	tickerCancelFunc context.CancelFunc
 	tickerCtx        context.Context
@@ -46,14 +45,6 @@ func CloudAppInstance() *CloudApp {
 
 func (app *CloudApp) Init(appName string, appUsage string) error {
 	app.flags = []cli.Flag{
-		&cli.StringFlag{
-			Name:        "config",
-			Aliases:     []string{"c"},
-			Usage:       "assign config file `PATH`",
-			Value:       "/etc/apulisedge/cloud/cloud.yaml",
-			EnvVars:     []string{"APULIS_EDGE_CLOUD_CONFIG"},
-			Destination: &app.configFile,
-		},
 		&cli.StringFlag{
 			Name:        "config",
 			Aliases:     []string{"c"},
@@ -97,6 +88,9 @@ func (app *CloudApp) MainLoop() error {
 
 	// init tables
 	app.InitTables()
+
+	// init kubeclient
+	utils.InitKubeClient(app.cloudConfig.KubeMaster, app.cloudConfig.KubeConfFile)
 
 	// init ticker
 	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
