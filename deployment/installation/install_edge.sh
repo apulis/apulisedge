@@ -136,6 +136,7 @@ runEdgecore()
     cd ${KUBEEDGE_HOME_PATH}
     # generate edgecore runtime config
     mkdir -p config
+    mkdir -p /var/lib/edged
     LOG_INFO "create edgecore config file..."
     docker run ${KUBEEDGE_EDGE_IMAGE} /bin/bash -c "edgecore --minconfig" | tee config/edgecore.yaml
     sed -i "s#httpServer:\ .*10002#httpServer: https://${SERVER_DOMAIN}:10002#g" config/edgecore.yaml
@@ -152,6 +153,8 @@ runEdgecore()
     --privileged=true \
     --network=host \
     -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /var/lib/edged:/var/lib/edged \
+    -v /var/lib/docker:/var/lib/docker \
     -v ${KUBEEDGE_DATABASES_DIR}:${KUBEEDGE_DATABASES_DIR} \
     -v ${KUBEEDGE_LOG_DIR}:${KUBEEDGE_LOG_DIR} \
     -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH} \
