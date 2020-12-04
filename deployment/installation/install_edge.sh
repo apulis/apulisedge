@@ -4,6 +4,7 @@
 # ===
 # common
 ARCH= # will be init latter
+NODENAME=$(hostname)
 LOG_DIR=/var/log/apulisedge
 INSTALL_LOG_FILE=${LOG_DIR}/installer.log
 SCRIPT_DIR=/opt/apulisedge
@@ -140,6 +141,7 @@ runEdgecore()
     sed -i "s#httpServer:\ .*10002#httpServer: https://${SERVER_DOMAIN}:10002#g" config/edgecore.yaml
     sed -i "s#server:\ .*10001#server: ${SERVER_DOMAIN}:10001#g" config/edgecore.yaml
     sed -i "s#server:\ .*10000#server: ${SERVER_DOMAIN}:10000#g" config/edgecore.yaml
+    sed -i "s#hostnameOverride:\ .*#hostnameOverride:\ ${NODENAME}#g" config/edgecore.yaml
     # run edgecore image
     LOG_INFO "config file generated."
     systemctl enable docker.service
@@ -176,6 +178,16 @@ main()
                 ;;
                 -i)
                 APULISEDGE_IMAGE="$2"
+                shift;
+                shift;
+                ;;
+                -l)
+                KUBEEDGE_EDGE_IMAGE="$2"
+                shift;
+                shift;
+                ;;
+                -h)
+                NODENAME="$2"
                 shift;
                 shift;
                 ;;
