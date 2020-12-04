@@ -3,8 +3,9 @@
 package httpserver
 
 import (
-	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/node/entity"
-	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/node/service"
+	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-playground/validator/v10"
@@ -15,48 +16,16 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/node")
 
 	group.POST("/createNode", wrapper(CreateEdgeNode))
-	group.POST("/listNodes", wrapper(ListEdgeNodes))
+	group.POST("/listNode", wrapper(ListEdgeNodes))
 	group.POST("/desNode", wrapper(DescribeEgeNode))
-
-}
-
-// Create edge node
-type CreateEdgeNodeReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	NodeName           string `json:"nodeName"`
-}
-
-type CreateEdgeNodesRsp struct {
-	Node *nodeentity.NodeBasicInfo `json:"node"`
-}
-
-// List edge nodes
-type ListEdgeNodesReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	PageNum            int `json:"pageNum"`
-	PageSize           int `json:"pageSize"`
-}
-
-type ListEdgeNodesRsp struct {
-	Total int                         `json:"total"`
-	Nodes *[]nodeentity.NodeBasicInfo `json:"nodes"`
-}
-
-// Describe edge node proto
-type DescribeEdgeNodesReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	NodeName           string `json:"nodeName"`
-}
-
-type DescribeEdgeNodesRsp struct {
-	Node *nodeentity.NodeBasicInfo `json:"node"`
+	group.POST("/deleteNode", wrapper(DeleteEdgeNode))
 }
 
 // create edge node
 func CreateEdgeNode(c *gin.Context) error {
 	var err error
 	var req proto.Message
-	var reqContent CreateEdgeNodeReq
+	var reqContent nodemodule.CreateEdgeNodeReq
 	var node *nodeentity.NodeBasicInfo
 
 	if err = c.ShouldBindJSON(&req); err != nil {
@@ -75,7 +44,7 @@ func CreateEdgeNode(c *gin.Context) error {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
 
-	data := CreateEdgeNodesRsp{
+	data := nodemodule.CreateEdgeNodeRsp{
 		Node: node,
 	}
 	return SuccessResp(c, &req, data)
@@ -85,7 +54,7 @@ func CreateEdgeNode(c *gin.Context) error {
 func ListEdgeNodes(c *gin.Context) error {
 	var err error
 	var req proto.Message
-	var reqContent ListEdgeNodesReq
+	var reqContent nodemodule.ListEdgeNodesReq
 	var nodes *[]nodeentity.NodeBasicInfo
 	var total int
 
@@ -105,7 +74,7 @@ func ListEdgeNodes(c *gin.Context) error {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
 
-	data := ListEdgeNodesRsp{
+	data := nodemodule.ListEdgeNodesRsp{
 		Total: total,
 		Nodes: nodes,
 	}
@@ -116,7 +85,7 @@ func ListEdgeNodes(c *gin.Context) error {
 func DescribeEgeNode(c *gin.Context) error {
 	var err error
 	var req proto.Message
-	var reqContent DescribeEdgeNodesReq
+	var reqContent nodemodule.DescribeEdgeNodesReq
 	var nodeInfo *nodeentity.NodeBasicInfo
 
 	if err = c.ShouldBindJSON(&req); err != nil {
@@ -135,8 +104,33 @@ func DescribeEgeNode(c *gin.Context) error {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
 
-	data := DescribeEdgeNodesRsp{
+	data := nodemodule.DescribeEdgeNodesRsp{
 		Node: nodeInfo,
 	}
 	return SuccessResp(c, &req, data)
+}
+
+// delete edge node
+func DeleteEdgeNode(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent nodemodule.DeleteEdgeNodeReq
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// TODO validate reqContent
+
+	// delete application
+	err = nodeservice.DeleteEdgeNode(&reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	return SuccessResp(c, &req, "OK")
 }

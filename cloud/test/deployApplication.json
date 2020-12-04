@@ -10,6 +10,13 @@
   "content": {
     "userId": 0,
     "userName": "test",
-    "nodeName": "lab1"
+    "appName": "nginx",
+    "nodeName": "lab1",
+    "namespaceName": "default",
+    "containerPort": 80,
+    "portMapping": {
+      "enable": false,
+      "hostPort": 0
+    }
   }
 }

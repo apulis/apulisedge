@@ -6,10 +6,13 @@ import (
 	"context"
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"github.com/apulis/ApulisEdge/cloud/pkg/database"
+	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
+	applicationservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/service"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
-	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/node/entity"
-	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/node/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/servers/httpserver"
+	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	"github.com/urfave/cli/v2"
 	"os"
 	"os/signal"
@@ -86,8 +89,12 @@ func (app *CloudApp) MainLoop() error {
 	// init tables
 	app.InitTables()
 
+	// init kubeclient
+	utils.InitKubeClient(app.cloudConfig.KubeMaster, app.cloudConfig.KubeConfFile)
+
 	// init ticker
 	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
+	go applicationservice.CreateApplicationTickerLoop(app.tickerCtx, &app.cloudConfig)
 
 	// quit when signal notifys
 	quit := make(chan os.Signal)
@@ -120,4 +127,6 @@ func (app *CloudApp) InitDatabase() {
 
 func (app *CloudApp) InitTables() {
 	database.CreateTableIfNotExists(nodeentity.NodeBasicInfo{})
+	database.CreateTableIfNotExists(appentity.ApplicationBasicInfo{})
+	database.CreateTableIfNotExists(appentity.ApplicationDeployInfo{})
 }

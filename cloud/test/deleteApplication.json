@@ -5,11 +5,11 @@
     "source": "portal"
   },
   "route": {
-    "operation": "insert"
+    "operation": "delete"
   },
   "content": {
     "userId": 0,
-    "userName": "test",
-    "nodeName": "lab1"
+    "appName": "nginx",
+    "version": "1.0"
   }
 }

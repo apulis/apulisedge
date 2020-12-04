@@ -5,11 +5,12 @@
     "source": "portal"
   },
   "route": {
-    "operation": "insert"
+    "operation": "query"
   },
   "content": {
     "userId": 0,
     "userName": "test",
-    "nodeName": "lab1"
+    "pageNum": 0,
+    "pageSize": 100
   }
 }

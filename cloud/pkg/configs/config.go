@@ -9,11 +9,13 @@ import (
 )
 
 type EdgeCloudConfig struct {
-	DebugModel bool
-	Portal     PortalConfig
-	CloudHub   CloudHubConfig
-	Log        LogConfig
-	Db         DbConfig
+	DebugModel   bool
+	Portal       PortalConfig
+	CloudHub     CloudHubConfig
+	Log          LogConfig
+	Db           DbConfig
+	KubeConfFile string
+	KubeMaster   string
 }
 
 type HttpConfig struct {
@@ -23,8 +25,9 @@ type HttpConfig struct {
 }
 
 type PortalConfig struct {
-	NodeCheckerInterval int32
-	Http                HttpConfig
+	NodeCheckerInterval        int32
+	ApplicationCheckerInterval int32
+	Http                       HttpConfig
 }
 
 type WebsocketConfig struct {
