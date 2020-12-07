@@ -25,15 +25,17 @@ func NewInstance() *EdgeApp {
 }
 
 // Run is the start function
-func Run() error {
-	fmt.Print("app running")
+func (app *EdgeApp) Run() error {
+	fmt.Println("app running")
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	for {
-		time.Sleep(time.Duration(1) * time.Second)
-		fmt.Printf("still running")
-	}
+	go func() {
+		for {
+			time.Sleep(time.Duration(1) * time.Second)
+			fmt.Println("still running")
+		}
+	}()
 	select {
 	case <-quit:
 		fmt.Printf("app quit")
