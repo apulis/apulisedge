@@ -19,7 +19,7 @@ require (
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.6.7 // indirect
 	github.com/urfave/cli/v2 v2.3.0
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
+	golang.org/x/tools/gopls v0.5.5 // indirect
 	gorm.io/driver/mysql v1.0.3
 	gorm.io/gorm v1.20.7
 	k8s.io/api v0.0.0-20200903132205-4352ece35dc9
