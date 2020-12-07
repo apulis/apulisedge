@@ -4,6 +4,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/apulis/ApulisEdge/agent/pkg/app"
+	_ "github.com/apulis/ApulisEdge/agent/pkg/model_service/service"
 	"os"
 )
 
