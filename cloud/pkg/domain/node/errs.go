@@ -7,6 +7,6 @@ import (
 )
 
 var (
-	ErrNodeExist = errors.New("node exist")
-	ErrGetNode   = errors.New("get node err")
+	ErrNodeNotExist = errors.New("node not exist")
+	ErrGetNode      = errors.New("get node err")
 )

@@ -4,6 +4,8 @@ package nodeservice
 
 import (
 	"fmt"
+	"time"
+
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
@@ -11,7 +13,6 @@ import (
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
-	"time"
 )
 
 var logger = loggers.LogInstance()
@@ -75,8 +76,8 @@ func DeleteEdgeNode(req *nodemodule.DeleteEdgeNodeReq) error {
 	// second: check if any node exist
 	whereQueryStr = fmt.Sprintf("UserId = '%s' and NodeName = '%s'", req.UserId, req.NodeName)
 	apulisdb.Db.Model(&nodeentity.NodeBasicInfo{}).Where(whereQueryStr).Count(&total)
-	if total != 0 {
-		return nodemodule.ErrNodeExist
+	if total == 0 {
+		return nodemodule.ErrNodeNotExist
 	}
 
 	nodeInfo, err := nodeentity.GetNode(req.UserId, req.NodeName)
