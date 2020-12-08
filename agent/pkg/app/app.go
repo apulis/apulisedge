@@ -7,25 +7,35 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/urfave/cli"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-var appInstance EdgeApp
+// NewAgentCommand create a new instance of the application
+func NewAgentCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Short: "agent for apulisedge, use with kubeedge",
+		Run: func(cmd *cobra.Command, args []string) {
+			run()
+		},
+	}
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "Print the version number of cobrademo",
+		Long:  `All software has versions. This is cobrademo's`,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("cobrademo version is v1.0")
+		},
+	}
+	cmd.AddCommand(versionCmd)
+	initApp()
 
-// EdgeApp is app instance defination
-type EdgeApp struct {
-	appInstance *cli.App
-	flags       []cli.Flag
-}
-
-// NewInstance create a new instance of the application
-func NewInstance() *EdgeApp {
-
-	return nil
+	return cmd
 }
 
 // Run is the start function
-func (app *EdgeApp) Run() error {
+func run() error {
+	initConfig()
 	fmt.Println("app running")
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -36,6 +46,8 @@ func (app *EdgeApp) Run() error {
 			fmt.Println("still running")
 		}
 	}()
+
+	fmt.Println(viper.Get("server"))
 	select {
 	case <-quit:
 		fmt.Printf("app quit")
@@ -45,4 +57,16 @@ func (app *EdgeApp) Run() error {
 
 func registerModules() error {
 	return nil
+}
+
+func initConfig() {
+	viper.SetConfigFile("/etc/apulisedge/config/config.yaml")
+	if err := viper.ReadInConfig(); err != nil {
+		panic(fmt.Errorf("Fatal error reading config file: %s", err))
+	}
+
+}
+
+func initApp() {
+
 }

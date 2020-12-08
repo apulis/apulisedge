@@ -13,7 +13,8 @@ DESIRE_DOCKER_VERSION=17.06
 KUBEEDGE_LOG_DIR=/var/log/kubeedge
 KUBEEDGE_DATABASES_DIR=/var/lib/kubeedge
 KUBEEDGE_TAR_FILE= # need arch, will be init later
-KUBEEDGE_EDGE_IMAGE=apulis/kubeedge-edge:1.0
+DEFAULT_KUBEEDGE_EDGE_IMAGE=apulis/kubeedge-edge:1.0
+KUBEEDGE_EDGE_IMAGE=${DEFAULT_KUBEEDGE_EDGE_IMAGE}
 KUBEEDGE_HOME_PATH=/etc/kubeedge
 EDGECORE_LOG_FILE=${LOG_DIR}/edgecore.log
 
@@ -131,6 +132,7 @@ runEdgecore()
 {
     LOG_INFO "pulling images..."
     docker pull ${KUBEEDGE_EDGE_IMAGE}
+    docker tag ${KUBEEDGE_EDGE_IMAGE} ${DEFAULT_KUBEEDGE_EDGE_IMAGE}
     LOG_INFO "images ready."
     cd ${KUBEEDGE_HOME_PATH}
     # generate edgecore runtime config

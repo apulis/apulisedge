@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	appUtil := app.NewInstance()
+	command := app.NewAgentCommand()
 
 	// start server
-	err := appUtil.Run()
+	err := command.Execute()
 	if err != nil {
 		fmt.Printf(err.Error())
 	}

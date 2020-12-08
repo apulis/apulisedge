@@ -1,6 +1,0 @@
-server:
-  address:
-  ports:
-  - name:  Port Name
-    port:  Port
-    protocol: TCP
