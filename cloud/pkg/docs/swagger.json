@@ -1,0 +1,13 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "ApulisEdge cloud server.",
+        "title": "ApulisEdge Cloud API",
+        "contact": {},
+        "license": {
+            "name": "Apache 2.0"
+        },
+        "version": "alpha"
+    },
+    "paths": {}
+}

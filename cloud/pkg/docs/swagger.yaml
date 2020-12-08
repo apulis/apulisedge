@@ -1,0 +1,9 @@
+info:
+  contact: {}
+  description: ApulisEdge cloud server.
+  license:
+    name: Apache 2.0
+  title: ApulisEdge Cloud API
+  version: alpha
+paths: {}
+swagger: "2.0"
