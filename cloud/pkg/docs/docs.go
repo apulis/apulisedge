@@ -19,14 +19,250 @@ var doc = `{
         "description": "{{.Description}}",
         "title": "{{.Title}}",
         "contact": {},
-        "license": {
-            "name": "Apache 2.0"
-        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/createNode": {
+            "post": {
+                "description": "create edge node",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "node"
+                ],
+                "summary": "create edge node",
+                "parameters": [
+                    {
+                        "description": "userId:user id, userName: user name",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/node.CreateEdgeNodeReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.APISuccessResp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.CreateEdgeNodeRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.APIErrorResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/listNode": {
+            "post": {
+                "description": "list edge nodes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "node"
+                ],
+                "summary": "list edge nodes",
+                "parameters": [
+                    {
+                        "description": "userId:user id, userName: user name",
+                        "name": "param",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/node.ListEdgeNodesReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "code:0, msg:OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.APISuccessResp"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/node.ListEdgeNodesRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "code:30000, msg:db error",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.APIErrorResp"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "httpserver.APIErrorResp": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "httpserver.APISuccessResp": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "object"
+                },
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "node.CreateEdgeNodeReq": {
+            "type": "object",
+            "properties": {
+                "nodeName": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "node.CreateEdgeNodeRsp": {
+            "type": "object",
+            "properties": {
+                "node": {
+                    "$ref": "#/definitions/nodeentity.NodeBasicInfo"
+                }
+            }
+        },
+        "node.ListEdgeNodesReq": {
+            "type": "object",
+            "properties": {
+                "pageNum": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "userId": {
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "node.ListEdgeNodesRsp": {
+            "type": "object",
+            "properties": {
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/nodeentity.NodeBasicInfo"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "nodeentity.NodeBasicInfo": {
+            "type": "object",
+            "required": [
+                "id",
+                "name",
+                "osImage",
+                "roles",
+                "runtime",
+                "status",
+                "userId",
+                "userName"
+            ],
+            "properties": {
+                "createAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "interIp": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "osImage": {
+                    "type": "string"
+                },
+                "outerIp": {
+                    "type": "string"
+                },
+                "providerId": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "string"
+                },
+                "runtime": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updateAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }`
 
 type swaggerInfo struct {
