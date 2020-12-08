@@ -28,5 +28,11 @@ db:
   maxopenconns: 10
   maxidleconns: 2
 
+authentication:
+  type: JWT
+  username: root
+  password: root@123
+  key: "Sign key for JWT"
+
 kubemaster: "https://cls-f4x353m8.ccs.tencent-cloud.com"
 KubeConfFile: "/.kube/config"
