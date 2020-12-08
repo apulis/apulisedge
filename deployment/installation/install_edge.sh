@@ -145,6 +145,7 @@ runEdgecore()
     sed -i "s#server:\ .*10001#server: ${SERVER_DOMAIN}:10001#g" config/edgecore.yaml
     sed -i "s#server:\ .*10000#server: ${SERVER_DOMAIN}:10000#g" config/edgecore.yaml
     sed -i "s#hostnameOverride:\ .*#hostnameOverride:\ ${NODENAME}#g" config/edgecore.yaml
+    sed -i "/.*token:\ .*/d" config/edgecore.yaml
     # run edgecore image
     LOG_INFO "config file generated."
     systemctl enable docker.service
