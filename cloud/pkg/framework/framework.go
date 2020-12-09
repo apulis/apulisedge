@@ -128,5 +128,6 @@ func (app *CloudApp) InitDatabase() {
 func (app *CloudApp) InitTables() {
 	database.CreateTableIfNotExists(nodeentity.NodeBasicInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationBasicInfo{})
+	database.CreateTableIfNotExists(appentity.ApplicationVersionInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationDeployInfo{})
 }

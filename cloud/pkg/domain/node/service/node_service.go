@@ -16,16 +16,16 @@ import (
 
 var logger = loggers.LogInstance()
 
-func CreateEdgeNode(userId int64, userName string, nodeName string) (*nodeentity.NodeBasicInfo, error) {
+func CreateEdgeNode(req *nodemodule.CreateEdgeNodeReq) (*nodeentity.NodeBasicInfo, error) {
 	node := &nodeentity.NodeBasicInfo{
-		UserId:           userId,
-		UserName:         userName,
-		NodeName:         nodeName,
+		ClusterId:        req.ClusterId,
+		GroupId:          req.GroupId,
+		UserId:           req.UserId,
+		NodeName:         req.NodeName,
 		Status:           constants.StatusNotInstalled,
 		Roles:            "",
 		ContainerRuntime: "",
 		OsImage:          "",
-		ProviderId:       "",
 		InterIp:          "",
 		OuterIp:          "",
 		CreateAt:         time.Now(),
@@ -35,12 +35,12 @@ func CreateEdgeNode(userId int64, userName string, nodeName string) (*nodeentity
 	return node, nodeentity.CreateNode(node)
 }
 
-func ListEdgeNodes(userId int64, offset int, limit int) (*[]nodeentity.NodeBasicInfo, int, error) {
+func ListEdgeNodes(req *nodemodule.ListEdgeNodesReq) (*[]nodeentity.NodeBasicInfo, int, error) {
 	var nodeInfos []nodeentity.NodeBasicInfo
 
 	total := 0
-	whereQueryStr := fmt.Sprintf("UserId = '%s' ", userId)
-	res := apulisdb.Db.Offset(offset).Limit(limit).Where(whereQueryStr).Find(&nodeInfos)
+	whereQueryStr := fmt.Sprintf("ClusterId = '%s' and GroupId = '%s' and UserId = '%s' ", req.ClusterId, req.GroupId, req.UserId)
+	res := apulisdb.Db.Offset(req.PageNum).Limit(req.PageSize).Where(whereQueryStr).Find(&nodeInfos)
 
 	if res.Error != nil {
 		return &nodeInfos, total, res.Error
@@ -49,10 +49,10 @@ func ListEdgeNodes(userId int64, offset int, limit int) (*[]nodeentity.NodeBasic
 	return &nodeInfos, int(res.RowsAffected), nil
 }
 
-func DescribeEdgeNode(userId int64, nodeName string) (*nodeentity.NodeBasicInfo, error) {
+func DescribeEdgeNode(req *nodemodule.DescribeEdgeNodesReq) (*nodeentity.NodeBasicInfo, error) {
 	var nodeInfo nodeentity.NodeBasicInfo
 
-	whereQueryStr := fmt.Sprintf("UserId = '%s' and NodeName = '%s'", userId, nodeName)
+	whereQueryStr := fmt.Sprintf("ClusterId = '%s' and GroupId = '%s' and UserId = '%s' and NodeName = '%s'", req.ClusterId, req.GroupId, req.UserId, req.NodeName)
 	res := apulisdb.Db.Where(whereQueryStr).First(&nodeInfo)
 
 	if res.Error != nil {
@@ -66,20 +66,21 @@ func DescribeEdgeNode(userId int64, nodeName string) (*nodeentity.NodeBasicInfo,
 func DeleteEdgeNode(req *nodemodule.DeleteEdgeNodeReq) error {
 	// first: check if any deploy exist
 	var total int64
-	whereQueryStr := fmt.Sprintf("UserId = '%s' and NodeName = '%s'", req.UserId, req.NodeName)
+	whereQueryStr := fmt.Sprintf("ClusterId = '%s' and GroupId = '%s' and UserId = '%s' and NodeName = '%s'",
+		req.ClusterId, req.GroupId, req.UserId, req.NodeName)
 	apulisdb.Db.Model(&appentity.ApplicationDeployInfo{}).Where(whereQueryStr).Count(&total)
 	if total != 0 {
 		return appmodule.ErrDeployExist
 	}
 
 	// second: check if any node exist
-	whereQueryStr = fmt.Sprintf("UserId = '%s' and NodeName = '%s'", req.UserId, req.NodeName)
+	whereQueryStr = fmt.Sprintf("ClusterId = '%s' and GroupId = '%s' and UserId = '%s' and NodeName = '%s'", req.ClusterId, req.GroupId, req.UserId, req.NodeName)
 	apulisdb.Db.Model(&nodeentity.NodeBasicInfo{}).Where(whereQueryStr).Count(&total)
 	if total != 0 {
-		return nodemodule.ErrNodeExist
+		return nodemodule.ErrNodeNotExist
 	}
 
-	nodeInfo, err := nodeentity.GetNode(req.UserId, req.NodeName)
+	nodeInfo, err := nodeentity.GetNode(req.ClusterId, req.GroupId, req.UserId, req.NodeName)
 	if err != nil {
 		return err
 	}

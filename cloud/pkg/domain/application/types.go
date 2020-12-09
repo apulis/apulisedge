@@ -21,5 +21,15 @@ const (
 )
 
 const (
+	AppUserDefine string = "UserDefine"
+	AppSysDefine  string = "System"
+)
+
+const (
+	DefaultNamespace string = "default"
+)
+
+// for ticker
+const (
 	TransferCountEach int = 10
 )

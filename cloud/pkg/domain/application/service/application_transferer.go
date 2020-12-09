@@ -9,10 +9,8 @@ import (
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	applicationentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
-	v1 "k8s.io/api/apps/v1"
-	k8scorev1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"strconv"
 	"time"
 )
@@ -88,24 +86,23 @@ func handleStatusInit(appDeployInfo *applicationentity.ApplicationDeployInfo) {
 	}
 
 	// second: deploy to k8s
-	err = CreateK8sDeployment(appDeployInfo)
+	err = CreateK8sPod(appDeployInfo)
 	if err != nil {
-		logger.Infof("create deployment failed! err = %v", err)
+		logger.Infof("create pod failed! err = %v", err)
 		return
 	}
 
-	logger.Infof("create deployment succ! status to %s", constants.StatusDeploying)
+	logger.Infof("create pod succ! status to %s", constants.StatusDeploying)
 }
 
 func handleStatusDeploying(appDeployInfo *applicationentity.ApplicationDeployInfo) {
-	// check deployment status, if ok, transfer to StatusRunning; if failed, retry
-	deploy, err := GetK8sDeployment(appDeployInfo)
+	// check pod status, if ok, transfer to StatusRunning; if failed, retry
+	pod, err := GetK8sPod(appDeployInfo)
 	if err != nil { // if failed, try next time
 		return
 	}
 
-	// TODO add replicas to db info
-	if deploy.Status.ReadyReplicas == 1 {
+	if pod.Status.Phase == corev1.PodRunning {
 		appDeployInfo.Status = constants.StatusRunning
 		appDeployInfo.UpdateAt = time.Now()
 		err := applicationentity.UpdateAppDeploy(appDeployInfo)
@@ -113,6 +110,8 @@ func handleStatusDeploying(appDeployInfo *applicationentity.ApplicationDeployInf
 			logger.Infof("handleStatusDeploying update deployment failed!")
 		}
 	}
+
+	// TODO other status handle
 }
 
 func handleStatusRunning(appDeployInfo *applicationentity.ApplicationDeployInfo) {
@@ -121,14 +120,14 @@ func handleStatusRunning(appDeployInfo *applicationentity.ApplicationDeployInfo)
 
 func handleStatusDeleting(appDeployInfo *applicationentity.ApplicationDeployInfo) {
 	// first: undeploy to k8s
-	_, err := GetK8sDeployment(appDeployInfo)
+	_, err := GetK8sPod(appDeployInfo)
 	if err != nil { // if failed, try next time
 		// metav1.StatusReasonNotFound
-		logger.Infof("handleStatusDeleting, GetK8sDeployment err, err = %v", err)
+		logger.Infof("handleStatusDeleting, GetK8sPod err, err = %v", err)
 		return
 	}
 
-	err = DeleteK8sDeployment(appDeployInfo)
+	err = DeleteK8sPod(appDeployInfo)
 	if err != nil { // if failed, try next time
 		return
 	}
@@ -140,54 +139,35 @@ func handleStatusDeleting(appDeployInfo *applicationentity.ApplicationDeployInfo
 	}
 }
 
-func deploymentName(appName string, userId int64) string {
-	return appName + "-" + strconv.FormatInt(userId, 10) + "-" + "deployment"
-}
-
-func CreateK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error {
-	deployClient, err := utils.GetDeploymentClient(dbInfo.Namespace)
+func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
+	podClient, err := utils.GetPodClient(constants.DefaultNamespace)
 	if err != nil {
 		return err
 	}
 
-	deployment := &v1.Deployment{
+	verInfo, err := applicationentity.GetApplicationVersion(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version)
+	if err != nil {
+		return err
+	}
+
+	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: deploymentName(dbInfo.AppName, dbInfo.UserId), // deployment名字
+			Name: podName(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version, dbInfo.NodeName),
 		},
-		Spec: v1.DeploymentSpec{
-			Replicas: pointer.Int32Ptr(1), // 指定副本数
-			Selector: &metav1.LabelSelector{ // 指定标签
-				MatchLabels: map[string]string{
-					"app": dbInfo.AppName,
-				},
+		Spec: corev1.PodSpec{
+			NodeSelector: map[string]string{
+				"kubernetes.io/hostname": dbInfo.NodeName,
 			},
-			Template: k8scorev1.PodTemplateSpec{ // 容器模板
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"app": dbInfo.AppName,
-					},
-				},
-				Spec: k8scorev1.PodSpec{
-					NodeSelector: map[string]string{
-						"kubernetes.io/hostname": dbInfo.NodeName,
-					},
-					Containers: []k8scorev1.Container{
-						{
-							Name:  dbInfo.ContainerImage,
-							Image: dbInfo.ContainerImagePath,
-							Ports: []k8scorev1.ContainerPort{
-								{
-									ContainerPort: int32(dbInfo.ContainerPort),
-								},
-							},
-						},
-					},
+			Containers: []corev1.Container{
+				{
+					Name:  verInfo.ContainerImage,
+					Image: verInfo.ContainerImagePath,
 				},
 			},
 		},
 	}
 
-	_, err = deployClient.Create(context.Background(), deployment, metav1.CreateOptions{})
+	_, err = podClient.Create(context.Background(), pod, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -195,25 +175,29 @@ func CreateK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error 
 	return nil
 }
 
-func GetK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) (*v1.Deployment, error) {
-	deployClient, err := utils.GetDeploymentClient(dbInfo.Namespace)
+func GetK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) (*corev1.Pod, error) {
+	podClient, err := utils.GetPodClient(constants.DefaultNamespace)
 	if err != nil {
 		return nil, err
 	}
 
-	deploy, err := deployClient.Get(context.Background(), deploymentName(dbInfo.AppName, dbInfo.UserId), metav1.GetOptions{})
+	pod, err := podClient.Get(context.Background(), podName(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version, dbInfo.NodeName), metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	return deploy, nil
+	return pod, nil
 }
 
-func DeleteK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error {
-	deployClient, err := utils.GetDeploymentClient(dbInfo.Namespace)
+func DeleteK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
+	podClient, err := utils.GetPodClient(constants.DefaultNamespace)
 	if err != nil {
 		return err
 	}
 
-	return deployClient.Delete(context.Background(), deploymentName(dbInfo.AppName, dbInfo.UserId), metav1.DeleteOptions{})
+	return podClient.Delete(context.Background(), podName(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version, dbInfo.NodeName), metav1.DeleteOptions{})
+}
+
+func podName(clusterId int64, groupId int64, userId int64, appName string, version string, nodeName string) string {
+	return appName + "-" + strconv.FormatInt(userId, 10) + "-" + "deployment"
 }

@@ -12,16 +12,17 @@ const (
 	TableNodeBasicInfo string = "NodeBasicInfos"
 )
 
+// NodeName is unique in Cluster/Group/User
 type NodeBasicInfo struct {
 	ID               int64     `gorm:"column:Id;primary_key"                                   json:"id" binding:"required"`
 	NodeName         string    `gorm:"uniqueIndex:user_node;column:NodeName;size:255;not null" json:"name" binding:"required"`
+	ClusterId        int64     `gorm:"uniqueIndex:user_node;column:ClusterId;not null"         json:"clusterId" binding:"required"`
+	GroupId          int64     `gorm:"uniqueIndex:user_node;column:GroupId;not null"           json:"groupId" binding:"required"`
 	UserId           int64     `gorm:"uniqueIndex:user_node;column:UserId;not null"            json:"userId" binding:"required"`
-	UserName         string    `gorm:"column:UserName;size:255;not null"                       json:"userName" binding:"required"`
 	Status           string    `gorm:"column:Status;size:255;not null"                         json:"status" binding:"required"`
 	Roles            string    `gorm:"column:Roles;size:255;not null"                          json:"roles" binding:"required"`
 	ContainerRuntime string    `gorm:"column:ContainerRuntime;size:255;not null"               json:"runtime" binding:"required"`
 	OsImage          string    `gorm:"column:OsImage;size:255;not null"                        json:"osImage" binding:"required"`
-	ProviderId       string    `gorm:"column:ProviderId;size:255"                              json:"providerId"`
 	InterIp          string    `gorm:"column:InterIp;size:255;not null"                        json:"interIp"`
 	OuterIp          string    `gorm:"column:OuterIp;size:255"                                 json:"outerIp"`
 	CreateAt         time.Time `gorm:"column:CreateAt;not null"                                json:"createAt"`
@@ -40,8 +41,8 @@ func UpdateNode(nodeInfo *NodeBasicInfo) error {
 	return apulisdb.Db.Save(nodeInfo).Error
 }
 
-func GetNode(userId int64, nodeName string) (*NodeBasicInfo, error) {
-	nodeInfo := NodeBasicInfo{UserId: userId, NodeName: nodeName}
+func GetNode(clusterId int64, groupId int64, userId int64, nodeName string) (*NodeBasicInfo, error) {
+	nodeInfo := NodeBasicInfo{ClusterId: clusterId, GroupId: groupId, UserId: userId, NodeName: nodeName}
 	res := apulisdb.Db.First(&nodeInfo)
 	if res.Error != nil {
 		return nil, res.Error

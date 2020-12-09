@@ -58,11 +58,11 @@ func ListEdgeApps(c *gin.Context) error {
 }
 
 // create edge application
+// this interface can both create basic app and app version
 func CreateEdgeApplication(c *gin.Context) error {
 	var err error
 	var req proto.Message
 	var reqContent appmodule.CreateEdgeApplicationReq
-	var app *appentity.ApplicationBasicInfo
 
 	if err = c.ShouldBindJSON(&req); err != nil {
 		return ParameterError(c, &req, err.Error())
@@ -75,13 +75,14 @@ func CreateEdgeApplication(c *gin.Context) error {
 	// TODO validate reqContent
 
 	// create application
-	app, err = appservice.CreateEdgeApplication(&reqContent)
+	appCreated, verCreated, err := appservice.CreateEdgeApplication(&reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
 
 	data := appmodule.CreateEdgeApplicationRsp{
-		Application: app,
+		AppCreated:     appCreated,
+		VersionCreated: verCreated,
 	}
 
 	return SuccessResp(c, &req, data)
@@ -110,6 +111,37 @@ func DeleteEdgeApplication(c *gin.Context) error {
 	}
 
 	return SuccessResp(c, &req, "OK")
+}
+
+// list edge app versions
+func ListEdgeAppVersions(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent appmodule.ListEdgeApplicationVersionReq
+	var appVers *[]appentity.ApplicationVersionInfo
+	var total int
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// TODO validate reqContent
+
+	// list node
+	appVers, total, err = appservice.ListEdgeApplicationVersions(&reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := appmodule.ListEdgeApplicationVersionRsp{
+		Total:       total,
+		AppVersions: appVers,
+	}
+	return SuccessResp(c, &req, data)
 }
 
 // list edge app deploys

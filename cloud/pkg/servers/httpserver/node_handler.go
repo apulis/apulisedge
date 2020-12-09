@@ -17,7 +17,7 @@ func NodeHandlerRoutes(r *gin.Engine) {
 
 	group.POST("/createNode", wrapper(CreateEdgeNode))
 	group.POST("/listNode", wrapper(ListEdgeNodes))
-	group.POST("/desNode", wrapper(DescribeEgeNode))
+	group.POST("/desNode", wrapper(DescribeEdgeNode))
 	group.POST("/deleteNode", wrapper(DeleteEdgeNode))
 }
 
@@ -47,7 +47,7 @@ func CreateEdgeNode(c *gin.Context) error {
 	// TODO validate reqContent
 
 	// create node
-	node, err = nodeservice.CreateEdgeNode(reqContent.UserId, reqContent.UserName, reqContent.NodeName)
+	node, err = nodeservice.CreateEdgeNode(&reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -85,7 +85,7 @@ func ListEdgeNodes(c *gin.Context) error {
 	// TODO validate reqContent
 
 	// list node
-	nodes, total, err = nodeservice.ListEdgeNodes(reqContent.UserId, reqContent.PageNum, reqContent.PageSize)
+	nodes, total, err = nodeservice.ListEdgeNodes(&reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -98,7 +98,7 @@ func ListEdgeNodes(c *gin.Context) error {
 }
 
 // describe edge nodes
-func DescribeEgeNode(c *gin.Context) error {
+func DescribeEdgeNode(c *gin.Context) error {
 	var err error
 	var req proto.Message
 	var reqContent nodemodule.DescribeEdgeNodesReq
@@ -115,7 +115,7 @@ func DescribeEgeNode(c *gin.Context) error {
 	// TODO validate reqContent
 
 	// describe node
-	nodeInfo, err = nodeservice.DescribeEdgeNode(reqContent.UserId, reqContent.NodeName)
+	nodeInfo, err = nodeservice.DescribeEdgeNode(&reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
