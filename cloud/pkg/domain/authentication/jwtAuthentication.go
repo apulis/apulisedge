@@ -9,33 +9,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var jwtSecretKey string
+
 func jwtAuthtication(c *gin.Context) {
+
 	r := c.Request
 	auth := r.Header.Get("Authorization")
-	fmt.Println(auth)
 	tokenString := strings.Fields(auth)[1]
-	fmt.Println("token acquired: ", tokenString)
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
 
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return []byte("Sign key for JWT"), nil
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtSecretKey), nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(claims)
+	if token.Valid {
+		logger.Infoln("token valid")
+	} else if ve, ok := err.(*jwt.ValidationError); ok {
+		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+			logger.Errorln("token format error")
+		} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+			logger.Errorln("token expired or nor valid yet")
+		} else {
+			logger.Errorln("Couldn't handle this token:", err)
+		}
 	} else {
-		c.Abort()
-		fmt.Println(err)
+		logger.Errorln("Couldn't handle this token:", err)
 	}
 	c.Next()
 }
 
 func jwtSign() string {
-	mySigningKey := []byte("Sign key for JWT")
+	mySigningKey := []byte(jwtSecretKey)
 
 	type MyCustomClaims struct {
 		jwt.StandardClaims
