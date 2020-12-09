@@ -2,18 +2,24 @@
 # ===
 # === ENV variables
 # ===
+# common
 ARCH= # will be init latter
 LOG_DIR=/var/log/apulisedge
+INSTALL_LOG_FILE=${LOG_DIR}/installer.log
+SCRIPT_DIR=/opt/apulisedge
+DESIRE_DOCKER_VERSION=17.06
+
+# kubeedge
 KUBEEDGE_LOG_DIR=/var/log/kubeedge
 KUBEEDGE_DATABASES_DIR=/var/lib/kubeedge
-INSTALL_LOG_FILE=${LOG_DIR}/installer.log
-EDGECORE_LOG_FILE=${LOG_DIR}/edgecore.log
-APULISEDGE_PACKAGE_DOWNLOAD_PATH=/tmp/apulisedge
 KUBEEDGE_TAR_FILE= # need arch, will be init later
-KUBEEDGE_HOME_PATH=/etc/kubeedge
-DESIRE_DOCKER_VERSION=17.06
-APULISEDGE_IMAGE=apulisedge-agent:1.0
 KUBEEDGE_EDGE_IMAGE=apulis/kubeedge-edge:1.0
+KUBEEDGE_HOME_PATH=/etc/kubeedge
+EDGECORE_LOG_FILE=${LOG_DIR}/edgecore.log
+
+# apulisedge
+APULISEDGE_PACKAGE_DOWNLOAD_PATH=/tmp/apulisedge
+APULISEDGE_IMAGE=apulisedge-agent:1.0
 
 
 # ===
@@ -110,6 +116,7 @@ envInit()
     mkdir -p ${KUBEEDGE_HOME_PATH}
     mkdir -p ${KUBEEDGE_LOG_DIR}
     mkdir -p ${KUBEEDGE_DATABASES_DIR}
+    mkdir -p ${SCRIPT_DIR}
     LOG_INFO "directory ready."
     cd ${KUBEEDGE_HOME_PATH}
     LOG_INFO "decompress file..."
@@ -190,10 +197,9 @@ main()
 
     # === init log
     mkdir -p ${LOG_DIR}
-    if [ -e "${INSTALL_LOG_FILE}}" ]; then
-        rm "${INSTALL_LOG_FILE}"
+    if [ ! -e "${INSTALL_LOG_FILE}}" ]; then
+        touch "${INSTALL_LOG_FILE}"
     fi
-    touch "${INSTALL_LOG_FILE}"
 
     process=(
         envCheck
@@ -216,4 +222,6 @@ main()
 # ===
 # === main code start here
 # ===
-main "$@"
+if [ "${1}" != "--source-only" ]; then
+    main "$@"
+fi
