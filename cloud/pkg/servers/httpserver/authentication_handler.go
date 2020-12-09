@@ -27,11 +27,12 @@ func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req proto.Message
 		authenticated := authentication.Auth(c)
-		if authenticated.Result {
-
-		} else {
+		if authenticated.AuthError != nil {
 			c.Abort()
-			c.JSON(http.StatusUnauthorized, UnAuthorizedError(c, &req, "authentication fail"))
+			c.JSON(http.StatusUnauthorized, UnAuthorizedError(c, &req, "authenticate error:"+authenticated.AuthError.Error()))
+		} else if !authenticated.Result {
+			c.Abort()
+			c.JSON(http.StatusUnauthorized, UnAuthorizedError(c, &req, "authentication fail: not valided"))
 		}
 		c.Next()
 
