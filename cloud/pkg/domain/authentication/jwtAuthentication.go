@@ -11,7 +11,8 @@ import (
 
 var jwtSecretKey string
 
-func jwtAuthtication(c *gin.Context) {
+func jwtAuthtication(c *gin.Context) bool {
+	authenticated := false
 
 	r := c.Request
 	auth := r.Header.Get("Authorization")
@@ -34,7 +35,8 @@ func jwtAuthtication(c *gin.Context) {
 	} else {
 		logger.Errorln("Couldn't handle this token:", err)
 	}
-	c.Next()
+
+	return authenticated
 }
 
 func jwtSign() string {

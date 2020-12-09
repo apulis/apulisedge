@@ -8,11 +8,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-var authMethod gin.HandlerFunc
+var authMethod func(c *gin.Context) bool
 var logger = loggers.LogInstance()
 
 // Auth offer multi authentication features
-func Auth() gin.HandlerFunc {
+func Auth(c *gin.Context) bool {
 	authType := viper.GetStringMap("authentication")["type"]
 	if authType == "JWT" {
 		authMethod = jwtAuthtication
@@ -20,7 +20,7 @@ func Auth() gin.HandlerFunc {
 	} else {
 		panic(fmt.Errorf("unsupport authentication metho: %s", authType))
 	}
-	return authMethod
+	return authMethod(c)
 }
 
 func Sign() {
