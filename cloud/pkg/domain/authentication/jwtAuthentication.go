@@ -1,6 +1,7 @@
 package authentication
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,19 +12,29 @@ import (
 
 var jwtSecretKey string
 
-func jwtAuthtication(c *gin.Context) bool {
-	authenticated := false
+func jwtAuthtication(c *gin.Context) AuthResult {
+	authResult := AuthResult{
+		false,
+		nil,
+	}
 
 	r := c.Request
 	auth := r.Header.Get("Authorization")
+	if len(auth) == 0 {
+		return NoAuthHeadError
+	}
 	tokenString := strings.Fields(auth)[1]
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(jwtSecretKey), nil
 	})
+	if err != nil {
+		return newAuthResult(false, errors.New("jwt token parse fail"))
+	}
 
 	if token.Valid {
 		logger.Infoln("token valid")
+		authResult.Result = true
 	} else if ve, ok := err.(*jwt.ValidationError); ok {
 		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 			logger.Errorln("token format error")
@@ -32,11 +43,13 @@ func jwtAuthtication(c *gin.Context) bool {
 		} else {
 			logger.Errorln("Couldn't handle this token:", err)
 		}
+		authResult.AuthError = err
 	} else {
 		logger.Errorln("Couldn't handle this token:", err)
+		authResult.AuthError = err
 	}
 
-	return authenticated
+	return authResult
 }
 
 func jwtSign() string {

@@ -27,7 +27,7 @@ func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req proto.Message
 		authenticated := authentication.Auth(c)
-		if authenticated {
+		if authenticated.Result {
 
 		} else {
 			c.Abort()
