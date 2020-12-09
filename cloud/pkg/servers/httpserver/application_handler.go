@@ -20,6 +20,10 @@ func ApplicationHandlerRoutes(r *gin.Engine) {
 	group.POST("/createApplication", wrapper(CreateEdgeApplication))
 	group.POST("/deleteApplication", wrapper(DeleteEdgeApplication))
 
+	// edge application version
+	group.POST("/listApplicationVersion", wrapper(ListEdgeAppVersions))
+	group.POST("/deleteApplicationVersion", wrapper(DeleteEdgeApplicationVersion))
+
 	// application deployment
 	group.POST("/listApplicationDeploy", wrapper(ListEdgeAppDeploys))
 	group.POST("/deployApplication", wrapper(DeployEdgeApplication))
@@ -142,6 +146,31 @@ func ListEdgeAppVersions(c *gin.Context) error {
 		AppVersions: appVers,
 	}
 	return SuccessResp(c, &req, data)
+}
+
+// delete edge application version
+func DeleteEdgeApplicationVersion(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent appmodule.DeleteEdgeApplicationVersionReq
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// TODO validate reqContent
+
+	// delete application
+	err = appservice.DeleteEdgeApplicationVersion(&reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	return SuccessResp(c, &req, "OK")
 }
 
 // list edge app deploys

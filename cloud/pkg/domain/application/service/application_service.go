@@ -8,7 +8,6 @@ import (
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
-	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	"gorm.io/gorm"
 	"time"
@@ -158,7 +157,6 @@ func DeployEdgeApplication(req *appmodule.DeployEdgeApplicationReq) error {
 	// get application
 	var err error
 	var appVerInfo appentity.ApplicationVersionInfo
-	var nodeBasicInfo *nodeentity.NodeBasicInfo
 
 	whereQueryStr := fmt.Sprintf("ClusterId = '%s' and GroupId = '%s' and UserId = '%s' and AppName = '%s' and Version = '%s'",
 		req.ClusterId, req.GroupId, req.UserId, req.AppName, req.Version)
@@ -167,18 +165,12 @@ func DeployEdgeApplication(req *appmodule.DeployEdgeApplicationReq) error {
 		return res.Error
 	}
 
-	nodeBasicInfo, err = nodeentity.GetNode(req.ClusterId, req.GroupId, req.UserId, req.NodeName)
-	if err != nil {
-		return err
-	}
-
 	// store deploy info
 	deployInfo := &appentity.ApplicationDeployInfo{
 		ClusterId: req.ClusterId,
 		GroupId:   req.GroupId,
 		UserId:    req.UserId,
 		AppName:   req.AppName,
-		NodeId:    nodeBasicInfo.ID,
 		NodeName:  req.NodeName,
 		Version:   appVerInfo.Version,
 		Status:    constants.StatusInit,

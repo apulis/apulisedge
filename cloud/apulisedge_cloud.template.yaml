@@ -14,7 +14,7 @@ cloudhub:
 
 log:
   # 6: trace, 5: debug, 4: info
-  level: 4
+  level: 5
   writefile: true
   filedir: logs
   filename: apulis_edge_cloud.log
@@ -29,5 +29,5 @@ db:
   maxopenconns: 10
   maxidleconns: 2
 
-kubemaster: "https://cloud.sigsus.cn:6443"
+kubemaster: "https://192.168.1.112:6443"
 KubeConfFile: "/root/.kube/config"

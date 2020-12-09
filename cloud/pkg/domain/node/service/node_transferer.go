@@ -102,7 +102,7 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 		if cond.Type == v1.NodeReady {
 			if cond.Status == v1.ConditionTrue {
 				nodeStatus = constants.StatusOnline
-			} else if cond.Status == v1.ConditionFalse {
+			} else if cond.Status == v1.ConditionFalse || cond.Status == v1.ConditionUnknown {
 				nodeStatus = constants.StatusOffline
 			}
 		}
@@ -119,6 +119,7 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	roles = strings.TrimPrefix(roles, ",")
 	roles = strings.TrimSuffix(roles, ",")
 
+	logger.Infof("node status = %s", nodeStatus)
 	newDbInfo := &nodeentity.NodeBasicInfo{
 		ID:               dbInfo.ID,
 		ClusterId:        dbInfo.ClusterId,
