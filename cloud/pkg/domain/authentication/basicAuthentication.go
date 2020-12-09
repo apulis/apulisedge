@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"encoding/base64"
+	"errors"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -33,6 +34,8 @@ func basicAuthentication(c *gin.Context) AuthResult {
 
 	if reqUsername == username && reqPassword == password {
 		authenticated.Result = true
+	} else {
+		return newAuthResult(false, errors.New("user name and password not valid"))
 	}
 
 	return authenticated
