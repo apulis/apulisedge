@@ -55,15 +55,6 @@ func (ApplicationVersionInfo) TableName() string {
 	return TableApplicationVersionInfo
 }
 
-func GetApplication(clusterId int64, groupId int64, userId int64, appName string) (*ApplicationBasicInfo, error) {
-	appInfo := ApplicationBasicInfo{ClusterId: clusterId, GroupId: groupId, UserId: userId, AppName: appName}
-	res := apulisdb.Db.First(&appInfo)
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	return &appInfo, nil
-}
-
 func CreateApplication(appInfo *ApplicationBasicInfo) error {
 	return apulisdb.Db.Create(appInfo).Error
 }
@@ -74,15 +65,6 @@ func UpdateApplication(appInfo *ApplicationBasicInfo) error {
 
 func DeleteApplication(appInfo *ApplicationBasicInfo) error {
 	return apulisdb.Db.Delete(appInfo).Error
-}
-
-func GetApplicationVersion(clusterId int64, groupId int64, userId int64, appName string, ver string) (*ApplicationVersionInfo, error) {
-	verInfo := ApplicationVersionInfo{ClusterId: clusterId, GroupId: groupId, UserId: userId, AppName: appName, Version: ver}
-	res := apulisdb.Db.First(&verInfo)
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	return &verInfo, nil
 }
 
 func CreateApplicationVersion(appInfo *ApplicationVersionInfo) error {

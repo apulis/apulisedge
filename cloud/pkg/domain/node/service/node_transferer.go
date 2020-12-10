@@ -61,6 +61,7 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 		res := apulisdb.Db.Offset(offset).Limit(constants.TransferCountEach).Find(&nodeInfos)
 		if res.Error != nil {
 			logger.Errorf("query node failed. err = %v", res.Error)
+			continue
 		} else {
 			for i := 0; i < int(res.RowsAffected); i++ {
 				logger.Debugf("NodeTicker handle node = %v", nodeInfos[i])

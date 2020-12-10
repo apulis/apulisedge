@@ -63,6 +63,7 @@ func ApplicationTicker(config *configs.EdgeCloudConfig) {
 		res := apulisdb.Db.Offset(offset).Limit(constants.TransferCountEach).Find(&appDeployInfos)
 		if res.Error != nil {
 			logger.Errorf("query application deploy failed. err = %v", res.Error)
+			continue
 		} else {
 			for i := 0; i < int(res.RowsAffected); i++ {
 				logger.Debugf("ApplicationTicker handle application = %v", appDeployInfos[i])
@@ -140,14 +141,19 @@ func handleStatusDeleting(appDeployInfo *applicationentity.ApplicationDeployInfo
 }
 
 func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
+	var appVerInfo applicationentity.ApplicationVersionInfo
+
 	podClient, err := utils.GetPodClient(constants.DefaultNamespace)
 	if err != nil {
 		return err
 	}
 
-	verInfo, err := applicationentity.GetApplicationVersion(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version)
-	if err != nil {
-		return err
+	res := apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
+			dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version).
+		First(&appVerInfo)
+	if res.Error != nil {
+		return res.Error
 	}
 
 	pod := &corev1.Pod{
@@ -160,8 +166,8 @@ func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 			},
 			Containers: []corev1.Container{
 				{
-					Name:  verInfo.ContainerImage,
-					Image: verInfo.ContainerImagePath,
+					Name:  appVerInfo.ContainerImage,
+					Image: appVerInfo.ContainerImagePath,
 				},
 			},
 		},

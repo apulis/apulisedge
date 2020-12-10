@@ -42,7 +42,8 @@ func ListEdgeNodes(req *nodemodule.ListEdgeNodesReq) (*[]nodeentity.NodeBasicInf
 	limit := req.PageSize
 
 	res := apulisdb.Db.Offset(offset).Limit(limit).
-		Where("ClusterId = ? and GroupId = ? and UserId = ?", req.ClusterId, req.GroupId, req.UserId).Find(&nodeInfos)
+		Where("ClusterId = ? and GroupId = ? and UserId = ?", req.ClusterId, req.GroupId, req.UserId).
+		Find(&nodeInfos)
 
 	if res.Error != nil {
 		return &nodeInfos, total, res.Error
@@ -72,24 +73,16 @@ func DeleteEdgeNode(req *nodemodule.DeleteEdgeNodeReq) error {
 	// first: check if any deploy exist
 	var total int64
 	apulisdb.Db.Model(&appentity.ApplicationDeployInfo{}).
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", req.ClusterId, req.GroupId, req.UserId, req.NodeName).Count(&total)
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", req.ClusterId, req.GroupId, req.UserId, req.NodeName).
+		Count(&total)
 	if total != 0 {
 		return appmodule.ErrDeployExist
 	}
 
-	// second: check if any node exist
-	apulisdb.Db.Model(&nodeentity.NodeBasicInfo{}).
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", req.ClusterId, req.GroupId, req.UserId, req.NodeName).
-		Count(&total)
-	if total == 0 {
-		return nodemodule.ErrNodeNotExist
-	}
-
-	// third: get node and delete
+	// second: get node and delete
 	res := apulisdb.Db.
 		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", req.ClusterId, req.GroupId, req.UserId, req.NodeName).
 		First(&nodeInfo)
-
 	if res.Error != nil {
 		return res.Error
 	}
