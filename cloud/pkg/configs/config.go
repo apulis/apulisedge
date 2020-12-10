@@ -4,6 +4,8 @@ package configs
 
 import (
 	"fmt"
+
+	"github.com/apulis/ApulisEdge/cloud/pkg/domain/authentication"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -70,6 +72,11 @@ func InitConfig(configFile string, config *EdgeCloudConfig) {
 
 	if err := viper.Unmarshal(&config); err != nil {
 		panic(fmt.Errorf("Fatal error unmarshal config file: %s \n", err))
+	}
+
+	authType := viper.GetStringMap("authentication")["type"].(string)
+	if !authentication.IsSupport(authType) {
+		panic(fmt.Errorf("unsupport authentication method: %s", authType))
 	}
 
 	fmt.Println(config.CloudHub.Websocket)

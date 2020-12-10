@@ -20,6 +20,11 @@ var NoAuth = AuthResult{
 	AuthError: nil,
 }
 
+var NotSupportAuth = AuthResult{
+	Result:    false,
+	AuthError: errors.New("not supprt authType"),
+}
+
 var NoAuthHeadError = AuthResult{
 	Result:    false,
 	AuthError: errors.New("can't found authentication in header"),
@@ -35,9 +40,24 @@ var BasicAuthDecodeFailError = AuthResult{
 	AuthError: errors.New("basic auth decode fails"),
 }
 
+var JWTAuthSuccess = AuthResult{
+	Result:    true,
+	AuthError: nil,
+}
+
 var JWTAuthFailError = AuthResult{
 	Result:    false,
 	AuthError: errors.New("JWT auth fail"),
+}
+
+var JWTTokenFormatError = AuthResult{
+	Result:    false,
+	AuthError: errors.New("token format error"),
+}
+
+var JWTTokenExpiredError = AuthResult{
+	Result:    false,
+	AuthError: errors.New("token expired or nor valid yet"),
 }
 
 func newAuthResult(result bool, authError error) AuthResult {

@@ -17,10 +17,6 @@ type jwtAuthtication struct {
 }
 
 func (jwtAuthticator jwtAuthtication) AuthMethod(c *gin.Context) AuthResult {
-	authResult := AuthResult{
-		false,
-		nil,
-	}
 
 	r := c.Request
 	auth := r.Header.Get("Authorization")
@@ -37,23 +33,18 @@ func (jwtAuthticator jwtAuthtication) AuthMethod(c *gin.Context) AuthResult {
 	}
 
 	if token.Valid {
-		logger.Infoln("token valid")
-		authResult.Result = true
+		return JWTAuthSuccess
 	} else if ve, ok := err.(*jwt.ValidationError); ok {
 		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-			logger.Errorln("token format error")
+			return JWTTokenFormatError
 		} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
-			logger.Errorln("token expired or nor valid yet")
+			return JWTTokenExpiredError
 		} else {
-			logger.Errorln("Couldn't handle this token:", err)
+			return newAuthResult(false, errors.New("can't handle this token: "+err.Error()))
 		}
-		authResult.AuthError = err
 	} else {
-		logger.Errorln("Couldn't handle this token:", err)
-		authResult.AuthError = err
+		return JWTAuthFailError
 	}
-
-	return authResult
 }
 
 func (jwtAuthticator jwtAuthtication) initCertificate() {

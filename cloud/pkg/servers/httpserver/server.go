@@ -5,9 +5,10 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"net/http"
 	"time"
+
+	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 )
 
 // Start API server for portal
