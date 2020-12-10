@@ -6,12 +6,16 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
 var username string
 var password string
 
-func basicAuthentication(c *gin.Context) AuthResult {
+type basicAuthentication struct {
+}
+
+func (basicAuthenticator basicAuthentication) AuthMethod(c *gin.Context) AuthResult {
 	authenticated := AuthResult{
 		Result:    false,
 		AuthError: nil,
@@ -39,4 +43,9 @@ func basicAuthentication(c *gin.Context) AuthResult {
 	}
 
 	return authenticated
+}
+
+func (basicAuthenticator basicAuthentication) initCertificate() {
+	username = viper.GetViper().GetStringMap("authentication")["username"].(string)
+	password = viper.GetViper().GetStringMap("authentication")["password"].(string)
 }

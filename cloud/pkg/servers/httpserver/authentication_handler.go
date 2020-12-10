@@ -10,7 +10,6 @@ import (
 
 // AuthenticationHandlerRoutes join authentication module in server
 func AuthenticationHandlerRoutes(r *gin.Engine) {
-
 	group := r.Group("/apulisEdge/api/authentication")
 	group.Use(Auth())
 
@@ -32,7 +31,7 @@ func Auth() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, UnAuthorizedError(c, &req, "authenticate error:"+authenticated.AuthError.Error()))
 		} else if !authenticated.Result {
 			c.Abort()
-			c.JSON(http.StatusUnauthorized, UnAuthorizedError(c, &req, "authentication fail: not valided"))
+			c.JSON(http.StatusUnauthorized, UnAuthorizedError(c, &req, "authentication fail: "+authenticated.AuthError.Error()))
 		}
 		c.Next()
 
