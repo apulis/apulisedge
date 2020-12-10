@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/apulis/ApulisEdge/agent/pkg/common/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,15 +20,19 @@ func NewAgentCommand() *cobra.Command {
 			run()
 		},
 	}
-	versionCmd := &cobra.Command{
-		Use:   "version",
+	cmd.Flags().StringVarP(&config.ConfigFilePath, "config", "c", config.DEFAULT_CONFIG_PATH, "path to config file")
+
+	testCmd := &cobra.Command{
+		Use:   "test",
 		Short: "Print the version number of cobrademo",
 		Long:  `All software has versions. This is cobrademo's`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("cobrademo version is v1.0")
+			fmt.Println(config.ConfigFilePath)
 		},
 	}
-	cmd.AddCommand(versionCmd)
+	testCmd.Flags().StringVarP(&config.ConfigFilePath, "config", "c", "/etc/apulisedge/config/config.yaml", "path to config file")
+	cmd.AddCommand(testCmd)
+
 	initApp()
 
 	return cmd
@@ -35,7 +40,11 @@ func NewAgentCommand() *cobra.Command {
 
 // Run is the start function
 func run() error {
+
 	initConfig()
+
+	initLogger()
+
 	fmt.Println("app running")
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -60,13 +69,13 @@ func registerModules() error {
 }
 
 func initConfig() {
-	viper.SetConfigFile("/etc/apulisedge/config/config.yaml")
-	if err := viper.ReadInConfig(); err != nil {
-		panic(fmt.Errorf("Fatal error reading config file: %s", err))
-	}
-
+	config.InitConfig()
 }
 
 func initApp() {
+
+}
+
+func initLogger() {
 
 }
