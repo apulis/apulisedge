@@ -3,7 +3,6 @@
 package applicationservice
 
 import (
-	"fmt"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
@@ -206,11 +205,15 @@ func DeleteEdgeApplicationVersion(req *appmodule.DeleteEdgeApplicationVersionReq
 // list edge deploys
 func ListEdgeDeploys(req *appmodule.ListEdgeAppDeployReq) (*[]appentity.ApplicationDeployInfo, int, error) {
 	var appDeloys []appentity.ApplicationDeployInfo
-	total := 0
-	whereQueryStr := fmt.Sprintf("ClusterId = '%s' and GroupId = '%s' and UserId = '%s' and AppName = '%s' and Version = '%s'",
-		req.ClusterId, req.GroupId, req.UserId, req.AppName, req.Version)
-	res := apulisdb.Db.Offset(req.PageNum).Limit(req.PageSize).Where(whereQueryStr).Find(&appDeloys)
 
+	total := 0
+	offset := req.PageSize * (req.PageNum - 1)
+	limit := req.PageSize
+
+	res := apulisdb.Db.Offset(offset).Limit(limit).
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
+			req.ClusterId, req.GroupId, req.UserId, req.AppName, req.Version).
+		Find(&appDeloys)
 	if res.Error != nil {
 		return &appDeloys, total, res.Error
 	}
@@ -220,14 +223,16 @@ func ListEdgeDeploys(req *appmodule.ListEdgeAppDeployReq) (*[]appentity.Applicat
 
 // deploy edge application
 func DeployEdgeApplication(req *appmodule.DeployEdgeApplicationReq) error {
-	// get application
+	// get application version
 	var err error
 	var appVerInfo appentity.ApplicationVersionInfo
 
-	whereQueryStr := fmt.Sprintf("ClusterId = '%s' and GroupId = '%s' and UserId = '%s' and AppName = '%s' and Version = '%s'",
-		req.ClusterId, req.GroupId, req.UserId, req.AppName, req.Version)
-	res := apulisdb.Db.Where(whereQueryStr).First(&appVerInfo)
+	res := apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
+			req.ClusterId, req.GroupId, req.UserId, req.AppName, req.Version).
+		First(&appVerInfo)
 	if res.Error != nil {
+		logger.Infof("create application deploy failed! err = %v", res.Error)
 		return res.Error
 	}
 
@@ -259,11 +264,16 @@ func UnDeployEdgeApplication(req *appmodule.UnDeployEdgeApplicationReq) error {
 	var err error
 	var appDeployInfo appentity.ApplicationDeployInfo
 
-	whereQueryStr := fmt.Sprintf("ClusterId = '%s' and GroupId = '%s' and UserId = '%s' and AppName = '%s' and NodeName = '%s' and Version = '%s'",
-		req.ClusterId, req.GroupId, req.UserId, req.AppName, req.NodeName, req.Version)
-	res := apulisdb.Db.Where(whereQueryStr).First(&appDeployInfo)
+	res := apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and NodeName = ? and Version = ?",
+			req.ClusterId, req.GroupId, req.UserId, req.AppName, req.NodeName, req.Version).
+		First(&appDeployInfo)
 	if res.Error != nil {
 		return res.Error
+	}
+
+	if appDeployInfo.Status == constants.StatusDeleting {
+		return constants.ErrUnDeploying
 	}
 
 	// modify status directly

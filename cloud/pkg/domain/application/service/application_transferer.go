@@ -10,6 +10,7 @@ import (
 	applicationentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"time"
@@ -22,6 +23,7 @@ var statusHandlerMap = map[string]statusHandler{
 	constants.StatusInit:      handleStatusInit,
 	constants.StatusDeploying: handleStatusDeploying,
 	constants.StatusRunning:   handleStatusRunning,
+	constants.StatusAbnormal:  handleStatusAbnormal,
 	constants.StatusDeleting:  handleStatusDeleting,
 }
 
@@ -77,29 +79,67 @@ func ApplicationTicker(config *configs.EdgeCloudConfig) {
 }
 
 func handleStatusInit(appDeployInfo *applicationentity.ApplicationDeployInfo) {
-	// first: update status
+	var podExist bool
+
+	// check pod status, if ok, transfer to StatusDeploying; if failed, retry
+	_, err := GetK8sPod(appDeployInfo)
+	if err == nil {
+		podExist = true
+	} else {
+		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
+			podExist = false
+		} else {
+			logger.Infof("handleStatusInit GetK8sPod! err = %v", err)
+			return
+		}
+	}
+
+	if !podExist {
+		// deploy to k8s
+		err := CreateK8sPod(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusInit create pod failed! err = %v", err)
+			return
+		}
+	}
+
+	// update status
 	appDeployInfo.Status = constants.StatusDeploying
 	appDeployInfo.UpdateAt = time.Now()
-	err := applicationentity.UpdateAppDeploy(appDeployInfo)
+	err = applicationentity.UpdateAppDeploy(appDeployInfo)
 	if err != nil {
-		logger.Infof("update deployment failed when deploying!")
+		logger.Infof("handleStatusInit update deployment failed when deploying!")
 		return
 	}
 
-	// second: deploy to k8s
-	err = CreateK8sPod(appDeployInfo)
-	if err != nil {
-		logger.Infof("create pod failed! err = %v", err)
-		return
-	}
-
-	logger.Infof("create pod succ! status to %s", constants.StatusDeploying)
+	logger.Infof("handleStatusInit create pod succ! status to %s", constants.StatusDeploying)
 }
 
 func handleStatusDeploying(appDeployInfo *applicationentity.ApplicationDeployInfo) {
-	// check pod status, if ok, transfer to StatusRunning; if failed, retry
+	var podExist bool
+
+	// check pod status
 	pod, err := GetK8sPod(appDeployInfo)
-	if err != nil { // if failed, try next time
+	if err == nil {
+		podExist = true
+	} else {
+		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
+			podExist = false
+		} else {
+			logger.Infof("handleStatusDeploying GetK8sPod! err = %v", err)
+			return
+		}
+	}
+
+	if !podExist {
+		appDeployInfo.Status = constants.StatusInit
+		appDeployInfo.UpdateAt = time.Now()
+		err := applicationentity.UpdateAppDeploy(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusDeploying update deployment failed!")
+		}
+
+		logger.Infof("handleStatusDeploying deployment disappeared! return to init status!")
 		return
 	}
 
@@ -109,35 +149,144 @@ func handleStatusDeploying(appDeployInfo *applicationentity.ApplicationDeployInf
 		err := applicationentity.UpdateAppDeploy(appDeployInfo)
 		if err != nil {
 			logger.Infof("handleStatusDeploying update deployment failed!")
+			return
+		}
+		logger.Infof("handleStatusDeploying UpdateAppDeploy succ! status to %s", appDeployInfo.Status)
+	} else {
+		appDeployInfo.Status = constants.StatusAbnormal
+		appDeployInfo.UpdateAt = time.Now()
+		err := applicationentity.UpdateAppDeploy(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusDeploying update deployment failed!")
+			return
+		}
+		logger.Infof("handleStatusDeploying UpdateAppDeploy succ! status to %s", appDeployInfo.Status)
+	}
+}
+
+func handleStatusAbnormal(appDeployInfo *applicationentity.ApplicationDeployInfo) {
+	var podExist bool
+
+	// check pod status
+	pod, err := GetK8sPod(appDeployInfo)
+	if err == nil {
+		podExist = true
+	} else {
+		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
+			podExist = false
+		} else {
+			logger.Infof("handleStatusAbnormal GetK8sPod! err = %v", err)
+			return
 		}
 	}
 
-	// TODO other status handle
+	if !podExist {
+		appDeployInfo.Status = constants.StatusInit
+		appDeployInfo.UpdateAt = time.Now()
+		err := applicationentity.UpdateAppDeploy(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusAbnormal update deployment failed!")
+			return
+		}
+
+		logger.Infof("handleStatusAbnormal deployment disappeared! return to init status!")
+		return
+	}
+
+	if pod.Status.Phase == corev1.PodRunning {
+		appDeployInfo.Status = constants.StatusRunning
+		appDeployInfo.UpdateAt = time.Now()
+		err := applicationentity.UpdateAppDeploy(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusAbnormal update deployment failed!")
+			return
+		}
+
+		logger.Infof("handleStatusDeploying UpdateAppDeploy succ! status to %s", appDeployInfo.Status)
+	}
 }
 
 func handleStatusRunning(appDeployInfo *applicationentity.ApplicationDeployInfo) {
+	var podExist bool
 
+	// check pod status
+	pod, err := GetK8sPod(appDeployInfo)
+	if err == nil {
+		podExist = true
+	} else {
+		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
+			podExist = false
+		} else {
+			logger.Infof("handleStatusRunning GetK8sPod! err = %v", err)
+			return
+		}
+	}
+
+	if !podExist {
+		appDeployInfo.Status = constants.StatusInit
+		appDeployInfo.UpdateAt = time.Now()
+		err := applicationentity.UpdateAppDeploy(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusRunning update deployment failed!")
+			return
+		}
+
+		logger.Infof("handleStatusRunning deployment disappeared! return to init status!")
+		return
+	}
+
+	if pod.Status.Phase != corev1.PodRunning {
+		appDeployInfo.Status = constants.StatusAbnormal
+		appDeployInfo.UpdateAt = time.Now()
+		err := applicationentity.UpdateAppDeploy(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusDeploying update deployment failed!")
+			return
+		}
+
+		logger.Infof("handleStatusDeploying UpdateAppDeploy succ! status to %s", appDeployInfo.Status)
+	}
 }
 
 func handleStatusDeleting(appDeployInfo *applicationentity.ApplicationDeployInfo) {
-	// first: undeploy to k8s
+	var podExist bool
+
+	// check pod status
 	_, err := GetK8sPod(appDeployInfo)
-	if err != nil { // if failed, try next time
-		// metav1.StatusReasonNotFound
-		logger.Infof("handleStatusDeleting, GetK8sPod err, err = %v", err)
+	if err == nil {
+		podExist = true
+	} else {
+		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
+			podExist = false
+		} else {
+			logger.Infof("handleStatusRunning GetK8sPod! err = %v", err)
+			return
+		}
+	}
+
+	if !podExist {
+		err = applicationentity.DeleteAppDeploy(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusDeleting, DeleteAppDeploy err, err = %v", err)
+			return
+		}
+		logger.Infof("handleStatusDeleting, DeleteAppDeploy succ")
 		return
 	}
 
 	err = DeleteK8sPod(appDeployInfo)
 	if err != nil { // if failed, try next time
+		logger.Infof("handleStatusDeleting, DeleteK8sPod err, err = %v", err)
 		return
 	}
 
-	// second: db record delete
+	// db record delete
 	err = applicationentity.DeleteAppDeploy(appDeployInfo)
-	if err == nil {
+	if err != nil {
 		logger.Infof("handleStatusDeleting, DeleteAppDeploy err, err = %v", err)
+		return
 	}
+	logger.Infof("handleStatusDeleting, DeleteAppDeploy succ")
 }
 
 func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {

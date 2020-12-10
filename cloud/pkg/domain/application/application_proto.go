@@ -92,10 +92,7 @@ type DeployEdgeApplicationReq struct {
 	proto.ApulisHeader `mapstructure:",squash"`
 	AppName            string `json:"appName"`
 	NodeName           string `json:"nodeName"`
-	NamespaceName      string `json:"namespaceName"`
 	Version            string `json:"version"`
-	RestartPolicy      int    `json:"restartPolicy"`
-	// TODO port mapping
 }
 
 type DeployEdgeApplicationRsp struct {
