@@ -26,12 +26,10 @@ func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req proto.Message
 		authenticated := authentication.Auth(c)
-		if authenticated.AuthError != nil {
+		if authenticated.AuthError != nil || !authenticated.Result {
 			c.Abort()
 			c.JSON(http.StatusUnauthorized, UnAuthorizedError(c, &req, "authenticate error:"+authenticated.AuthError.Error()))
-		} else if !authenticated.Result {
-			c.Abort()
-			c.JSON(http.StatusUnauthorized, UnAuthorizedError(c, &req, "authentication fail: "+authenticated.AuthError.Error()))
+			logger.Errorln(authenticated.AuthError.Error())
 		}
 		c.Next()
 
