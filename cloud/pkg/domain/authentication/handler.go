@@ -8,26 +8,25 @@ import (
 	"github.com/spf13/viper"
 )
 
-var authMethod func(c *gin.Context) AuthResult
+var authenticator Authenticator
 var logger = loggers.LogInstance()
 
 // Auth offer multi authentication features
 func Auth(c *gin.Context) AuthResult {
 	authType := viper.GetStringMap("authentication")["type"]
-	if authType == "none" {
+	if authType == "none" || authType == nil {
 		return NoAuth
 	}
 	if authType == "JWT" {
-		authMethod = jwtAuthtication
-		jwtSecretKey = viper.GetStringMap("authentication")["key"].(string)
+		authenticator = new(jwtAuthtication)
 	} else if authType == "basic" {
-		username = viper.GetViper().GetStringMap("authentication")["username"].(string)
-		password = viper.GetViper().GetStringMap("authentication")["password"].(string)
-		authMethod = basicAuthentication
+		authenticator = new(basicAuthentication)
 	} else {
 		panic(fmt.Errorf("unsupport authentication metho: %s", authType))
 	}
-	return authMethod(c)
+
+	authenticator.initCertificate()
+	return authenticator.AuthMethod(c)
 }
 
 func Sign() {

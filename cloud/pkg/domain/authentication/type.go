@@ -1,7 +1,15 @@
 package authentication
 
-import "errors"
+import (
+	"errors"
 
+	"github.com/gin-gonic/gin"
+)
+
+type Authenticator interface {
+	AuthMethod(*gin.Context) AuthResult
+	initCertificate()
+}
 type AuthResult struct {
 	Result    bool
 	AuthError error

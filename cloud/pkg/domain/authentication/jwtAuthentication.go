@@ -8,11 +8,15 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
 var jwtSecretKey string
 
-func jwtAuthtication(c *gin.Context) AuthResult {
+type jwtAuthtication struct {
+}
+
+func (jwtAuthticator jwtAuthtication) AuthMethod(c *gin.Context) AuthResult {
 	authResult := AuthResult{
 		false,
 		nil,
@@ -50,6 +54,10 @@ func jwtAuthtication(c *gin.Context) AuthResult {
 	}
 
 	return authResult
+}
+
+func (jwtAuthticator jwtAuthtication) initCertificate() {
+	jwtSecretKey = viper.GetStringMap("authentication")["key"].(string)
 }
 
 func jwtSign() string {
