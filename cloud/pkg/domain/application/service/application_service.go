@@ -45,10 +45,14 @@ func CreateEdgeApplication(req *appmodule.CreateEdgeApplicationReq) (string, str
 	}
 
 	// create app version
+	logger.Infof("%v", req)
 	appVersionInfo := &appentity.ApplicationVersionInfo{
 		AppName:               appBasicInfo.AppName,
-		ArchType:              req.ArchType,
+		ClusterId:             req.ClusterId,
+		GroupId:               req.GroupId,
+		UserId:                req.UserId,
 		Version:               req.Version,
+		ArchType:              req.ArchType,
 		ContainerImage:        req.ContainerImage,
 		ContainerImageVersion: req.ContainerImageVersion,
 		ContainerImagePath:    req.ContainerImagePath,

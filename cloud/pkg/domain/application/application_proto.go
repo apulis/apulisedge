@@ -13,7 +13,7 @@ type CreateEdgeApplicationReq struct {
 	AppName               string  `json:"appName"`
 	FunctionType          string  `json:"functionType"`
 	Description           string  `json:"description"`
-	ArchType              int     `json:"archType"`
+	ArchType              string  `json:"archType"`
 	Version               string  `json:"version"`
 	ContainerImage        string  `json:"containerImage"`
 	ContainerImageVersion string  `json:"containerImageVersion"`

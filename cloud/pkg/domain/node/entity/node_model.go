@@ -41,15 +41,6 @@ func UpdateNode(nodeInfo *NodeBasicInfo) error {
 	return apulisdb.Db.Save(nodeInfo).Error
 }
 
-func GetNode(clusterId int64, groupId int64, userId int64, nodeName string) (*NodeBasicInfo, error) {
-	nodeInfo := NodeBasicInfo{ClusterId: clusterId, GroupId: groupId, UserId: userId, NodeName: nodeName}
-	res := apulisdb.Db.First(&nodeInfo)
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	return &nodeInfo, nil
-}
-
 func DeleteNode(nodeInfo *NodeBasicInfo) error {
 	return apulisdb.Db.Delete(nodeInfo).Error
 }

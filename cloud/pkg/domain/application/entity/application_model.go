@@ -35,7 +35,7 @@ type ApplicationVersionInfo struct {
 	GroupId               int64     `gorm:"uniqueIndex:app_version;column:GroupId;not null"          json:"groupId" binding:"required"`
 	UserId                int64     `gorm:"uniqueIndex:app_version;column:UserId;not null"           json:"userId" binding:"required"`
 	Version               string    `gorm:"uniqueIndex:app_version;column:Version;size:255;not null" json:"version" binding:"required"`
-	ArchType              int       `gorm:"column:ArchType;not null"                                 json:"archType" binding:"required"`
+	ArchType              string    `gorm:"column:ArchType;size:64;not null"                         json:"archType" binding:"required"`
 	ContainerImage        string    `gorm:"column:containerImage;size:255;not null"                  json:"containerImage" binding:"required"`
 	ContainerImageVersion string    `gorm:"column:containerImageVersion;size:255;not null"           json:"containerImageVersion" binding:"required"`
 	ContainerImagePath    string    `gorm:"column:containerImagePath;size:255;not null"              json:"containerImagePath" binding:"required"`
