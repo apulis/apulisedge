@@ -6,17 +6,23 @@ import (
 	"github.com/spf13/viper"
 )
 
+// ConfigFilePath indicates runtime configuration file path
 var ConfigFilePath string
+
+// AppConfig indicates runtime configuration
 var AppConfig AgentConfig
 
+// AgentConfig indicates configuration structure
 type AgentConfig struct {
 	Log      LogConfig      `yaml:"log"`
 	Database DatabaseConfig `yaml:"database"`
 	Server   ServerConfig   `yaml:"server"`
 }
 
+// LogConfig indicates log configuration structure
 type LogConfig struct {
-	Path string `yaml:"path"`
+	Path     string `yaml:"path"`
+	FileName string `yaml:"filename"`
 }
 
 type DatabaseConfig struct {
@@ -37,6 +43,8 @@ func InitConfig() {
 	viper.SetConfigFile(ConfigFilePath)
 
 	viper.SetDefault("database.databaseDir", DEFAULT_DATABASE_DIR)
+	viper.SetDefault("log.path", DEFAULT_LOG_PATH)
+	viper.SetDefault("log.filename", DEFAULT_LOG_FILE)
 
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("Fatal error reading config file: %s", err))

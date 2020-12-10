@@ -8,9 +8,12 @@ import (
 	"time"
 
 	"github.com/apulis/ApulisEdge/agent/pkg/common/config"
+	"github.com/apulis/ApulisEdge/agent/pkg/common/loggers"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+var logger = loggers.LogInstance()
 
 // NewAgentCommand create a new instance of the application
 func NewAgentCommand() *cobra.Command {
@@ -33,8 +36,6 @@ func NewAgentCommand() *cobra.Command {
 	testCmd.Flags().StringVarP(&config.ConfigFilePath, "config", "c", "/etc/apulisedge/config/config.yaml", "path to config file")
 	cmd.AddCommand(testCmd)
 
-	initApp()
-
 	return cmd
 }
 
@@ -45,14 +46,14 @@ func run() error {
 
 	initLogger()
 
-	fmt.Println("app running")
+	logger.Infoln("app start")
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		for {
 			time.Sleep(time.Duration(1) * time.Second)
-			fmt.Println("still running")
+			logger.Infoln("app still running ...")
 		}
 	}()
 
@@ -72,10 +73,7 @@ func initConfig() {
 	config.InitConfig()
 }
 
-func initApp() {
-
-}
-
 func initLogger() {
+	loggers.InitLogger()
 
 }
