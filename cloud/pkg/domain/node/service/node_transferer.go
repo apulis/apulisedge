@@ -10,6 +10,8 @@ import (
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"time"
 )
@@ -78,17 +80,31 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	var interIp string
 	var outerIp string
-	var nodeStatus string
+	var curNodeStatus string
 	var roles string
 
-	// first: get node info from k8s
+	var nodeExist bool
+
+	// get node info from k8s
 	nodeK8sInfo, err := utils.DescribeNode(dbInfo.NodeName)
-	if err != nil {
-		logger.Debugf("handleStatusNotInstalled DescribeNode failed. name = %s, err = %v", dbInfo.NodeName, err)
+	if err == nil {
+		nodeExist = true
+	} else {
+		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
+			nodeExist = false
+		} else {
+			logger.Infof("handleStatusNotInstalled DescribeNode failed! name = %v, err = %v", dbInfo.NodeName, err)
+			return
+		}
+	}
+
+	// node not exist in k8s, try next time
+	if !nodeExist {
+		logger.Infof("handleStatusNotInstalled name %v not exist in kubernetes", dbInfo.NodeName)
 		return
 	}
 
-	// second: create new node and install node
+	// create new node and install node
 	// get address
 	for _, addr := range nodeK8sInfo.Status.Addresses {
 		if addr.Type == v1.NodeInternalIP {
@@ -102,9 +118,9 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	for _, cond := range nodeK8sInfo.Status.Conditions {
 		if cond.Type == v1.NodeReady {
 			if cond.Status == v1.ConditionTrue {
-				nodeStatus = constants.StatusOnline
+				curNodeStatus = constants.StatusOnline
 			} else if cond.Status == v1.ConditionFalse || cond.Status == v1.ConditionUnknown {
-				nodeStatus = constants.StatusOffline
+				curNodeStatus = constants.StatusOffline
 			}
 		}
 	}
@@ -120,14 +136,13 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	roles = strings.TrimPrefix(roles, ",")
 	roles = strings.TrimSuffix(roles, ",")
 
-	logger.Infof("node status = %s", nodeStatus)
 	newDbInfo := &nodeentity.NodeBasicInfo{
 		ID:               dbInfo.ID,
 		ClusterId:        dbInfo.ClusterId,
 		GroupId:          dbInfo.GroupId,
 		UserId:           dbInfo.UserId,
 		NodeName:         nodeK8sInfo.Name,
-		Status:           nodeStatus,
+		Status:           curNodeStatus,
 		Roles:            roles,
 		ContainerRuntime: nodeK8sInfo.Status.NodeInfo.ContainerRuntimeVersion,
 		OsImage:          nodeK8sInfo.Status.NodeInfo.OSImage,
@@ -141,20 +156,41 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	if err != nil {
 		logger.Infof("NodeTicker install node failed, node = %s, err = %v", dbInfo.NodeName, err)
 	} else {
-		logger.Infof("NodeTicker install node succ, node = %s", dbInfo.NodeName)
+		logger.Infof("NodeTicker install node succ, node = %s, turn to status %s", dbInfo.NodeName, newDbInfo.Status)
 	}
 }
 
 // keep online or to offline/uninstalled
 func handleStatusOnline(dbInfo *nodeentity.NodeBasicInfo) {
-	var newDbInfo nodeentity.NodeBasicInfo
-	var nodeStatus string
+	handleStatusInstalled(dbInfo)
+}
 
+func handleStatusOffline(dbInfo *nodeentity.NodeBasicInfo) {
+	handleStatusInstalled(dbInfo)
+}
+
+func handleStatusInstalled(dbInfo *nodeentity.NodeBasicInfo) {
+	var newDbInfo nodeentity.NodeBasicInfo
+	var curNodeStatus string
+
+	var nodeExist bool
+
+	// get node info from k8s
 	nodeK8sInfo, err := utils.DescribeNode(dbInfo.NodeName)
-	// if err get k8s info, turn to uninstalled
-	if err != nil {
-		logger.Debugf("handleStatusOnline DescribeNode failed. name = %s, err = %v", dbInfo.NodeName, err)
-		// turn to uninstalled
+	if err == nil {
+		nodeExist = true
+	} else {
+		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
+			nodeExist = false
+		} else {
+			logger.Infof("handleStatusNotInstalled DescribeNode failed! name = %v, err = %v", dbInfo.NodeName, err)
+			// TODO try many times, if failed, turn to offline
+			return
+		}
+	}
+
+	// not exist, turn to init status
+	if !nodeExist {
 		newDbInfo = *dbInfo
 		newDbInfo.Status = constants.StatusNotInstalled
 		newDbInfo.UpdateAt = time.Now()
@@ -162,33 +198,39 @@ func handleStatusOnline(dbInfo *nodeentity.NodeBasicInfo) {
 		if err != nil {
 			logger.Infof("handleStatusOnline UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
 		} else {
-			logger.Infof("handleStatusOnline UpdateNode succ, node = %s, status = %s", dbInfo.NodeName, newDbInfo.Status)
+			logger.Infof("handleStatusOnline UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
 		}
-	} else { // check if not ready
+
+		return
+	} else {
 		for _, cond := range nodeK8sInfo.Status.Conditions {
 			if cond.Type == v1.NodeReady {
 				if cond.Status == v1.ConditionTrue {
-					nodeStatus = constants.StatusOnline
-				} else if cond.Status == v1.ConditionFalse {
-					nodeStatus = constants.StatusOffline
+					curNodeStatus = constants.StatusOnline
+				} else {
+					curNodeStatus = constants.StatusOffline
 				}
 			}
 		}
 
-		if nodeStatus == constants.StatusOffline {
-			newDbInfo = *dbInfo
-			newDbInfo.Status = constants.StatusOffline
-			newDbInfo.UpdateAt = time.Now()
+		newDbInfo = *dbInfo
+		newDbInfo.UpdateAt = time.Now()
+		if dbInfo.Status == constants.StatusOnline && curNodeStatus == constants.StatusOffline {
+			newDbInfo.Status = curNodeStatus
 			err = nodeentity.UpdateNode(&newDbInfo)
 			if err != nil {
 				logger.Infof("handleStatusOnline UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
 			} else {
-				logger.Infof("handleStatusOnline UpdateNode succ, node = %s, status = %s", dbInfo.NodeName, newDbInfo.Status)
+				logger.Infof("handleStatusOnline UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
+			}
+		} else if dbInfo.Status == constants.StatusOffline && curNodeStatus == constants.StatusOnline {
+			newDbInfo.Status = curNodeStatus
+			err = nodeentity.UpdateNode(&newDbInfo)
+			if err != nil {
+				logger.Infof("handleStatusOnline UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
+			} else {
+				logger.Infof("handleStatusOnline UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
 			}
 		}
 	}
-}
-
-func handleStatusOffline(dbInfo *nodeentity.NodeBasicInfo) {
-
 }
