@@ -7,10 +7,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/apulis/ApulisEdge/agent/pkg/agentSocket"
 	"github.com/apulis/ApulisEdge/agent/pkg/common/config"
+	"github.com/apulis/ApulisEdge/agent/pkg/common/database"
 	"github.com/apulis/ApulisEdge/agent/pkg/common/loggers"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var logger = loggers.LogInstance()
@@ -46,7 +47,12 @@ func run() error {
 
 	initLogger()
 
-	logger.Infoln("app start")
+	initDatabase()
+
+	logger.Infoln("app start, config showing bellow:")
+	logger.Infoln("============================== ")
+	logger.Infoln(config.AppConfig)
+	logger.Infoln("============================== ")
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
@@ -57,11 +63,12 @@ func run() error {
 		}
 	}()
 
-	fmt.Println(viper.Get("server"))
 	select {
 	case <-quit:
 		fmt.Printf("app quit")
 	}
+
+	stopApp()
 	return nil
 }
 
@@ -76,4 +83,14 @@ func initConfig() {
 func initLogger() {
 	loggers.InitLogger()
 
+}
+
+func initDatabase() {
+	database.InitDatabase()
+
+	database.CreateTableIfNotExists(agentSocket.WebSocket{})
+}
+
+func stopApp() {
+	database.CloseDatabase()
 }

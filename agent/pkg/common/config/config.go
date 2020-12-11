@@ -26,12 +26,12 @@ type LogConfig struct {
 }
 
 type DatabaseConfig struct {
-	DatabaseDir     string `yaml:"dir"`
-	DatabaseType    string `yaml:"type"`
-	DatabaseAddress string `yaml:"address"`
-	Port            int    `yaml:"port"`
-	UserName        string `yaml:"username"`
-	Password        string `yaml:"password"`
+	Dir      string `yaml:"dir"`
+	Type     string `yaml:"type"`
+	Address  string `yaml:"address"`
+	Port     int    `yaml:"port"`
+	UserName string `yaml:"username"`
+	Password string `yaml:"password"`
 }
 
 type ServerConfig struct {
@@ -54,7 +54,4 @@ func InitConfig() {
 		panic(fmt.Errorf("Fatal error convert config file: %s", err))
 	}
 
-	fmt.Println("============================== ")
-	fmt.Println(AppConfig)
-	fmt.Println("============================== ")
 }
