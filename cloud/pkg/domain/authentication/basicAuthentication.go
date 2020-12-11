@@ -1,3 +1,5 @@
+// Copyright 2020 Apulis Technology Inc. All rights reserved.
+
 package authentication
 
 import (

@@ -1,3 +1,5 @@
+// Copyright 2020 Apulis Technology Inc. All rights reserved.
+
 package authentication
 
 import (
@@ -5,7 +7,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var authenticator Authenticator
 var authenticatorMap = map[string]Authenticator{
 	"JWT":   new(jwtAuthtication),
 	"basic": new(basicAuthentication),

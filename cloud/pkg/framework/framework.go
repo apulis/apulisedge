@@ -123,7 +123,9 @@ func (app *CloudApp) InitLogger() {
 
 func (app *CloudApp) InitConfig() {
 	logger.Infof("InitConfig, configFile path = %s", app.configFile)
+
 	configs.InitConfig(app.configFile, &app.cloudConfig)
+
 	authType := viper.GetStringMap("authentication")["type"].(string)
 	if !authentication.IsSupport(authType) {
 		panic(fmt.Errorf("unsupport authentication method: %s", authType))
