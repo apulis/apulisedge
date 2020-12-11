@@ -5,6 +5,7 @@ package framework
 import (
 	"context"
 	"fmt"
+	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	"os"
 	"os/signal"
 	"sync"
@@ -139,4 +140,5 @@ func (app *CloudApp) InitTables() {
 	database.CreateTableIfNotExists(appentity.ApplicationBasicInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationVersionInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationDeployInfo{})
+	database.CreateTableIfNotExists(imageentity.UserContainerImageInfo{})
 }

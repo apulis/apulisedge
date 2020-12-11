@@ -34,6 +34,7 @@ func NewRouter() *gin.Engine {
 
 	NodeHandlerRoutes(r)
 	ApplicationHandlerRoutes(r)
-	AuthenticationHandlerRoutes(r)
+	//AuthenticationHandlerRoutes(r)
+	ImageHandlerRoutes(r)
 	return r
 }
