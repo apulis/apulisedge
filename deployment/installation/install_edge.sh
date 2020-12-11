@@ -4,6 +4,7 @@
 # ===
 # common
 ARCH= # will be init latter
+NODENAME=$(hostname)
 LOG_DIR=/var/log/apulisedge
 INSTALL_LOG_FILE=${LOG_DIR}/installer.log
 SCRIPT_DIR=/opt/apulisedge
@@ -13,7 +14,8 @@ DESIRE_DOCKER_VERSION=17.06
 KUBEEDGE_LOG_DIR=/var/log/kubeedge
 KUBEEDGE_DATABASES_DIR=/var/lib/kubeedge
 KUBEEDGE_TAR_FILE= # need arch, will be init later
-KUBEEDGE_EDGE_IMAGE=apulis/kubeedge-edge:1.0
+DEFAULT_KUBEEDGE_EDGE_IMAGE=apulis/kubeedge-edge:1.0
+KUBEEDGE_EDGE_IMAGE=${DEFAULT_KUBEEDGE_EDGE_IMAGE}
 KUBEEDGE_HOME_PATH=/etc/kubeedge
 EDGECORE_LOG_FILE=${LOG_DIR}/edgecore.log
 
@@ -131,15 +133,19 @@ runEdgecore()
 {
     LOG_INFO "pulling images..."
     docker pull ${KUBEEDGE_EDGE_IMAGE}
+    docker tag ${KUBEEDGE_EDGE_IMAGE} ${DEFAULT_KUBEEDGE_EDGE_IMAGE}
     LOG_INFO "images ready."
     cd ${KUBEEDGE_HOME_PATH}
     # generate edgecore runtime config
     mkdir -p config
+    mkdir -p /var/lib/edged
     LOG_INFO "create edgecore config file..."
     docker run ${KUBEEDGE_EDGE_IMAGE} /bin/bash -c "edgecore --minconfig" | tee config/edgecore.yaml
     sed -i "s#httpServer:\ .*10002#httpServer: https://${SERVER_DOMAIN}:10002#g" config/edgecore.yaml
     sed -i "s#server:\ .*10001#server: ${SERVER_DOMAIN}:10001#g" config/edgecore.yaml
     sed -i "s#server:\ .*10000#server: ${SERVER_DOMAIN}:10000#g" config/edgecore.yaml
+    sed -i "s#hostnameOverride:\ .*#hostnameOverride:\ ${NODENAME}#g" config/edgecore.yaml
+    sed -i "/.*token:\ .*/d" config/edgecore.yaml
     # run edgecore image
     LOG_INFO "config file generated."
     systemctl enable docker.service
@@ -150,6 +156,8 @@ runEdgecore()
     --privileged=true \
     --network=host \
     -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /var/lib/edged:/var/lib/edged \
+    -v /var/lib/docker:/var/lib/docker \
     -v ${KUBEEDGE_DATABASES_DIR}:${KUBEEDGE_DATABASES_DIR} \
     -v ${KUBEEDGE_LOG_DIR}:${KUBEEDGE_LOG_DIR} \
     -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH} \
@@ -176,6 +184,16 @@ main()
                 ;;
                 -i)
                 APULISEDGE_IMAGE="$2"
+                shift;
+                shift;
+                ;;
+                -l)
+                KUBEEDGE_EDGE_IMAGE="$2"
+                shift;
+                shift;
+                ;;
+                -h)
+                NODENAME="$2"
                 shift;
                 shift;
                 ;;
