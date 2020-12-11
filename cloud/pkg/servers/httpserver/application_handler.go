@@ -15,6 +15,8 @@ import (
 func ApplicationHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/application")
 
+	group.Use(Auth())
+
 	/// edge application
 	group.POST("/listApplication", wrapper(ListEdgeApps))
 	group.POST("/createApplication", wrapper(CreateEdgeApplication))
