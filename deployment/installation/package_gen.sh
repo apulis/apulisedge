@@ -181,4 +181,3 @@ main()
 ARCH="x86_64"
 main "$@"
 ARCH="aarch64"
-main "$@"
