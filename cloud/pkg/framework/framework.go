@@ -100,6 +100,9 @@ func (app *CloudApp) MainLoop() error {
 	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
 	go applicationservice.CreateApplicationTickerLoop(app.tickerCtx, &app.cloudConfig)
 
+	// init download server
+	nodeservice.InitInstallScriptConfig(&app.cloudConfig)
+
 	// quit when signal notifys
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

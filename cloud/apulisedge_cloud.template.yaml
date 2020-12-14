@@ -36,3 +36,7 @@ authentication:
 
 kubemaster: "https://cls-f4x353m8.ccs.tencent-cloud.com"
 KubeConfFile: "/.kube/config"
+
+downloadServer:
+  address: 127.0.0.1
+  port: 12315
