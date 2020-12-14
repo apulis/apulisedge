@@ -3,35 +3,29 @@
 package authentication
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
+	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
+	"github.com/apulis/ApulisEdge/cloud/pkg/domain/authentication/service"
+	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 )
 
+var logger = loggers.LogInstance()
+
 var authenticatorMap = map[string]Authenticator{
-	"JWT":   new(jwtAuthtication),
-	"basic": new(basicAuthentication),
+	"AiArts": authservice.AiArtsAuthtication{},
 }
 
-// Auth offer multi authentication features
-// If you want to add a authenticator, follow steps:
-// 1. define your authenticator struct, and implements "Authenticator" interface
-// 2. add your config key pair in authenticatorMap
-func Auth(c *gin.Context) AuthResult {
-	authType := viper.GetStringMap("authentication")["type"]
-	if authType == "none" || authType == nil {
-		return NoAuth
+func GetAuthenticator(config *configs.EdgeCloudConfig) (Authenticator, error) {
+	authType := config.Authentication.AuthType
+	_, ok := authenticatorMap[authType]
+	if !ok {
+		logger.Infof("InitAuth failed, authType = %s, err = %v", authType, ErrAuthTypeNotSupported)
+		return nil, ErrAuthTypeNotSupported
 	}
 
-	authenticator := authenticatorMap[authType.(string)]
-	if authenticator == nil {
-		return NotSupportAuth
+	err := authenticatorMap[authType].Init(config)
+	if err != nil {
+		return nil, ErrAuthenticatorInit
 	}
 
-	authenticator.initCertificate()
-	return authenticator.AuthMethod(c)
-}
-
-func IsSupport(authName string) bool {
-	_, ok := authenticatorMap[authName]
-	return ok
+	return authenticatorMap[authType], nil
 }

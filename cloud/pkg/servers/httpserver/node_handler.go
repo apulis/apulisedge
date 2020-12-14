@@ -15,6 +15,7 @@ import (
 func NodeHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/node")
 
+	// add authentication
 	//group.Use(Auth())
 
 	group.POST("/createNode", wrapper(CreateEdgeNode))

@@ -15,6 +15,7 @@ import (
 func ApplicationHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/application")
 
+	// add authentication
 	//group.Use(Auth())
 
 	/// edge application

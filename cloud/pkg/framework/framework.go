@@ -4,7 +4,6 @@ package framework
 
 import (
 	"context"
-	"fmt"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	"os"
 	"os/signal"
@@ -15,13 +14,11 @@ import (
 	"github.com/apulis/ApulisEdge/cloud/pkg/database"
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
 	applicationservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/service"
-	"github.com/apulis/ApulisEdge/cloud/pkg/domain/authentication"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	"github.com/apulis/ApulisEdge/cloud/pkg/servers/httpserver"
 	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
-	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
 )
 
@@ -97,6 +94,13 @@ func (app *CloudApp) MainLoop() error {
 	// init kubeclient
 	utils.InitKubeClient(app.cloudConfig.KubeMaster, app.cloudConfig.KubeConfFile)
 
+	// init auth
+	err := app.InitAuth()
+	if err != nil {
+		logger.Errorf("Auth init failed, err = %v", err)
+		return err
+	}
+
 	// init ticker
 	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
 	go applicationservice.CreateApplicationTickerLoop(app.tickerCtx, &app.cloudConfig)
@@ -123,18 +127,15 @@ func (app *CloudApp) InitLogger() {
 
 func (app *CloudApp) InitConfig() {
 	logger.Infof("InitConfig, configFile path = %s", app.configFile)
-
 	configs.InitConfig(app.configFile, &app.cloudConfig)
-
-	authType := viper.GetStringMap("authentication")["type"].(string)
-	if !authentication.IsSupport(authType) {
-		panic(fmt.Errorf("unsupport authentication method: %s", authType))
-	}
-
 }
 
 func (app *CloudApp) InitDatabase() {
 	database.InitDatabase(&app.cloudConfig)
+}
+
+func (app *CloudApp) InitAuth() error {
+	return httpserver.InitAuth(&app.cloudConfig)
 }
 
 func (app *CloudApp) InitTables() {
