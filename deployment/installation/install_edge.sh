@@ -210,8 +210,8 @@ main()
     fi
 
     # === init some variables
-    ARCH="$(getArch $(uname -m))"
-    KUBEEDGE_TAR_FILE=kubeedgeRuntime-${ARCH}.tar.gz
+    ARCH="$(uname -m)"
+    KUBEEDGE_TAR_FILE=apulisedge_${ARCH}.tar.gz
 
     # === init log
     mkdir -p ${LOG_DIR}
