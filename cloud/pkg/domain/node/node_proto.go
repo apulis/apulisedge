@@ -10,7 +10,7 @@ import (
 // Create edge node
 type CreateEdgeNodeReq struct {
 	protocol.ApulisHeader `mapstructure:",squash"`
-	NodeName              string `json:"nodeName"`
+	Name                  string `json:"name"`
 }
 
 type CreateEdgeNodeRsp struct {
@@ -32,7 +32,7 @@ type ListEdgeNodesRsp struct {
 // Describe edge node protocol
 type DescribeEdgeNodesReq struct {
 	protocol.ApulisHeader `mapstructure:",squash"`
-	NodeName              string `json:"nodeName"`
+	Name                  string `json:"name"`
 }
 
 type DescribeEdgeNodesRsp struct {
@@ -42,7 +42,7 @@ type DescribeEdgeNodesRsp struct {
 // Delete edge node
 type DeleteEdgeNodeReq struct {
 	protocol.ApulisHeader `mapstructure:",squash"`
-	NodeName              string `json:"nodeName"`
+	Name                  string `json:"name"`
 }
 
 type DeleteEdgeNodeRsp struct {

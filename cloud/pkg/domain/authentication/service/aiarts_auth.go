@@ -17,20 +17,20 @@ const (
 	DefaultUserId    int64 = 0
 )
 
+var JwtSecretKey string
+
 type AiArtsAuthtication struct {
-	JwtSecretKey  string
-	Authenticator interface{}
 }
 
 type Claim struct {
-	jwt.StandardClaims
 	Uid      int    `json:"uid"`
 	UserName string `json:"userName"`
+	jwt.StandardClaims
 }
 
 func (a AiArtsAuthtication) Init(config *configs.EdgeCloudConfig) error {
-	a.JwtSecretKey = config.Authentication.AiArtsAuth.Key
-	logger.Debugf("jwt key = %s", a.JwtSecretKey)
+	JwtSecretKey = config.Authentication.AiArtsAuth.Key
+	logger.Infof("jwt key = [%s]", JwtSecretKey)
 	return nil
 }
 
@@ -51,7 +51,7 @@ func (a AiArtsAuthtication) AuthMethod(auth string) (*protocol.ApulisHeader, err
 
 func (a AiArtsAuthtication) ParseToken(token string) (*Claim, error) {
 	jwtToken, err := jwt.ParseWithClaims(token, &Claim{}, func(token *jwt.Token) (i interface{}, e error) {
-		return []byte(a.JwtSecretKey), nil
+		return []byte(JwtSecretKey), nil
 	})
 
 	if err == nil && jwtToken != nil {
@@ -60,6 +60,6 @@ func (a AiArtsAuthtication) ParseToken(token string) (*Claim, error) {
 		}
 	}
 
-	logger.Debugf("AiArtsAuthtication parseToken failed! err = %v", err)
+	logger.Infof("AiArtsAuthtication parseToken failed! err = %v", err)
 	return nil, err
 }

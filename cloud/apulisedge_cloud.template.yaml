@@ -14,7 +14,7 @@ cloudhub:
 
 log:
   # 6: trace, 5: debug, 4: info
-  level: 5
+  level: 4
   writefile: true
   filedir: logs
   filename: apulis_edge_cloud.log
@@ -37,5 +37,5 @@ Authentication:
   password: root@123
   key: "Sign key for JWT"
 
-kubemaster: "https://192.168.1.112:6443"
+kubemaster: "https://192.168.1.158:6443"
 KubeConfFile: "/root/.kube/config"
