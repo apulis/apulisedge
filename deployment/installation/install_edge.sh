@@ -124,6 +124,8 @@ envInit()
     LOG_INFO "decompress file..."
     cp ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE} ${KUBEEDGE_HOME_PATH}
     tar -zxvf ${KUBEEDGE_HOME_PATH}/${KUBEEDGE_TAR_FILE}
+    cp -r ${KUBEEDGE_HOME_PATH}/package/ca ${KUBEEDGE_HOME_PATH}/
+    cp -r ${KUBEEDGE_HOME_PATH}/package/certs ${KUBEEDGE_HOME_PATH}/
     LOG_INFO "file decompressed."
     LOG_INFO "Initializing completed."
 
@@ -210,8 +212,8 @@ main()
     fi
 
     # === init some variables
-    ARCH="$(getArch $(uname -m))"
-    KUBEEDGE_TAR_FILE=kubeedgeRuntime-${ARCH}.tar.gz
+    ARCH="$(uname -m)"
+    KUBEEDGE_TAR_FILE=apulisedge_${ARCH}.tar.gz
 
     # === init log
     mkdir -p ${LOG_DIR}

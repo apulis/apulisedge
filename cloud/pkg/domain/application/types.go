@@ -17,9 +17,20 @@ const (
 	StatusInit      string = "Init"
 	StatusDeploying string = "Deploying"
 	StatusRunning   string = "Running"
+	StatusAbnormal  string = "Abnormal"
 	StatusDeleting  string = "Deleting"
 )
 
+const (
+	AppUserDefine string = "UserDefine"
+	AppSysDefine  string = "System"
+)
+
+const (
+	DefaultNamespace string = "default"
+)
+
+// for ticker
 const (
 	TransferCountEach int = 10
 )
