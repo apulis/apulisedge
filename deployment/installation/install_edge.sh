@@ -65,7 +65,7 @@ envCheck()
 {
     # === check hostname case
     HOSTNAME=`hostname`
-    REGEX_OUTPUT=`echo "${HOSTNAME} | grep -P "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*" -o"`
+    REGEX_OUTPUT=`echo ${HOSTNAME} | grep -P "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*" -o`
     if [[ ! "${HOSTNAME}" == "${REGEX_OUTPUT}" ]]; then
         LOG_ERROR "Subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*') "
         return 1
