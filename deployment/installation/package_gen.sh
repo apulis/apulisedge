@@ -8,10 +8,6 @@ PACKAGE_PATH="/tmp/apulisedge/${PACKAGE_NAME}/"
 LOG_FILE_PATH="/var/log/apulisedge/"
 LOG_FILE="${LOG_FILE_PATH}/package_gen.log"
 CLOUD_DOMAIN="apulis.cn"
-CA_PATH=${CA_PATH:-${PACKAGE_PATH}/ca}
-CA_SUBJECT=${CA_SUBJECT:-/C=CN/ST=Guangdong/L=Shenzhen/O=Apulis/CN=${CLOUD_DOMAIN}}
-CERT_PATH=${CERT_PATH:-${PACKAGE_PATH}/certs}
-SUBJECT=${SUBJECT:-/C=CN/ST=Guangdong/L=Shenzhen/O=Apulis/CN=${CLOUD_DOMAIN}}
 INSTALL_SCRIPT_PATH="${PACKAGE_PATH}/scripts"
 
 
@@ -84,6 +80,14 @@ envCheck()
 
 envInit()
 {
+    # init some environment variables
+    TAR_PACKAGE_NAME="apulisedge_${ARCH}.tar.gz"
+    LOG_INFO "Package will be save as: ${TAR_PACKAGE_NAME}"
+    CA_PATH=${CA_PATH:-${PACKAGE_PATH}/ca}
+    CA_SUBJECT=${CA_SUBJECT:-/C=CN/ST=Guangdong/L=Shenzhen/O=Apulis/CN=${CLOUD_DOMAIN}}
+    CERT_PATH=${CERT_PATH:-${PACKAGE_PATH}/certs}
+    SUBJECT=${SUBJECT:-/C=CN/ST=Guangdong/L=Shenzhen/O=Apulis/CN=${CLOUD_DOMAIN}}
+
     # delete last generated package
     rm -rf ${PACKAGE_PATH}
 
@@ -95,9 +99,6 @@ envInit()
     mkdir -p ${CERT_PATH}
     mkdir -p ${INSTALL_SCRIPT_PATH}
 
-    # init some environment variables
-    TAR_PACKAGE_NAME="apulisedge_${ARCH}.tar.gz"
-    LOG_INFO "Package will be save as: ${TAR_PACKAGE_NAME}"
 }
 
 downloadScripts()
@@ -181,3 +182,4 @@ main()
 ARCH="x86_64"
 main "$@"
 ARCH="aarch64"
+main "$@"
