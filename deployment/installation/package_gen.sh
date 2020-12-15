@@ -183,6 +183,12 @@ main()
         envClean
     )
 
+    # === init log
+    mkdir -p ${LOG_DIR}
+    if [ ! -e "${INSTALL_LOG_FILE}}" ]; then
+        touch "${INSTALL_LOG_FILE}"
+    fi
+
     LOG_INFO "=== package generate begin"
     for i in "${!process[@]}";do
         LOG_INFO "process ${process[${i}]} begin"
