@@ -3,6 +3,7 @@ module github.com/apulis/ApulisEdge/cloud
 go 1.14
 
 require (
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-contrib/cors v1.3.1
@@ -19,12 +20,11 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/viper v1.7.0
 	github.com/swaggo/gin-swagger v1.2.0
-	github.com/swaggo/swag v1.6.7 // indirect
+	github.com/swaggo/swag v1.6.7
 	github.com/urfave/cli/v2 v2.3.0
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/tools v0.0.0-20201204180437-c46b611624b3 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gorm.io/driver/mysql v1.0.3
 	gorm.io/gorm v1.20.7
 	k8s.io/api v0.0.0-20200903132205-4352ece35dc9
