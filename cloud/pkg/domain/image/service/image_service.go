@@ -11,6 +11,7 @@ import (
 
 var logger = loggers.LogInstance()
 
+// list container images
 func ListContainerImage(req *imagemodule.ListContainerImageReq) ([]imageentity.UserContainerImageInfo, int, error) {
 	var imageInfos []imageentity.UserContainerImageInfo
 
@@ -30,4 +31,30 @@ func ListContainerImage(req *imagemodule.ListContainerImageReq) ([]imageentity.U
 	}
 
 	return imageInfos, int(res.RowsAffected), nil
+}
+
+// delete container images
+func DeleteContainerImage(req *imagemodule.DeleteContainerImageReq) error {
+	var imageInfo imageentity.UserContainerImageInfo
+
+	// check if any image version exist
+	var total int64
+	apulisdb.Db.Model(&imageentity.UserContainerImageVersionInfo{}).
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ?",
+			req.ClusterId, req.GroupId, req.UserId, req.ImageName, req.OrgName).
+		Count(&total)
+	if total != 0 {
+		return imagemodule.ErrImageVersionExist
+	}
+
+	// get image and delete
+	res := apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ?",
+			req.ClusterId, req.GroupId, req.UserId, req.ImageName, req.OrgName).
+		First(&imageInfo)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	return imageentity.DeleteContainerImage(&imageInfo)
 }

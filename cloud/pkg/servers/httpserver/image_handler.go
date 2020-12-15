@@ -45,11 +45,12 @@ func ListContainerImage(c *gin.Context) error {
 	}
 
 	data := imagemodule.ListContainerImageRsp{
-		Total: total,
+		Total:  total,
+		Images: []imagemodule.RspContainerImageInfo{},
 	}
 
 	for i := 0; i < data.Total; i++ {
-		img := imagemodule.RspImageInfo{
+		img := imagemodule.RspContainerImageInfo{
 			ClusterId:    images[i].ClusterId,
 			GroupId:      images[i].GroupId,
 			UserId:       images[i].UserId,

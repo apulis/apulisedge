@@ -3,18 +3,19 @@
 package image
 
 import (
+	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"time"
 )
 
-// List edge nodes
+// List image
 type ListContainerImageReq struct {
 	protocol.ApulisHeader `mapstructure:",squash"`
 	PageNum               int `json:"pageNum"`
 	PageSize              int `json:"pageSize"`
 }
 
-type RspImageInfo struct {
+type RspContainerImageInfo struct {
 	ClusterId    int64     `json:"clusterId"`
 	GroupId      int64     `json:"groupId"`
 	UserId       int64     `json:"userId"`
@@ -25,6 +26,63 @@ type RspImageInfo struct {
 }
 
 type ListContainerImageRsp struct {
-	Total  int            `json:"total"`
-	Images []RspImageInfo `json:"images"`
+	Total  int                     `json:"total"`
+	Images []RspContainerImageInfo `json:"images"`
+}
+
+// Delete image
+type DeleteContainerImageReq struct {
+	protocol.ApulisHeader `mapstructure:",squash"`
+	ImageName             string `json:"imageName"`
+	OrgName               string `json:"orgName"`
+}
+
+type DeleteContainerImageRsp struct {
+}
+
+// List image version
+type ListContainerImageVersionReq struct {
+	protocol.ApulisHeader `mapstructure:",squash"`
+	ImageName             string `json:"imageName"`
+	OrgName               string `json:"orgName"`
+	PageNum               int    `json:"pageNum"`
+	PageSize              int    `json:"pageSize"`
+}
+
+type ListContainerImageVersionRsp struct {
+	Total  int                                          `json:"total"`
+	Images *[]imageentity.UserContainerImageVersionInfo `json:"imageVersions"`
+}
+
+// Delete image version
+type DeleteContainerImageVersionReq struct {
+	protocol.ApulisHeader `mapstructure:",squash"`
+	ImageName             string `json:"imageName"`
+	OrgName               string `json:"orgName"`
+	ImageVersion          string `json:"imageVersion"`
+}
+
+type DeleteContainerImageVersionRsp struct {
+}
+
+// List image org
+type ListContainerImageOrgReq struct {
+	protocol.ApulisHeader `mapstructure:",squash"`
+	OrgName               string `json:"orgName"`
+	PageNum               int    `json:"pageNum"`
+	PageSize              int    `json:"pageSize"`
+}
+
+type ListContainerImageOrgRsp struct {
+	Total  int                              `json:"total"`
+	Images *[]imageentity.ContainerImageOrg `json:"imageOrgs"`
+}
+
+// Delete image org
+type DeleteContainerImageOrgReq struct {
+	protocol.ApulisHeader `mapstructure:",squash"`
+	OrgName               string `json:"orgName"`
+}
+
+type DeleteContainerImageOrgRsp struct {
 }
