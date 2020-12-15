@@ -4,7 +4,7 @@ package httpserver
 
 import (
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
-	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	"github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
@@ -14,16 +14,25 @@ import (
 
 func NodeHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/node")
-	group.Use(Auth())
+
+	//group.Use(Auth())
 
 	group.POST("/createNode", wrapper(CreateEdgeNode))
 	group.POST("/listNode", wrapper(ListEdgeNodes))
-	group.POST("/desNode", wrapper(DescribeEgeNode))
+	group.POST("/desNode", wrapper(DescribeEdgeNode))
 	group.POST("/deleteNode", wrapper(DeleteEdgeNode))
 	group.GET("/scripts", wrapper(GetInstallScripts))
 }
 
-// create edge node
+// @Summary create edge node
+// @Description create edge node
+// @Tags node
+// @Accept json
+// @Produce json
+// @Param param body node.CreateEdgeNodeReq true "userId:user id, userName: user name"
+// @Success 200 {object} APISuccessResp{data=node.CreateEdgeNodeRsp}
+// @Failure 400 {object} APIErrorResp
+// @Router /createNode [post]
 func CreateEdgeNode(c *gin.Context) error {
 	var err error
 	var req proto.Message
@@ -41,7 +50,7 @@ func CreateEdgeNode(c *gin.Context) error {
 	// TODO validate reqContent
 
 	// create node
-	node, err = nodeservice.CreateEdgeNode(reqContent.UserId, reqContent.UserName, reqContent.NodeName)
+	node, err = nodeservice.CreateEdgeNode(&reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -52,7 +61,15 @@ func CreateEdgeNode(c *gin.Context) error {
 	return SuccessResp(c, &req, data)
 }
 
-// list edge nodes
+// @Summary list edge nodes
+// @Description list edge nodes
+// @Tags node
+// @Accept json
+// @Produce json
+// @Param param body node.ListEdgeNodesReq true "userId:user id, userName: user name"
+// @Success 200 {object} APISuccessResp{data=node.ListEdgeNodesRsp} "code:0, msg:OK"
+// @Failure 400 {object} APIErrorResp "code:30000, msg:db error"
+// @Router /listNode [post]
 func ListEdgeNodes(c *gin.Context) error {
 	var err error
 	var req proto.Message
@@ -71,7 +88,7 @@ func ListEdgeNodes(c *gin.Context) error {
 	// TODO validate reqContent
 
 	// list node
-	nodes, total, err = nodeservice.ListEdgeNodes(reqContent.UserId, reqContent.PageNum, reqContent.PageSize)
+	nodes, total, err = nodeservice.ListEdgeNodes(&reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -84,7 +101,7 @@ func ListEdgeNodes(c *gin.Context) error {
 }
 
 // describe edge nodes
-func DescribeEgeNode(c *gin.Context) error {
+func DescribeEdgeNode(c *gin.Context) error {
 	var err error
 	var req proto.Message
 	var reqContent nodemodule.DescribeEdgeNodesReq
@@ -101,7 +118,7 @@ func DescribeEgeNode(c *gin.Context) error {
 	// TODO validate reqContent
 
 	// describe node
-	nodeInfo, err = nodeservice.DescribeEdgeNode(reqContent.UserId, reqContent.NodeName)
+	nodeInfo, err = nodeservice.DescribeEdgeNode(&reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}

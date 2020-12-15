@@ -7,6 +7,8 @@ import (
 )
 
 var (
-	ErrDeployExist    = errors.New("application deploy exist")
-	ErrGetApplication = errors.New("get application err")
+	ErrDeployExist             = errors.New("application deploy exist")
+	ErrApplicationExist        = errors.New("application exist")
+	ErrApplicationVersionExist = errors.New("application version exist")
+	ErrUnDeploying             = errors.New("undeploying")
 )

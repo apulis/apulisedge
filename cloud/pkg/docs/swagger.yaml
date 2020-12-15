@@ -1,0 +1,158 @@
+definitions:
+  httpserver.APIErrorResp:
+    properties:
+      code:
+        type: integer
+      msg:
+        type: string
+    type: object
+  httpserver.APISuccessResp:
+    properties:
+      code:
+        type: integer
+      data:
+        type: object
+      msg:
+        type: string
+    type: object
+  node.CreateEdgeNodeReq:
+    properties:
+      nodeName:
+        type: string
+      userId:
+        type: integer
+      userName:
+        type: string
+    type: object
+  node.CreateEdgeNodeRsp:
+    properties:
+      node:
+        $ref: '#/definitions/nodeentity.NodeBasicInfo'
+    type: object
+  node.ListEdgeNodesReq:
+    properties:
+      pageNum:
+        type: integer
+      pageSize:
+        type: integer
+      userId:
+        type: integer
+      userName:
+        type: string
+    type: object
+  node.ListEdgeNodesRsp:
+    properties:
+      nodes:
+        items:
+          $ref: '#/definitions/nodeentity.NodeBasicInfo'
+        type: array
+      total:
+        type: integer
+    type: object
+  nodeentity.NodeBasicInfo:
+    properties:
+      createAt:
+        type: string
+      id:
+        type: integer
+      interIp:
+        type: string
+      name:
+        type: string
+      osImage:
+        type: string
+      outerIp:
+        type: string
+      providerId:
+        type: string
+      roles:
+        type: string
+      runtime:
+        type: string
+      status:
+        type: string
+      updateAt:
+        type: string
+      userId:
+        type: integer
+      userName:
+        type: string
+    required:
+    - id
+    - name
+    - osImage
+    - roles
+    - runtime
+    - status
+    - userId
+    - userName
+    type: object
+info:
+  contact: {}
+  description: ApulisEdge cloud server.
+  title: ApulisEdge Cloud API
+  version: alpha
+paths:
+  /createNode:
+    post:
+      consumes:
+      - application/json
+      description: create edge node
+      parameters:
+      - description: 'userId:user id, userName: user name'
+        in: body
+        name: param
+        required: true
+        schema:
+          $ref: '#/definitions/node.CreateEdgeNodeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.APISuccessResp'
+            - properties:
+                data:
+                  $ref: '#/definitions/node.CreateEdgeNodeRsp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpserver.APIErrorResp'
+      summary: create edge node
+      tags:
+      - node
+  /listNode:
+    post:
+      consumes:
+      - application/json
+      description: list edge nodes
+      parameters:
+      - description: 'userId:user id, userName: user name'
+        in: body
+        name: param
+        required: true
+        schema:
+          $ref: '#/definitions/node.ListEdgeNodesReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: code:0, msg:OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.APISuccessResp'
+            - properties:
+                data:
+                  $ref: '#/definitions/node.ListEdgeNodesRsp'
+              type: object
+        "400":
+          description: code:30000, msg:db error
+          schema:
+            $ref: '#/definitions/httpserver.APIErrorResp'
+      summary: list edge nodes
+      tags:
+      - node
+swagger: "2.0"

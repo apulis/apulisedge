@@ -3,6 +3,7 @@
 package httpserver
 
 import (
+	_ "github.com/apulis/ApulisEdge/cloud/pkg/docs"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
@@ -12,6 +13,9 @@ import (
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
+// @title ApulisEdge Cloud API
+// @version alpha
+// @description ApulisEdge cloud server.
 func NewRouter() *gin.Engine {
 	r := gin.New()
 
@@ -30,6 +34,7 @@ func NewRouter() *gin.Engine {
 
 	NodeHandlerRoutes(r)
 	ApplicationHandlerRoutes(r)
-	AuthenticationHandlerRoutes(r)
+	//AuthenticationHandlerRoutes(r)
+	ImageHandlerRoutes(r)
 	return r
 }

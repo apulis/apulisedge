@@ -73,6 +73,22 @@ func GetDeploymentClient(namespace string) (appsv1.DeploymentInterface, error) {
 	return clientSet.AppsV1().Deployments(namespace), nil
 }
 
+func GetPodClient(namespace string) (corev1.PodInterface, error) {
+	kubeConfig, err := KubeConfig()
+	if err != nil {
+		logger.Error("Failed to create KubeConfig , error : %v", err)
+		return nil, err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(kubeConfig)
+	if err != nil {
+		logger.Error("Failed to create clientset , error : %v", err)
+		return nil, err
+	}
+
+	return clientSet.CoreV1().Pods(namespace), nil
+}
+
 func ListNodes() (result *v1.NodeList, err error) {
 	nodeClient, err := GetNodeClient()
 	if err != nil {
