@@ -29,11 +29,13 @@ db:
   maxopenconns: 10
   maxidleconns: 2
 
-authentication:
-  type: JWT
+Authentication:
+  AuthType: AiArts
+  AiArtsAuth:
+    key: "Sign key for JWT"
   username: root
   password: root@123
   key: "Sign key for JWT"
 
-kubemaster: "https://192.168.1.112:6443"
+kubemaster: "https://192.168.1.158:6443"
 KubeConfFile: "/root/.kube/config"

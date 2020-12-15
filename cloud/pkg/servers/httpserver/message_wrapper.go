@@ -60,6 +60,15 @@ func HandleNotFound(c *gin.Context) {
 
 }
 
+func ErrorNoBodyResp(code int, msg string) *APIErrorResp {
+	errMsg := &APIErrorResp{
+		Code: code,
+		Msg:  msg,
+	}
+
+	return errMsg
+}
+
 func ErrorResp(c *gin.Context, req *proto.Message, code int, msg string) (*proto.Message, *APIErrorResp) {
 	errMsg := &APIErrorResp{
 		Code: code,
@@ -67,6 +76,11 @@ func ErrorResp(c *gin.Context, req *proto.Message, code int, msg string) (*proto
 	}
 	rsp := req.NewRespByMessage(req, errMsg)
 	return rsp, errMsg
+}
+
+func NoBodyUnAuthorizedError(msg string) *APIErrorResp {
+	rsp := ErrorNoBodyResp(AUTH_ERROR_CODE, msg)
+	return rsp
 }
 
 func UnAuthorizedError(c *gin.Context, req *proto.Message, msg string) *APIErrorResp {

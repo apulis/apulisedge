@@ -10,13 +10,14 @@ import (
 )
 
 type EdgeCloudConfig struct {
-	DebugModel   bool
-	Portal       PortalConfig
-	CloudHub     CloudHubConfig
-	Log          LogConfig
-	Db           DbConfig
-	KubeConfFile string
-	KubeMaster   string
+	DebugModel     bool
+	Portal         PortalConfig
+	CloudHub       CloudHubConfig
+	Log            LogConfig
+	Db             DbConfig
+	KubeConfFile   string
+	KubeMaster     string
+	Authentication AuthConfig
 }
 
 type HttpConfig struct {
@@ -56,6 +57,16 @@ type DbConfig struct {
 	Database     string
 	MaxOpenConns int
 	MaxIdleConns int
+}
+
+type AuthConfig struct {
+	AuthType   string
+	AiArtsAuth AiArtsAuthConfig
+	// TODO add other auth
+}
+
+type AiArtsAuthConfig struct {
+	Key string
 }
 
 func InitConfig(configFile string, config *EdgeCloudConfig) {

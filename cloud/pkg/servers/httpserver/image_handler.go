@@ -14,6 +14,8 @@ import (
 
 func ImageHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/image")
+
+	// add authentication
 	//group.Use(Auth())
 
 	group.POST("/listImage", wrapper(ListContainerImage))
