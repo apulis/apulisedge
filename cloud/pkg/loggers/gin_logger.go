@@ -4,7 +4,6 @@ package loggers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
 	"time"
 
@@ -22,7 +21,6 @@ func GinLogger(logger logrus.FieldLogger) gin.HandlerFunc {
 		statusCode := c.Writer.Status()
 		clientIP := c.ClientIP()
 		clientUserAgent := c.Request.UserAgent()
-		body, _ := ioutil.ReadAll(c.Request.Body)
 		referer := c.Request.Referer()
 		dataLength := c.Writer.Size()
 		if dataLength < 0 {
@@ -32,7 +30,6 @@ func GinLogger(logger logrus.FieldLogger) gin.HandlerFunc {
 		entry := logger.WithFields(logrus.Fields{
 			"clientIP":   clientIP,
 			"referer":    referer,
-			"reqBody":    body,
 			"dataLength": dataLength,
 			"userAgent":  clientUserAgent,
 		})

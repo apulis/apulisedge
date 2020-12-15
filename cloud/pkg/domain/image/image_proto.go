@@ -30,6 +30,14 @@ type ListContainerImageRsp struct {
 	Images []RspContainerImageInfo `json:"images"`
 }
 
+// Upload image
+type UploadContainerImageReq struct {
+	protocol.ApulisHeader `mapstructure:",squash"`
+}
+
+type UploadContainerImageRsp struct {
+}
+
 // Delete image
 type DeleteContainerImageReq struct {
 	protocol.ApulisHeader `mapstructure:",squash"`

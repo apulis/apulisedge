@@ -3,6 +3,7 @@
 package httpserver
 
 import (
+	"fmt"
 	imagemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/image"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
@@ -19,6 +20,7 @@ func ImageHandlerRoutes(r *gin.Engine) {
 	//group.Use(Auth())
 
 	group.POST("/listImage", wrapper(ListContainerImage))
+	group.POST("/uploadImage", wrapper(UploadContainerImage))
 }
 
 func ListContainerImage(c *gin.Context) error {
@@ -63,4 +65,24 @@ func ListContainerImage(c *gin.Context) error {
 	}
 
 	return SuccessResp(c, &req, data)
+}
+
+// upload container image
+func UploadContainerImage(c *gin.Context) error {
+	var err error
+
+	// single file
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
+
+	logger.Infof("Upload container image, file = %s", fileHeader.Filename)
+
+	err = c.SaveUploadedFile(fileHeader, "/tmp/apulis/images/"+fileHeader.Filename)
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
+
+	return NoReqSuccessResp(c, fmt.Sprintf("'%s' uploaded!", fileHeader.Filename))
 }

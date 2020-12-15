@@ -45,6 +45,18 @@ func SuccessResp(c *gin.Context, req *proto.Message, content interface{}) error 
 	return nil
 }
 
+func NoReqSuccessResp(c *gin.Context, content interface{}) error {
+	res := APISuccessResp{
+		Code: SUCCESS_CODE,
+		Msg:  "OK",
+		Data: content,
+	}
+	rsp := proto.NewRawMessage()
+	rsp.FillBody(res)
+	c.JSON(http.StatusOK, rsp)
+	return nil
+}
+
 //////////////// Error Message //////////////////
 func (e *APIErrorResp) Error() string {
 	return e.Msg
@@ -117,6 +129,12 @@ func AppError(c *gin.Context, req *proto.Message, errCode int, msg string) *APIE
 	rsp, err := ErrorResp(c, req, errCode, msg)
 	c.JSON(http.StatusBadRequest, rsp)
 	return err
+}
+
+func NoReqAppError(c *gin.Context, msg string) *APIErrorResp {
+	rsp := ErrorNoBodyResp(AUTH_ERROR_CODE, msg)
+	c.JSON(http.StatusBadRequest, rsp)
+	return rsp
 }
 
 func ServeError(c *gin.Context, req *proto.Message, errCode int, msg string) *APIErrorResp {
