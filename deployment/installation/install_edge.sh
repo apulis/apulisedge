@@ -63,15 +63,21 @@ LOG_ERROR()
 
 envCheck()
 {
+    # === check hostname case
+    HOSTNAME=`hostname`
+    REGEX_OUTPUT=`echo "${HOSTNAME} | grep -P "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*" -o"
+    if [[ ! "${HOSTNAME}" == "${REGEX_OUTPUT}" ]]; then
+        LOG_ERROR "Subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*') "
+        return 1
+    fi
+
     # === check docker install status and version
     if [[ ! `command -v docker` ]]; then
-        LOG_ERROR "ERROR !!!"
         LOG_ERROR "Docker is not found but is required on node."
         LOG_ERROR "Please install docker and then try again."
     fi
     result=$(docker info 2>&1 | sed -n '1p' | grep Cannot | grep connect | grep Docker)
     if [ -n "${result}" ]; then
-        LOG_ERROR "ERROR !!!"
         LOG_ERROR "docker is not start, please start first."
         return 1
     fi
@@ -86,7 +92,6 @@ envCheck()
             LOG_INFO "check docker version success"
         else
             LOG_ERROR "docker version is too low, mini support version is ${DESIRE_DOCKER_VERSION}."
-            LOG_ERROR "docker version is too low, mini support version is ${DESIRE_DOCKER_VERSION}."
             return 1
         fi
     fi
@@ -94,7 +99,6 @@ envCheck()
     # === check download package
     LOG_INFO "check download package:${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE}"
     if [[ ! -e ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE} ]];then
-        LOG_ERROR "ERROR !!!"
         LOG_ERROR "Can't find kubeedge.tar.gz"
         LOG_ERROR "Please fix and then try again."
         return 1
@@ -103,7 +107,6 @@ envCheck()
     # === check input params
     LOG_INFO "check input params:SERVER_DOMAIN"
     if [[ "${SERVER_DOMAIN}" = "" ]]; then
-        LOG_ERROR "ERROR !!!"
         LOG_ERROR "Cloud server domain is not specified."
         LOG_ERROR "Please fix and then try again."
         return 1
