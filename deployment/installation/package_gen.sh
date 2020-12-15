@@ -122,6 +122,28 @@ compressPackage()
     cd -
 }
 
+signPackage()
+{
+    cd ${PACKAGE_PATH}/..
+
+    mkdir -p private
+    openssl genrsa -out private/rsa_private_${ARCH}.key
+    openssl rsa -in private/rsa_private_${ARCH}.key -pubout -out apulisedge_${ARCH}.key
+    openssl dgst -sign private/rsa_private_${ARCH}.key -sha256 -out apulisedge_${ARCH}.sig ${TAR_PACKAGE_NAME}
+
+    cd -
+}
+
+envClean()
+{
+    cd ${PACKAGE_PATH}/..
+
+    # delete git project
+    rm -rf apulisedge
+
+    cd -
+}
+
 main()
 {
     if which getopt > /dev/null 2>&1; then
@@ -157,6 +179,8 @@ main()
         genCertAndKey
         downloadScripts
         compressPackage
+        signPackage
+        envClean
     )
 
     LOG_INFO "=== package generate begin"
