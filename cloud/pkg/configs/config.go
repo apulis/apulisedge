@@ -10,14 +10,21 @@ import (
 )
 
 type EdgeCloudConfig struct {
-	DebugModel     bool
-	Portal         PortalConfig
-	CloudHub       CloudHubConfig
-	Log            LogConfig
-	Db             DbConfig
-	KubeConfFile   string
-	KubeMaster     string
-	Authentication AuthConfig
+	DebugModel   bool
+	Portal       PortalConfig
+	CloudHub     CloudHubConfig
+	Log          LogConfig
+	Db           DbConfig
+	KubeConfFile string
+	KubeMaster   string
+	ScriptConfig DownloadServerConfig
+}
+
+type DownloadServerConfig struct {
+	DownloadAddress string `yaml:"address"`
+	DownloadPort    int    `yaml:"port"`
+	CloudServer     string `yaml:"cloudServer"`
+	ImageServer     string `yaml:"imageServer"`
 }
 
 type HttpConfig struct {

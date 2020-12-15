@@ -3,7 +3,7 @@
 package node
 
 import (
-	"github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 )
 
@@ -46,4 +46,13 @@ type DeleteEdgeNodeReq struct {
 }
 
 type DeleteEdgeNodeRsp struct {
+}
+
+type GetInstallScriptReq struct {
+	protocol.ApulisHeader `mapstructure:",squash"`
+	Arch                  string `json:"arch"`
+}
+
+type GetInstallScriptRsp struct {
+	Script string `json:"script"`
 }
