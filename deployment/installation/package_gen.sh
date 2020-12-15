@@ -185,8 +185,8 @@ main()
 
     # === init log
     mkdir -p ${LOG_DIR}
-    if [ ! -e "${INSTALL_LOG_FILE}}" ]; then
-        touch "${INSTALL_LOG_FILE}"
+    if [ ! -e "${LOG_FILE}}" ]; then
+        touch "${LOG_FILE}"
     fi
 
     LOG_INFO "=== package generate begin"
