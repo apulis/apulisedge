@@ -5,7 +5,7 @@
 ARCH=$(uname -m)
 PACKAGE_NAME="package"
 PACKAGE_PATH="/tmp/apulisedge/${PACKAGE_NAME}/"
-LOG_FILE_PATH="/var/log/apulisedge/"
+LOG_DIR=/var/log/apulisedge
 LOG_FILE="${LOG_FILE_PATH}/package_gen.log"
 CLOUD_DOMAIN="apulis.cn"
 INSTALL_SCRIPT_PATH="${PACKAGE_PATH}/scripts"
@@ -53,8 +53,18 @@ genCert() {
 }
 
 genCertAndKey() {
-    ensureCA
     local name="server"
+    echo ${CA_PATH}
+    echo ${CERT_PATH}
+    ls -l ${CA_PATH}
+    ls -l ${CERT_PATH}
+    if [[ -e ${CA_PATH}/rootCA.key && -e ${CA_PATH}/rootCA.crt && -e ${CA_PATH}/rootCA.srl && -e ${CERT_PATH}/${name}.crt && -e ${CERT_PATH}/${name}.csr && -e ${CERT_PATH}/${name}.key ]]; then
+        LOG_INFO "CA and Certs has been generated, use generated certificates now."
+        return 0
+    fi
+    LOG_INFO "CA and Certs has not been generated, generating..."
+    read -r ans
+    ensureCA
     genCsr $name
     genCert $name
 }
@@ -88,12 +98,7 @@ envInit()
     CERT_PATH=${CERT_PATH:-${PACKAGE_PATH}/certs}
     SUBJECT=${SUBJECT:-/C=CN/ST=Guangdong/L=Shenzhen/O=Apulis/CN=${CLOUD_DOMAIN}}
 
-    # delete last generated package
-    rm -rf ${PACKAGE_PATH}
-
     # create directory
-    mkdir -p ${LOG_FILE_PATH}
-    mkdir -p ${PACKAGE_PATH}
     mkdir -p ${PACKAGE_PATH}
     mkdir -p ${CA_PATH}
     mkdir -p ${CERT_PATH}
