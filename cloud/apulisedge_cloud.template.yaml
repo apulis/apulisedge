@@ -43,3 +43,5 @@ KubeConfFile: "/.kube/config"
 downloadServer:
   address: 127.0.0.1
   port: 12315
+  cloudServer: cloud.sigsus.cn
+  imageServer: harbor.sigsus.cn:8443
