@@ -7,12 +7,13 @@ import (
 	imagemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/image"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
+	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 )
 
 var logger = loggers.LogInstance()
 
 // list container images
-func ListContainerImage(req *imagemodule.ListContainerImageReq) ([]imageentity.UserContainerImageInfo, int, error) {
+func ListContainerImage(userInfo proto.ApulisHeader, req *imagemodule.ListContainerImageReq) ([]imageentity.UserContainerImageInfo, int, error) {
 	var imageInfos []imageentity.UserContainerImageInfo
 
 	total := 0
@@ -20,7 +21,7 @@ func ListContainerImage(req *imagemodule.ListContainerImageReq) ([]imageentity.U
 	limit := req.PageSize
 
 	res := apulisdb.Db.Offset(offset).Limit(limit).
-		Where("ClusterId = ? and GroupId = ? and UserId = ?", req.ClusterId, req.GroupId, req.UserId).
+		Where("ClusterId = ? and GroupId = ? and UserId = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId).
 		Group("ImageName").
 		Group("OrgName").
 		Select("ImageName, OrgName", "UpdateAt").
@@ -34,14 +35,14 @@ func ListContainerImage(req *imagemodule.ListContainerImageReq) ([]imageentity.U
 }
 
 // delete container images
-func DeleteContainerImage(req *imagemodule.DeleteContainerImageReq) error {
+func DeleteContainerImage(userInfo proto.ApulisHeader, req *imagemodule.DeleteContainerImageReq) error {
 	var imageInfo imageentity.UserContainerImageInfo
 
 	// check if any image version exist
 	var total int64
 	apulisdb.Db.Model(&imageentity.UserContainerImageVersionInfo{}).
 		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ?",
-			req.ClusterId, req.GroupId, req.UserId, req.ImageName, req.OrgName).
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.ImageName, req.OrgName).
 		Count(&total)
 	if total != 0 {
 		return imagemodule.ErrImageVersionExist
@@ -50,7 +51,7 @@ func DeleteContainerImage(req *imagemodule.DeleteContainerImageReq) error {
 	// get image and delete
 	res := apulisdb.Db.
 		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ?",
-			req.ClusterId, req.GroupId, req.UserId, req.ImageName, req.OrgName).
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.ImageName, req.OrgName).
 		First(&imageInfo)
 	if res.Error != nil {
 		return res.Error

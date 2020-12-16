@@ -6,10 +6,11 @@ import (
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	imagemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/image"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
+	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 )
 
 // list container org
-func ListContainerImageOrg(req *imagemodule.ListContainerImageOrgReq) (*[]imageentity.ContainerImageOrg, error) {
+func ListContainerImageOrg(userInfo proto.ApulisHeader, req *imagemodule.ListContainerImageOrgReq) (*[]imageentity.ContainerImageOrg, error) {
 	var imageOrgs []imageentity.ContainerImageOrg
 
 	offset := req.PageSize * (req.PageNum - 1)
@@ -17,7 +18,7 @@ func ListContainerImageOrg(req *imagemodule.ListContainerImageOrgReq) (*[]imagee
 
 	res := apulisdb.Db.Offset(offset).Limit(limit).
 		Where("ClusterId = ? and OrgName = ? and OwnerGroupId = ? and OwnerUserId = ?",
-			req.ClusterId, req.OrgName, req.GroupId, req.UserId).
+			userInfo.ClusterId, req.OrgName, userInfo.GroupId, userInfo.UserId).
 		Find(&imageOrgs)
 
 	if res.Error != nil {
@@ -28,19 +29,19 @@ func ListContainerImageOrg(req *imagemodule.ListContainerImageOrgReq) (*[]imagee
 }
 
 // delete container org
-func DeleteContainterImageOrg(req *imagemodule.DeleteContainerImageOrgReq) error {
+func DeleteContainterImageOrg(userInfo proto.ApulisHeader, req *imagemodule.DeleteContainerImageOrgReq) error {
 
 	// check if org have images
 	var total int64
 	apulisdb.Db.Model(&imageentity.UserContainerImageInfo{}).
-		Where("ClusterId = ? and OrgName = ?", req.ClusterId, req.OrgName).
+		Where("ClusterId = ? and OrgName = ?", userInfo.ClusterId, req.OrgName).
 		Count(&total)
 	if total != 0 {
 		return imagemodule.ErrOrgImageNotEmpty
 	}
 
 	// delete org
-	res := apulisdb.Db.Where("ClusterId = ? and OrgName = ?", req.ClusterId, req.OrgName).
+	res := apulisdb.Db.Where("ClusterId = ? and OrgName = ?", userInfo.ClusterId, req.OrgName).
 		Delete(imageentity.ContainerImageOrg{})
 	if res.Error != nil {
 		return res.Error

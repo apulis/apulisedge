@@ -16,7 +16,7 @@ func ApplicationHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/application")
 
 	// add authentication
-	//group.Use(Auth())
+	group.Use(Auth())
 
 	/// edge application
 	group.POST("/listApplication", wrapper(ListEdgeApps))
@@ -51,8 +51,15 @@ func ListEdgeApps(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// list node
-	apps, total, err = appservice.ListEdgeApplications(&reqContent)
+	apps, total, err = appservice.ListEdgeApplications(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -81,8 +88,15 @@ func CreateEdgeApplication(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// create application
-	appCreated, verCreated, err := appservice.CreateEdgeApplication(&reqContent)
+	appCreated, verCreated, err := appservice.CreateEdgeApplication(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -111,8 +125,15 @@ func DeleteEdgeApplication(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// delete application
-	err = appservice.DeleteEdgeApplication(&reqContent)
+	err = appservice.DeleteEdgeApplication(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -138,8 +159,15 @@ func ListEdgeAppVersions(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// list node
-	appVers, total, err = appservice.ListEdgeApplicationVersions(&reqContent)
+	appVers, total, err = appservice.ListEdgeApplicationVersions(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -167,8 +195,15 @@ func DeleteEdgeApplicationVersion(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// delete application
-	err = appservice.DeleteEdgeApplicationVersion(&reqContent)
+	err = appservice.DeleteEdgeApplicationVersion(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -194,8 +229,15 @@ func ListEdgeAppDeploys(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// list node
-	appDeploys, total, err = appservice.ListEdgeDeploys(&reqContent)
+	appDeploys, total, err = appservice.ListEdgeDeploys(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -223,8 +265,15 @@ func DeployEdgeApplication(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// deploy application
-	err = appservice.DeployEdgeApplication(&reqContent)
+	err = appservice.DeployEdgeApplication(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -248,8 +297,15 @@ func UnDeployEdgeApplication(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// deploy application
-	err = appservice.UnDeployEdgeApplication(&reqContent)
+	err = appservice.UnDeployEdgeApplication(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}

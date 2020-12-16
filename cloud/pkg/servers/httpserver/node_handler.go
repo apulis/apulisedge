@@ -16,7 +16,7 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/node")
 
 	// add authentication
-	//group.Use(Auth())
+	group.Use(Auth())
 
 	group.POST("/createNode", wrapper(CreateEdgeNode))
 	group.POST("/listNode", wrapper(ListEdgeNodes))
@@ -49,8 +49,15 @@ func CreateEdgeNode(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// create node
-	node, err = nodeservice.CreateEdgeNode(&reqContent)
+	node, err = nodeservice.CreateEdgeNode(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -87,8 +94,15 @@ func ListEdgeNodes(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// list node
-	nodes, total, err = nodeservice.ListEdgeNodes(&reqContent)
+	nodes, total, err = nodeservice.ListEdgeNodes(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -117,8 +131,15 @@ func DescribeEdgeNode(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// describe node
-	nodeInfo, err = nodeservice.DescribeEdgeNode(&reqContent)
+	nodeInfo, err = nodeservice.DescribeEdgeNode(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -145,8 +166,15 @@ func DeleteEdgeNode(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// delete application
-	err = nodeservice.DeleteEdgeNode(&reqContent)
+	err = nodeservice.DeleteEdgeNode(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}

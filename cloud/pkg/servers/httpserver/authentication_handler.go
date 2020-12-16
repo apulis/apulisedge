@@ -3,27 +3,13 @@ package httpserver
 import (
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"net/http"
+	"strings"
 
 	"github.com/apulis/ApulisEdge/cloud/pkg/domain/authentication"
-	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
 )
 
 var authenticator authentication.Authenticator
-
-// AuthenticationHandlerRoutes join authentication module in server
-func AuthenticationHandlerRoutes(r *gin.Engine) {
-	group := r.Group("/apulisEdge/api/authentication")
-	group.Use(Auth())
-
-	group.GET("/test", wrapper(authenticationTest))
-}
-
-func authenticationTest(c *gin.Context) error {
-	var req proto.Message
-	data := "success"
-	return SuccessResp(c, &req, data)
-}
 
 func InitAuth(config *configs.EdgeCloudConfig) error {
 	var err error
@@ -41,25 +27,35 @@ func Auth() gin.HandlerFunc {
 		var err error
 
 		r := c.Request
-		auth := r.Header.Get("Authorization")
-		logger.Debugf("Auth header = %s", auth)
-		if len(auth) == 0 {
+		authHeader := r.Header.Get("Authorization")
+		logger.Debugf("Auth header = %s", authHeader)
+		if len(authHeader) == 0 {
 			c.Abort()
 			c.JSON(http.StatusUnauthorized, NoBodyUnAuthorizedError("Cannot authorize"))
 			c.Next()
 			return
 		}
 
+		auth := strings.Fields(authHeader)[1]
 		data, err := authenticator.AuthMethod(auth)
 		if err != nil {
 			c.Abort()
 			c.JSON(http.StatusUnauthorized, NoBodyUnAuthorizedError(err.Error()))
-		} else {
-			c.Set("clusterId", data.ClusterId)
-			c.Set("groupId", data.GroupId)
-			c.Set("userId", data.UserId)
+			c.Next()
+			return
 		}
 
+		// TODO check clusterId/groupId/userId
+		if data.ClusterId < 0 || data.GroupId < 0 || data.UserId < 0 {
+			c.Abort()
+			c.JSON(http.StatusUnauthorized, NoBodyUnAuthorizedError(ErrInvalidUserInfo.Error()))
+			c.Next()
+			return
+		}
+
+		c.Set("clusterId", data.ClusterId)
+		c.Set("groupId", data.GroupId)
+		c.Set("userId", data.UserId)
 		c.Next()
 	}
 }

@@ -10,16 +10,17 @@ import (
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
+	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"time"
 )
 
 var logger = loggers.LogInstance()
 
-func CreateEdgeNode(req *nodemodule.CreateEdgeNodeReq) (*nodeentity.NodeBasicInfo, error) {
+func CreateEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.CreateEdgeNodeReq) (*nodeentity.NodeBasicInfo, error) {
 	node := &nodeentity.NodeBasicInfo{
-		ClusterId:        req.ClusterId,
-		GroupId:          req.GroupId,
-		UserId:           req.UserId,
+		ClusterId:        userInfo.ClusterId,
+		GroupId:          userInfo.GroupId,
+		UserId:           userInfo.UserId,
 		NodeName:         req.Name,
 		Status:           constants.StatusNotInstalled,
 		Roles:            "",
@@ -34,7 +35,7 @@ func CreateEdgeNode(req *nodemodule.CreateEdgeNodeReq) (*nodeentity.NodeBasicInf
 	return node, nodeentity.CreateNode(node)
 }
 
-func ListEdgeNodes(req *nodemodule.ListEdgeNodesReq) (*[]nodeentity.NodeBasicInfo, int, error) {
+func ListEdgeNodes(userInfo proto.ApulisHeader, req *nodemodule.ListEdgeNodesReq) (*[]nodeentity.NodeBasicInfo, int, error) {
 	var nodeInfos []nodeentity.NodeBasicInfo
 
 	total := 0
@@ -42,7 +43,7 @@ func ListEdgeNodes(req *nodemodule.ListEdgeNodesReq) (*[]nodeentity.NodeBasicInf
 	limit := req.PageSize
 
 	res := apulisdb.Db.Offset(offset).Limit(limit).
-		Where("ClusterId = ? and GroupId = ? and UserId = ?", req.ClusterId, req.GroupId, req.UserId).
+		Where("ClusterId = ? and GroupId = ? and UserId = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId).
 		Find(&nodeInfos)
 
 	if res.Error != nil {
@@ -52,11 +53,11 @@ func ListEdgeNodes(req *nodemodule.ListEdgeNodesReq) (*[]nodeentity.NodeBasicInf
 	return &nodeInfos, int(res.RowsAffected), nil
 }
 
-func DescribeEdgeNode(req *nodemodule.DescribeEdgeNodesReq) (*nodeentity.NodeBasicInfo, error) {
+func DescribeEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.DescribeEdgeNodesReq) (*nodeentity.NodeBasicInfo, error) {
 	var nodeInfo nodeentity.NodeBasicInfo
 
 	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", req.ClusterId, req.GroupId, req.UserId, req.Name).
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.Name).
 		First(&nodeInfo)
 
 	if res.Error != nil {
@@ -67,13 +68,13 @@ func DescribeEdgeNode(req *nodemodule.DescribeEdgeNodesReq) (*nodeentity.NodeBas
 }
 
 // delete edge node
-func DeleteEdgeNode(req *nodemodule.DeleteEdgeNodeReq) error {
+func DeleteEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.DeleteEdgeNodeReq) error {
 	var nodeInfo nodeentity.NodeBasicInfo
 
 	// first: check if any deploy exist
 	var total int64
 	apulisdb.Db.Model(&appentity.ApplicationDeployInfo{}).
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", req.ClusterId, req.GroupId, req.UserId, req.Name).
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.Name).
 		Count(&total)
 	if total != 0 {
 		return appmodule.ErrDeployExist
@@ -81,7 +82,7 @@ func DeleteEdgeNode(req *nodemodule.DeleteEdgeNodeReq) error {
 
 	// second: get node and delete
 	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", req.ClusterId, req.GroupId, req.UserId, req.Name).
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.Name).
 		First(&nodeInfo)
 	if res.Error != nil {
 		return res.Error

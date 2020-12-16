@@ -17,7 +17,7 @@ func ImageHandlerRoutes(r *gin.Engine) {
 	group := r.Group("/apulisEdge/api/image")
 
 	// add authentication
-	//group.Use(Auth())
+	group.Use(Auth())
 
 	group.POST("/listImage", wrapper(ListContainerImage))
 	group.POST("/uploadImage", wrapper(UploadContainerImage))
@@ -40,8 +40,15 @@ func ListContainerImage(c *gin.Context) error {
 
 	// TODO validate reqContent
 
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
 	// list node
-	images, total, err = imageservice.ListContainerImage(&reqContent)
+	images, total, err = imageservice.ListContainerImage(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -70,6 +77,13 @@ func ListContainerImage(c *gin.Context) error {
 // upload container image
 func UploadContainerImage(c *gin.Context) error {
 	var err error
+
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
 
 	// single file
 	fileHeader, err := c.FormFile("file")

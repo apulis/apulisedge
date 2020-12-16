@@ -4,13 +4,11 @@ package node
 
 import (
 	"github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
-	"github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 )
 
 // Create edge node
 type CreateEdgeNodeReq struct {
-	protocol.ApulisHeader `mapstructure:",squash"`
-	Name                  string `json:"name"`
+	Name string `json:"name"`
 }
 
 type CreateEdgeNodeRsp struct {
@@ -19,9 +17,8 @@ type CreateEdgeNodeRsp struct {
 
 // List edge nodes
 type ListEdgeNodesReq struct {
-	protocol.ApulisHeader `mapstructure:",squash"`
-	PageNum               int `json:"pageNum"`
-	PageSize              int `json:"pageSize"`
+	PageNum  int `json:"pageNum"`
+	PageSize int `json:"pageSize"`
 }
 
 type ListEdgeNodesRsp struct {
@@ -31,8 +28,7 @@ type ListEdgeNodesRsp struct {
 
 // Describe edge node protocol
 type DescribeEdgeNodesReq struct {
-	protocol.ApulisHeader `mapstructure:",squash"`
-	Name                  string `json:"name"`
+	Name string `json:"name"`
 }
 
 type DescribeEdgeNodesRsp struct {
@@ -41,8 +37,7 @@ type DescribeEdgeNodesRsp struct {
 
 // Delete edge node
 type DeleteEdgeNodeReq struct {
-	protocol.ApulisHeader `mapstructure:",squash"`
-	Name                  string `json:"name"`
+	Name string `json:"name"`
 }
 
 type DeleteEdgeNodeRsp struct {

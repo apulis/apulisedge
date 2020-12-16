@@ -2,6 +2,8 @@
 
 package httpserver
 
+import "errors"
+
 const (
 	SUCCESS_CODE = 0
 
@@ -28,4 +30,18 @@ const (
 	APP_STILL_HAVE_DEPLOY = 30101
 
 	REMOTE_SERVE_ERROR_CODE = 40000
+)
+
+// user manage
+const (
+	InvalidClusterId int64 = -1
+	InvalidGroupId   int64 = -1
+	InvalidUserId    int64 = -1
+)
+
+var (
+	ErrInvalidClusterId = errors.New("Invalid cluster id")
+	ErrInvalidGroupId   = errors.New("Invalid group id")
+	ErrInvalidUserId    = errors.New("Invalid user id")
+	ErrInvalidUserInfo  = errors.New("Invalid user info")
 )

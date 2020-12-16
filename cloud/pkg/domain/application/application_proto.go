@@ -4,12 +4,10 @@ package application
 
 import (
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
-	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 )
 
 // Create edge application
 type CreateEdgeApplicationReq struct {
-	proto.ApulisHeader    `mapstructure:",squash"`
 	AppName               string  `json:"appName"`
 	FunctionType          string  `json:"functionType"`
 	Description           string  `json:"description"`
@@ -31,9 +29,8 @@ type CreateEdgeApplicationRsp struct {
 
 // List edge application
 type ListEdgeApplicationReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	PageNum            int `json:"pageNum"`
-	PageSize           int `json:"pageSize"`
+	PageNum  int `json:"pageNum"`
+	PageSize int `json:"pageSize"`
 }
 
 type ListEdgeApplicationRsp struct {
@@ -43,10 +40,9 @@ type ListEdgeApplicationRsp struct {
 
 // List edge application version
 type ListEdgeApplicationVersionReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	AppName            string `json:"appName"`
-	PageNum            int    `json:"pageNum"`
-	PageSize           int    `json:"pageSize"`
+	AppName  string `json:"appName"`
+	PageNum  int    `json:"pageNum"`
+	PageSize int    `json:"pageSize"`
 }
 
 type ListEdgeApplicationVersionRsp struct {
@@ -56,8 +52,7 @@ type ListEdgeApplicationVersionRsp struct {
 
 // Delete edge application
 type DeleteEdgeApplicationReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	AppName            string `json:"appName"`
+	AppName string `json:"appName"`
 }
 
 type DeleteEdgeApplicationRsp struct {
@@ -65,9 +60,8 @@ type DeleteEdgeApplicationRsp struct {
 
 // Delete edge application version
 type DeleteEdgeApplicationVersionReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	AppName            string `json:"appName"`
-	Version            string `json:"version"`
+	AppName string `json:"appName"`
+	Version string `json:"version"`
 }
 
 type DeleteEdgeApplicationVersionRsp struct {
@@ -75,11 +69,10 @@ type DeleteEdgeApplicationVersionRsp struct {
 
 // List edge application
 type ListEdgeAppDeployReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	AppName            string `json:"appName"`
-	Version            string `json:"version"`
-	PageNum            int    `json:"pageNum"`
-	PageSize           int    `json:"pageSize"`
+	AppName  string `json:"appName"`
+	Version  string `json:"version"`
+	PageNum  int    `json:"pageNum"`
+	PageSize int    `json:"pageSize"`
 }
 
 type ListEdgeAppDeployRsp struct {
@@ -89,10 +82,9 @@ type ListEdgeAppDeployRsp struct {
 
 // Deploy edge application
 type DeployEdgeApplicationReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	AppName            string `json:"appName"`
-	NodeName           string `json:"nodeName"`
-	Version            string `json:"version"`
+	AppName  string `json:"appName"`
+	NodeName string `json:"nodeName"`
+	Version  string `json:"version"`
 }
 
 type DeployEdgeApplicationRsp struct {
@@ -100,10 +92,9 @@ type DeployEdgeApplicationRsp struct {
 
 // undeploy edge application
 type UnDeployEdgeApplicationReq struct {
-	proto.ApulisHeader `mapstructure:",squash"`
-	AppName            string `json:"appName"`
-	NodeName           string `json:"nodeName"`
-	Version            string `json:"version"`
+	AppName  string `json:"appName"`
+	NodeName string `json:"nodeName"`
+	Version  string `json:"version"`
 }
 
 type UnDeployEdgeApplicationRsp struct {
