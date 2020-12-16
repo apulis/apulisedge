@@ -87,13 +87,18 @@ func UploadContainerImage(c *gin.Context) error {
 		return NoReqAppError(c, err.Error())
 	}
 
+	// org
+	orgName := c.PostForm("orgName")
+	if orgName == "" {
+		return NoReqAppError(c, ErrOrgNameNeeded.Error())
+	}
+
 	// single file
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
 		return NoReqAppError(c, err.Error())
 	}
-
-	logger.Infof("Upload container image, file = %s", fileHeader.Filename)
+	logger.Infof("Uploading container image, file = %s", fileHeader.Filename)
 
 	dstFile := "/tmp/apulis/images/" + fileHeader.Filename
 	err = c.SaveUploadedFile(fileHeader, dstFile)
@@ -101,7 +106,7 @@ func UploadContainerImage(c *gin.Context) error {
 		return NoReqAppError(c, err.Error())
 	}
 
-	// image load and image push
+	// image load
 	ctx := context.Background()
 	cli, err := utils.NewDockerClient()
 	if err != nil {
@@ -109,12 +114,30 @@ func UploadContainerImage(c *gin.Context) error {
 	}
 	defer utils.CloseDockerClient(cli)
 
-	tag, err := utils.DockerImageLoad(ctx, cli, dstFile)
+	img, err := utils.DockerImageLoad(ctx, cli, dstFile)
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
+	logger.Infof("Image load succ, load tag = %s", img)
+
+	// image tag
+	tag, ver, err := utils.GetImageNameAndVersion(img)
 	if err != nil {
 		return NoReqAppError(c, err.Error())
 	}
 
-	logger.Infof("Image load succ, load tag = %s", tag)
+	dstImage := "harbor.sigsus.cn:8443/" + "apulisedge/" + orgName + "/" + tag + ":" + ver
+	err = utils.DockerImageTag(ctx, cli, tag+":"+ver, dstImage)
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
+
+	// img push
+	err = utils.DockerImagePush(ctx, cli, dstImage)
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
+	logger.Infof("Image push succ, load tag = %s", img)
 
 	return NoReqSuccessResp(c, fmt.Sprintf("'%s' uploaded!", fileHeader.Filename))
 }

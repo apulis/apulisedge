@@ -44,4 +44,5 @@ var (
 	ErrInvalidGroupId   = errors.New("Invalid group id")
 	ErrInvalidUserId    = errors.New("Invalid user id")
 	ErrInvalidUserInfo  = errors.New("Invalid user info")
+	ErrOrgNameNeeded    = errors.New("Need org name")
 )
