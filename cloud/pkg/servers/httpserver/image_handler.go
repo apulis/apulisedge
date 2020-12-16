@@ -3,11 +3,13 @@
 package httpserver
 
 import (
+	"context"
 	"fmt"
 	imagemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/image"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
+	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
@@ -93,10 +95,26 @@ func UploadContainerImage(c *gin.Context) error {
 
 	logger.Infof("Upload container image, file = %s", fileHeader.Filename)
 
-	err = c.SaveUploadedFile(fileHeader, "/tmp/apulis/images/"+fileHeader.Filename)
+	dstFile := "/tmp/apulis/images/" + fileHeader.Filename
+	err = c.SaveUploadedFile(fileHeader, dstFile)
 	if err != nil {
 		return NoReqAppError(c, err.Error())
 	}
+
+	// image load and image push
+	ctx := context.Background()
+	cli, err := utils.NewDockerClient()
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
+	defer utils.CloseDockerClient(cli)
+
+	tag, err := utils.DockerImageLoad(ctx, cli, dstFile)
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
+
+	logger.Infof("Image load succ, load tag = %s", tag)
 
 	return NoReqSuccessResp(c, fmt.Sprintf("'%s' uploaded!", fileHeader.Filename))
 }

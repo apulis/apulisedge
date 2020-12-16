@@ -23,6 +23,7 @@ func GinLogger(logger logrus.FieldLogger) gin.HandlerFunc {
 		clientUserAgent := c.Request.UserAgent()
 		referer := c.Request.Referer()
 		dataLength := c.Writer.Size()
+
 		if dataLength < 0 {
 			dataLength = 0
 		}
@@ -32,6 +33,7 @@ func GinLogger(logger logrus.FieldLogger) gin.HandlerFunc {
 			"referer":    referer,
 			"dataLength": dataLength,
 			"userAgent":  clientUserAgent,
+			//"header":     c.Request.Header,
 		})
 
 		if len(c.Errors) > 0 {
