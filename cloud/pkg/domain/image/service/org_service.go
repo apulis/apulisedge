@@ -81,3 +81,17 @@ func DeleteContainterImageOrg(userInfo proto.ApulisHeader, req *imagemodule.Dele
 
 	return nil
 }
+
+func DoIHaveTheOrg(userInfo proto.ApulisHeader, orgName string) bool {
+	var orgInfo imageentity.ContainerImageOrg
+
+	res := apulisdb.Db.Model(&imageentity.ContainerImageOrg{}).
+		Where("ClusterId = ? and OrgName = ? and OwnerGroupId = ? and OwnerUserId = ?",
+			userInfo.ClusterId, orgName, userInfo.GroupId, userInfo.UserId).
+		First(&orgInfo)
+	if res.Error == nil {
+		return true
+	} else {
+		return false
+	}
+}

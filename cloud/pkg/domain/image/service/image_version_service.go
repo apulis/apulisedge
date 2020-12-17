@@ -7,6 +7,7 @@ import (
 	imagemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/image"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
+	"strings"
 )
 
 // list container image version
@@ -44,4 +45,22 @@ func DeleteContainterImageVersion(userInfo proto.ApulisHeader, req *imagemodule.
 	}
 
 	return imageentity.DeleteContainerImageVersion(&imageVerInfo)
+}
+
+func DoIHaveTheImageVersion(userInfo proto.ApulisHeader, orgName string, imgName string, imgVersion string) (string, bool) {
+	var verInfo imageentity.UserContainerImageVersionInfo
+
+	res := apulisdb.Db.Model(&imageentity.UserContainerImageVersionInfo{}).
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and OrgName = ? and ImageName = ? and ImageVersion = ?",
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, orgName, imgName, imgVersion).
+		First(&verInfo)
+	if res.Error == nil {
+		return getImgPathFromDownloadCommand(verInfo.DownloadCommand), true
+	} else {
+		return "", false
+	}
+}
+
+func getImgPathFromDownloadCommand(downloadCommand string) string {
+	return strings.TrimPrefix(strings.Split(downloadCommand, imagemodule.DockerPullPrefix)[1], imagemodule.BlankString)
 }

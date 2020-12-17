@@ -90,6 +90,10 @@ func UploadContainerImage(c *gin.Context) error {
 		return NoReqAppError(c, ErrOrgNameNeeded.Error())
 	}
 
+	if !imageservice.DoIHaveTheOrg(userInfo, orgName) {
+		return NoReqAppError(c, ErrIDontHaveOrg.Error())
+	}
+
 	// single file
 	fileHeader, err := c.FormFile("file")
 	if err != nil {

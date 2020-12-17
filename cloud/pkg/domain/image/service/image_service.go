@@ -99,7 +99,7 @@ func AddContainerImage(userInfo proto.ApulisHeader, orgName string, imgName stri
 			ImageId:         "",
 			ImageVersion:    imgVer,
 			ImageSize:       float32(0),
-			DownloadCommand: "docker pull " + imgRepo,
+			DownloadCommand: imagemodule.DockerPullPrefix + imagemodule.BlankString + imgRepo,
 			CreateAt:        time.Now(),
 			UpdateAt:        time.Now(),
 		}

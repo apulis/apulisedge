@@ -45,4 +45,5 @@ var (
 	ErrInvalidUserId    = errors.New("Invalid user id")
 	ErrInvalidUserInfo  = errors.New("Invalid user info")
 	ErrOrgNameNeeded    = errors.New("Need org name")
+	ErrIDontHaveOrg     = errors.New("I don`t have this org")
 )

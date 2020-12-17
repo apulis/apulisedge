@@ -15,9 +15,9 @@ type CreateEdgeApplicationReq struct {
 	Description           string  `json:"description"`
 	ArchType              string  `json:"archType"`
 	Version               string  `json:"version"`
+	OrgName               string  `json:"orgName"`
 	ContainerImage        string  `json:"containerImage"`
 	ContainerImageVersion string  `json:"containerImageVersion"`
-	ContainerImagePath    string  `json:"containerImagePath"`
 	CpuQuota              float32 `json:"cpuQuota"`
 	MaxCpuQuota           float32 `json:"maxCpuQuota"`
 	MemoryQuota           float32 `json:"memoryQuota"`
