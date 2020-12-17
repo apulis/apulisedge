@@ -8,8 +8,6 @@ import (
 	appservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
-	"github.com/mitchellh/mapstructure"
 )
 
 func ApplicationHandlerRoutes(r *gin.Engine) {
@@ -41,30 +39,13 @@ func ListEdgeApps(c *gin.Context) error {
 	var apps *[]appentity.ApplicationBasicInfo
 	var total int
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// list node
-	apps, total, err = appservice.ListEdgeApplications(userInfo, &reqContent)
+	apps, total, err = appservice.ListEdgeApplications(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -83,30 +64,13 @@ func CreateEdgeApplication(c *gin.Context) error {
 	var req proto.Message
 	var reqContent appmodule.CreateEdgeApplicationReq
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// create application
-	appCreated, verCreated, err := appservice.CreateEdgeApplication(userInfo, &reqContent)
+	appCreated, verCreated, err := appservice.CreateEdgeApplication(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -125,30 +89,13 @@ func DeleteEdgeApplication(c *gin.Context) error {
 	var req proto.Message
 	var reqContent appmodule.DeleteEdgeApplicationReq
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// delete application
-	err = appservice.DeleteEdgeApplication(userInfo, &reqContent)
+	err = appservice.DeleteEdgeApplication(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -164,30 +111,13 @@ func ListEdgeAppVersions(c *gin.Context) error {
 	var appVers *[]appentity.ApplicationVersionInfo
 	var total int
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// list node
-	appVers, total, err = appservice.ListEdgeApplicationVersions(userInfo, &reqContent)
+	appVers, total, err = appservice.ListEdgeApplicationVersions(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -205,30 +135,13 @@ func DeleteEdgeApplicationVersion(c *gin.Context) error {
 	var req proto.Message
 	var reqContent appmodule.DeleteEdgeApplicationVersionReq
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// delete application
-	err = appservice.DeleteEdgeApplicationVersion(userInfo, &reqContent)
+	err = appservice.DeleteEdgeApplicationVersion(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -244,30 +157,13 @@ func ListEdgeAppDeploys(c *gin.Context) error {
 	var appDeploys *[]appentity.ApplicationDeployInfo
 	var total int
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// list node
-	appDeploys, total, err = appservice.ListEdgeDeploys(userInfo, &reqContent)
+	appDeploys, total, err = appservice.ListEdgeDeploys(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -285,30 +181,13 @@ func DeployEdgeApplication(c *gin.Context) error {
 	var req proto.Message
 	var reqContent appmodule.DeployEdgeApplicationReq
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// deploy application
-	err = appservice.DeployEdgeApplication(userInfo, &reqContent)
+	err = appservice.DeployEdgeApplication(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -322,30 +201,13 @@ func UnDeployEdgeApplication(c *gin.Context) error {
 	var req proto.Message
 	var reqContent appmodule.UnDeployEdgeApplicationReq
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// deploy application
-	err = appservice.UnDeployEdgeApplication(userInfo, &reqContent)
+	err = appservice.UnDeployEdgeApplication(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}

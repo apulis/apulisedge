@@ -8,8 +8,6 @@ import (
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
-	"github.com/mitchellh/mapstructure"
 )
 
 // create org
@@ -19,30 +17,13 @@ func CreateImageOrg(c *gin.Context) error {
 	var reqContent imagemodule.CreateContainerImageOrgReq
 	var org *imageentity.ContainerImageOrg
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// create node
-	org, err = imageservice.CreateContainerImageOrg(userInfo, &reqContent)
+	org, err = imageservice.CreateContainerImageOrg(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -61,30 +42,12 @@ func ListImageOrg(c *gin.Context) error {
 	var orgs *[]imageentity.ContainerImageOrg
 	var total int
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
-
-	// list node
-	orgs, total, err = imageservice.ListContainerImageOrg(userInfo, &reqContent)
+	orgs, total, err = imageservice.ListContainerImageOrg(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -102,30 +65,13 @@ func DeleteImageOrg(c *gin.Context) error {
 	var req proto.Message
 	var reqContent imagemodule.DeleteContainerImageOrgReq
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// delete org
-	err = imageservice.DeleteContainterImageOrg(userInfo, &reqContent)
+	err = imageservice.DeleteContainterImageOrg(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}

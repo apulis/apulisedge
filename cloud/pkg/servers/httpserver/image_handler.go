@@ -11,8 +11,6 @@ import (
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
-	"github.com/mitchellh/mapstructure"
 )
 
 func ImageHandlerRoutes(r *gin.Engine) {
@@ -43,30 +41,13 @@ func ListContainerImage(c *gin.Context) error {
 	var images []imageentity.UserContainerImageInfo
 	var total int
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// list image
-	images, total, err = imageservice.ListContainerImage(userInfo, &reqContent)
+	images, total, err = imageservice.ListContainerImage(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -177,30 +158,13 @@ func DeleteImage(c *gin.Context) error {
 	var req proto.Message
 	var reqContent imagemodule.DeleteContainerImageReq
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// delete image
-	err = imageservice.DeleteContainerImage(userInfo, &reqContent)
+	err = imageservice.DeleteContainerImage(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
