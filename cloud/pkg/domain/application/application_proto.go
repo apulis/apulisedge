@@ -6,6 +6,8 @@ import (
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
 )
 
+// TODO add param validate, like node.ListEdgeNodesReq
+
 // Create edge application
 type CreateEdgeApplicationReq struct {
 	AppName               string  `json:"appName"`

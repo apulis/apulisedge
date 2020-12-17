@@ -8,7 +8,7 @@ import (
 	appservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -49,7 +49,12 @@ func ListEdgeApps(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -86,7 +91,12 @@ func CreateEdgeApplication(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -123,7 +133,12 @@ func DeleteEdgeApplication(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -157,7 +172,12 @@ func ListEdgeAppVersions(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -193,7 +213,12 @@ func DeleteEdgeApplicationVersion(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -227,7 +252,12 @@ func ListEdgeAppDeploys(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -263,7 +293,12 @@ func DeployEdgeApplication(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -295,7 +330,12 @@ func UnDeployEdgeApplication(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}

@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+// TODO add param validate, like node.ListEdgeNodesReq
+
 // List image
 type ListContainerImageReq struct {
 	PageNum  int `json:"pageNum"`
@@ -53,8 +55,8 @@ type ListContainerImageVersionReq struct {
 }
 
 type ListContainerImageVersionRsp struct {
-	Total  int                                          `json:"total"`
-	Images *[]imageentity.UserContainerImageVersionInfo `json:"imageVersions"`
+	Total         int                                          `json:"total"`
+	ImageVersions *[]imageentity.UserContainerImageVersionInfo `json:"imageVersions"`
 }
 
 // Delete image version

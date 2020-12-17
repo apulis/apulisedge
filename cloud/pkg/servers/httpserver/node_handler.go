@@ -9,7 +9,7 @@ import (
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -94,7 +94,12 @@ func ListEdgeNodes(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -131,7 +136,12 @@ func DescribeEdgeNode(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -166,7 +176,12 @@ func DeleteEdgeNode(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -197,7 +212,12 @@ func GetInstallScripts(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}

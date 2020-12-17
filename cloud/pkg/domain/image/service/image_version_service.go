@@ -10,9 +10,10 @@ import (
 )
 
 // list container image version
-func ListContainerImageVersion(userInfo proto.ApulisHeader, req *imagemodule.ListContainerImageVersionReq) (*[]imageentity.UserContainerImageVersionInfo, error) {
+func ListContainerImageVersion(userInfo proto.ApulisHeader, req *imagemodule.ListContainerImageVersionReq) (*[]imageentity.UserContainerImageVersionInfo, int, error) {
 	var imageVerInfos []imageentity.UserContainerImageVersionInfo
 
+	total := 0
 	offset := req.PageSize * (req.PageNum - 1)
 	limit := req.PageSize
 
@@ -22,10 +23,11 @@ func ListContainerImageVersion(userInfo proto.ApulisHeader, req *imagemodule.Lis
 		Find(&imageVerInfos)
 
 	if res.Error != nil {
-		return &imageVerInfos, res.Error
+		return &imageVerInfos, total, res.Error
 	}
 
-	return &imageVerInfos, nil
+	total = int(res.RowsAffected)
+	return &imageVerInfos, total, nil
 }
 
 // delete container image version

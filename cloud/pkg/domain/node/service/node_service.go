@@ -50,7 +50,8 @@ func ListEdgeNodes(userInfo proto.ApulisHeader, req *nodemodule.ListEdgeNodesReq
 		return &nodeInfos, total, res.Error
 	}
 
-	return &nodeInfos, int(res.RowsAffected), nil
+	total = int(res.RowsAffected)
+	return &nodeInfos, total, nil
 }
 
 func DescribeEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.DescribeEdgeNodesReq) (*nodeentity.NodeBasicInfo, error) {

@@ -11,7 +11,7 @@ import (
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -21,8 +21,14 @@ func ImageHandlerRoutes(r *gin.Engine) {
 	// add authentication
 	group.Use(Auth())
 
+	// image
 	group.POST("/listImage", wrapper(ListContainerImage))
 	group.POST("/uploadImage", wrapper(UploadContainerImage))
+	group.POST("/deleteImage", wrapper(DeleteImage))
+
+	// image version
+	group.POST("/listImageVersion", wrapper(ListContainerImageVersion))
+	group.POST("/deleteImageVersion", wrapper(DeleteImageVersion))
 }
 
 func ListContainerImage(c *gin.Context) error {
@@ -40,7 +46,12 @@ func ListContainerImage(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -49,7 +60,7 @@ func ListContainerImage(c *gin.Context) error {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
 
-	// list node
+	// list image
 	images, total, err = imageservice.ListContainerImage(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
@@ -133,7 +144,7 @@ func UploadContainerImage(c *gin.Context) error {
 		return NoReqAppError(c, err.Error())
 	}
 
-	dstImage := clu.GetHarborAddress() + "/" + orgName + "/" + tag + ":" + ver
+	dstImage := clu.GetHarborAddress() + "/" + clu.GetHarborProject() + "/" + orgName + "/" + tag + ":" + ver
 	err = clu.DockerImageTag(ctx, cli, tag+":"+ver, dstImage)
 	if err != nil {
 		return NoReqAppError(c, err.Error())
@@ -146,5 +157,129 @@ func UploadContainerImage(c *gin.Context) error {
 	}
 	logger.Infof("Image push succ, tag = %s", img)
 
+	// add to db
+	err = imageservice.AddContainerImage(userInfo, orgName, tag, ver, dstImage)
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
+
 	return NoReqSuccessResp(c, fmt.Sprintf("'%s' uploaded!", fileHeader.Filename))
+}
+
+// delete image
+func DeleteImage(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent imagemodule.DeleteContainerImageReq
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	// delete image
+	err = imageservice.DeleteContainerImage(userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	return SuccessResp(c, &req, "OK")
+}
+
+// image version =======================================================================================
+func ListContainerImageVersion(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent imagemodule.ListContainerImageVersionReq
+	var imageVers *[]imageentity.UserContainerImageVersionInfo
+	var total int
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	// list image version
+	imageVers, total, err = imageservice.ListContainerImageVersion(userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := imagemodule.ListContainerImageVersionRsp{
+		Total:         total,
+		ImageVersions: imageVers,
+	}
+
+	return SuccessResp(c, &req, data)
+}
+
+// delete image version
+func DeleteImageVersion(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent imagemodule.DeleteContainerImageVersionReq
+
+	if err = c.ShouldBindJSON(&req); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
+
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	// delete image version
+	err = imageservice.DeleteContainterImageVersion(userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	return SuccessResp(c, &req, "OK")
 }
