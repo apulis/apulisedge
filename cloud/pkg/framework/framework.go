@@ -4,6 +4,7 @@ package framework
 
 import (
 	"context"
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	"os"
 	"os/signal"
@@ -18,7 +19,6 @@ import (
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	"github.com/apulis/ApulisEdge/cloud/pkg/servers/httpserver"
-	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -31,6 +31,7 @@ type CloudApp struct {
 	cloudConfig      configs.EdgeCloudConfig
 	tickerCancelFunc context.CancelFunc
 	tickerCtx        context.Context
+	clusters         []configs.ClusterConfig
 }
 
 var once sync.Once
@@ -91,15 +92,15 @@ func (app *CloudApp) MainLoop() error {
 	// init tables
 	app.InitTables()
 
-	// init kubeclient
-	utils.InitKubeClient(app.cloudConfig.KubeMaster, app.cloudConfig.KubeConfFile)
-
 	// init auth
 	err := app.InitAuth()
 	if err != nil {
 		logger.Errorf("Auth init failed, err = %v", err)
 		return err
 	}
+
+	// init clusters
+	app.InitClusters()
 
 	// init ticker
 	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
@@ -138,10 +139,16 @@ func (app *CloudApp) InitAuth() error {
 	return httpserver.InitAuth(&app.cloudConfig)
 }
 
+func (app *CloudApp) InitClusters() {
+	cluster.InitClusters(&app.cloudConfig)
+}
+
 func (app *CloudApp) InitTables() {
 	database.CreateTableIfNotExists(nodeentity.NodeBasicInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationBasicInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationVersionInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationDeployInfo{})
 	database.CreateTableIfNotExists(imageentity.UserContainerImageInfo{})
+	database.CreateTableIfNotExists(imageentity.UserContainerImageVersionInfo{})
+	database.CreateTableIfNotExists(imageentity.ContainerImageOrg{})
 }

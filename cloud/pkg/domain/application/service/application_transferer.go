@@ -4,11 +4,11 @@ package applicationservice
 
 import (
 	"context"
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	applicationentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
-	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -292,7 +292,12 @@ func handleStatusDeleting(appDeployInfo *applicationentity.ApplicationDeployInfo
 func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 	var appVerInfo applicationentity.ApplicationVersionInfo
 
-	podClient, err := utils.GetPodClient(constants.DefaultNamespace)
+	clu, err := cluster.GetCluster(dbInfo.ClusterId)
+	if err != nil {
+		return err
+	}
+
+	podClient, err := clu.GetPodClient(constants.DefaultNamespace)
 	if err != nil {
 		return err
 	}
@@ -331,7 +336,13 @@ func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 }
 
 func GetK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) (*corev1.Pod, error) {
-	podClient, err := utils.GetPodClient(constants.DefaultNamespace)
+	clu, err := cluster.GetCluster(dbInfo.ClusterId)
+	if err != nil {
+		logger.Infof("GetK8sPod, can`t find cluster %d", dbInfo.ClusterId)
+		return nil, err
+	}
+
+	podClient, err := clu.GetPodClient(constants.DefaultNamespace)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +356,13 @@ func GetK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) (*corev1.Pod, er
 }
 
 func DeleteK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
-	podClient, err := utils.GetPodClient(constants.DefaultNamespace)
+	clu, err := cluster.GetCluster(dbInfo.ClusterId)
+	if err != nil {
+		logger.Infof("DeleteK8sPod, can`t find cluster %d", dbInfo.ClusterId)
+		return err
+	}
+
+	podClient, err := clu.GetPodClient(constants.DefaultNamespace)
 	if err != nil {
 		return err
 	}
@@ -353,6 +370,7 @@ func DeleteK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 	return podClient.Delete(context.Background(), podName(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version, dbInfo.NodeName), metav1.DeleteOptions{})
 }
 
+// Todo add cluster/group/version/nodename
 func podName(clusterId int64, groupId int64, userId int64, appName string, version string, nodeName string) string {
 	return appName + "-" + strconv.FormatInt(userId, 10) + "-" + "deployment"
 }

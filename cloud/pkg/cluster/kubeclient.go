@@ -1,10 +1,9 @@
 // Copyright 2020 Apulis Technology Inc. All rights reserved.
 
-package utils
+package cluster
 
 import (
 	"context"
-	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -14,35 +13,31 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-var logger = loggers.LogInstance()
+// init kubeclient
+func (c *Cluster) InitKube(kubeMaster string, kubeConfig string) {
+	c.KubeMaster = kubeMaster
+	c.KubeConfFile = kubeConfig
+	c.KubeQPS = float32(5.000000)
+	c.KubeBurst = 10
+	c.KubeContentType = "application/vnd.kubernetes.protobuf"
 
-// replace this with the K8s Master IP
-var KubeMaster string
-var Kubeconfig string
-var KubeQPS = float32(5.000000)
-var KubeBurst = 10
-var KubeContentType = "application/vnd.kubernetes.protobuf"
-
-func InitKubeClient(kubeMaster string, kubeConfig string) {
-	KubeMaster = kubeMaster
-	Kubeconfig = kubeConfig
-	logger.Infof("kubeMaster = %s, kubeConfigPath = %s", KubeMaster, Kubeconfig)
+	logger.Infof("kubeMaster = %s, kubeConfigPath = %s", c.KubeMaster, c.KubeConfFile)
 }
 
 // KubeConfig from flags
-func KubeConfig() (conf *rest.Config, err error) {
-	kubeConfig, err := clientcmd.BuildConfigFromFlags(KubeMaster, Kubeconfig)
+func (c *Cluster) KubeConfig() (conf *rest.Config, err error) {
+	kubeConfig, err := clientcmd.BuildConfigFromFlags(c.KubeMaster, c.KubeConfFile)
 	if err != nil {
 		return nil, err
 	}
-	kubeConfig.QPS = KubeQPS
-	kubeConfig.Burst = KubeBurst
-	kubeConfig.ContentType = KubeContentType
+	kubeConfig.QPS = c.KubeQPS
+	kubeConfig.Burst = c.KubeBurst
+	kubeConfig.ContentType = c.KubeContentType
 	return kubeConfig, err
 }
 
-func GetNodeClient() (corev1.NodeInterface, error) {
-	kubeConfig, err := KubeConfig()
+func (c *Cluster) GetNodeClient() (corev1.NodeInterface, error) {
+	kubeConfig, err := c.KubeConfig()
 	if err != nil {
 		logger.Error("Failed to create KubeConfig , error : %v", err)
 		return nil, err
@@ -57,8 +52,8 @@ func GetNodeClient() (corev1.NodeInterface, error) {
 	return clientSet.CoreV1().Nodes(), nil
 }
 
-func GetDeploymentClient(namespace string) (appsv1.DeploymentInterface, error) {
-	kubeConfig, err := KubeConfig()
+func (c *Cluster) GetDeploymentClient(namespace string) (appsv1.DeploymentInterface, error) {
+	kubeConfig, err := c.KubeConfig()
 	if err != nil {
 		logger.Error("Failed to create KubeConfig , error : %v", err)
 		return nil, err
@@ -73,8 +68,8 @@ func GetDeploymentClient(namespace string) (appsv1.DeploymentInterface, error) {
 	return clientSet.AppsV1().Deployments(namespace), nil
 }
 
-func GetPodClient(namespace string) (corev1.PodInterface, error) {
-	kubeConfig, err := KubeConfig()
+func (c *Cluster) GetPodClient(namespace string) (corev1.PodInterface, error) {
+	kubeConfig, err := c.KubeConfig()
 	if err != nil {
 		logger.Error("Failed to create KubeConfig , error : %v", err)
 		return nil, err
@@ -89,8 +84,8 @@ func GetPodClient(namespace string) (corev1.PodInterface, error) {
 	return clientSet.CoreV1().Pods(namespace), nil
 }
 
-func ListNodes() (result *v1.NodeList, err error) {
-	nodeClient, err := GetNodeClient()
+func (c *Cluster) ListNodes() (result *v1.NodeList, err error) {
+	nodeClient, err := c.GetNodeClient()
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +94,8 @@ func ListNodes() (result *v1.NodeList, err error) {
 	return result, err
 }
 
-func DescribeNode(name string) (result *v1.Node, err error) {
-	nodeClient, err := GetNodeClient()
+func (c *Cluster) DescribeNode(name string) (result *v1.Node, err error) {
+	nodeClient, err := c.GetNodeClient()
 	if err != nil {
 		return nil, err
 	}

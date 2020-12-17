@@ -1,38 +1,44 @@
-portal:
-  nodeCheckerInterval: 5
-  applicationCheckerInterval: 5
-  http:
-    address: 0.0.0.0
-    enable: true
-    port: 32769
+Portal:
+  NodeCheckerInterval: 5
+  ApplicationCheckerInterval: 5
+  Http:
+    Enable: true
+    Address: 0.0.0.0
+    Port: 32769
 
-cloudhub:
-  websocket:
-    address: 0.0.0.0
-    enable: true
-    port: 32768
+CloudHub:
+  Websocket:
+    Enable: true
+    Address: 0.0.0.0
+    Port: 32768
 
-log:
+Log:
   # 6: trace, 5: debug, 4: info
-  level: 4
-  writefile: true
-  filedir: logs
-  filename: apulis_edge_cloud.log
+  Level: 4
+  WriteFile: true
+  FileDir: logs
+  FileName: apulis_edge_cloud.log
 
-db:
-  username: root
-  password: root@123
-  host: 127.0.0.1
-  port: 3306
+Db:
+  UserName: root
+  Password: root@123
+  Host: 127.0.0.1
+  Port: 3306
   # ApulisEdgeCloudDB
-  database: TestDB
-  maxopenconns: 10
-  maxidleconns: 2
+  Database: TestDB
+  MaxOpenConns: 10
+  MaxIdleConns: 2
 
 Authentication:
   AuthType: AiArts
   AiArtsAuth:
     key: "Sign key for JWT"
 
-kubemaster: "https://192.168.1.158:6443"
-KubeConfFile: "/root/.kube/config"
+Clusters:
+  - Id: 0
+    Desc: "for test"
+    KubeMaster: "https://192.168.1.158:6443"
+    KubeConfFile: "/root/.kube/config"
+    HarborUser: "kefeng.zhang"
+    HarborPasswd: "Apulis123"
+    HarborAddress: "harbor.sigsus.cn:8443/apulisedge"

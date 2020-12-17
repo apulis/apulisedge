@@ -9,7 +9,7 @@ import (
 
 // table contants
 const (
-	TableContainerImageOrg string = "ContainerImageOrg"
+	TableContainerImageOrg string = "ContainerImageOrgs"
 )
 
 // The simplest implement, add RBAC if need

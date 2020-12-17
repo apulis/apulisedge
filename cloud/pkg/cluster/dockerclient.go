@@ -1,6 +1,6 @@
 // Copyright 2020 Apulis Technology Inc. All rights reserved.
 
-package utils
+package cluster
 
 import (
 	"bufio"
@@ -25,7 +25,20 @@ type ImageLoadResult struct {
 	Stream string
 }
 
-func GetImageNameAndVersion(imageTag string) (string, string, error) {
+// init docker cli
+func (c *Cluster) InitDockerCli(harborAddress string, harborUser string, harborPasswd string) {
+	c.HarborAddress = harborAddress
+	c.HarborUser = harborUser
+	c.HarborPasswd = harborPasswd
+
+	logger.Infof("HarborUser = %s, HarborPasswd = %s", c.HarborUser, c.HarborPasswd)
+}
+
+func (c *Cluster) GetHarborAddress() string {
+	return c.HarborAddress
+}
+
+func (c *Cluster) GetImageNameAndVersion(imageTag string) (string, string, error) {
 	var img string
 
 	path := strings.Split(imageTag, "/")
@@ -43,7 +56,7 @@ func GetImageNameAndVersion(imageTag string) (string, string, error) {
 	return tagVer[0], tagVer[1], nil
 }
 
-func NewDockerClient() (*client.Client, error) {
+func (c *Cluster) NewDockerClient() (*client.Client, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err
@@ -52,11 +65,11 @@ func NewDockerClient() (*client.Client, error) {
 	return cli, nil
 }
 
-func CloseDockerClient(cli *client.Client) error {
+func (c *Cluster) CloseDockerClient(cli *client.Client) error {
 	return cli.Close()
 }
 
-func DockerImageLoad(ctx context.Context, cli *client.Client, srcFile string) (string, error) {
+func (c *Cluster) DockerImageLoad(ctx context.Context, cli *client.Client, srcFile string) (string, error) {
 	var loadedTag string
 
 	imgSrc, err := os.Open(srcFile)
@@ -101,15 +114,15 @@ func DockerImageLoad(ctx context.Context, cli *client.Client, srcFile string) (s
 	return loadedTag, nil
 }
 
-func DockerImageTag(ctx context.Context, cli *client.Client, src string, target string) error {
+func (c *Cluster) DockerImageTag(ctx context.Context, cli *client.Client, src string, target string) error {
 	logger.Infof("DockerImageTag: src = %s, target = %s", src, target)
 	return cli.ImageTag(ctx, src, target)
 }
 
-func DockerImagePush(ctx context.Context, cli *client.Client, image string) error {
+func (c *Cluster) DockerImagePush(ctx context.Context, cli *client.Client, image string) error {
 	authConfig := types.AuthConfig{
-		Username: "kefeng.zhang",
-		Password: "Apulis123",
+		Username: c.HarborUser,
+		Password: c.HarborPasswd,
 	}
 	encodedJSON, err := json.Marshal(authConfig)
 	if err != nil {

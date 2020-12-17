@@ -15,9 +15,8 @@ type EdgeCloudConfig struct {
 	CloudHub       CloudHubConfig
 	Log            LogConfig
 	Db             DbConfig
-	KubeConfFile   string
-	KubeMaster     string
 	Authentication AuthConfig
+	Clusters       []ClusterConfig
 }
 
 type HttpConfig struct {
@@ -69,6 +68,16 @@ type AiArtsAuthConfig struct {
 	Key string
 }
 
+type ClusterConfig struct {
+	Id            int64
+	Desc          string
+	KubeMaster    string
+	KubeConfFile  string
+	HarborUser    string
+	HarborPasswd  string
+	HarborAddress string
+}
+
 func InitConfig(configFile string, config *EdgeCloudConfig) {
 	viper.SetConfigFile(configFile)
 
@@ -84,5 +93,7 @@ func InitConfig(configFile string, config *EdgeCloudConfig) {
 		panic(fmt.Errorf("Fatal error unmarshal config file: %s \n", err))
 	}
 
-	fmt.Println(config.CloudHub.Websocket)
+	fmt.Printf("Portal config = %v\n", config.Portal)
+	fmt.Printf("Websocket config = %v\n", config.CloudHub.Websocket)
+	fmt.Printf("Cluster config = %v\n", config.Clusters)
 }

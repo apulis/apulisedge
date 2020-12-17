@@ -4,11 +4,11 @@ package nodeservice
 
 import (
 	"context"
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
-	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -85,8 +85,14 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 
 	var nodeExist bool
 
+	clu, err := cluster.GetCluster(dbInfo.ClusterId)
+	if err != nil {
+		logger.Infof("handleStatusNotInstalled, can`t find cluster %d", dbInfo.ClusterId)
+		return
+	}
+
 	// get node info from k8s
-	nodeK8sInfo, err := utils.DescribeNode(dbInfo.NodeName)
+	nodeK8sInfo, err := clu.DescribeNode(dbInfo.NodeName)
 	if err == nil {
 		nodeExist = true
 	} else {
@@ -175,15 +181,21 @@ func handleStatusInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 
 	var nodeExist bool
 
+	clu, err := cluster.GetCluster(dbInfo.ClusterId)
+	if err != nil {
+		logger.Infof("handleStatusInstalled, can`t find cluster %d", dbInfo.ClusterId)
+		return
+	}
+
 	// get node info from k8s
-	nodeK8sInfo, err := utils.DescribeNode(dbInfo.NodeName)
+	nodeK8sInfo, err := clu.DescribeNode(dbInfo.NodeName)
 	if err == nil {
 		nodeExist = true
 	} else {
 		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
 			nodeExist = false
 		} else {
-			logger.Infof("handleStatusNotInstalled DescribeNode failed! name = %v, err = %v", dbInfo.NodeName, err)
+			logger.Infof("handleStatusInstalled DescribeNode failed! name = %v, err = %v", dbInfo.NodeName, err)
 			// TODO try many times, if failed, turn to offline
 			return
 		}
@@ -196,9 +208,9 @@ func handleStatusInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 		newDbInfo.UpdateAt = time.Now()
 		err = nodeentity.UpdateNode(&newDbInfo)
 		if err != nil {
-			logger.Infof("handleStatusOnline UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
+			logger.Infof("handleStatusInstalled UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
 		} else {
-			logger.Infof("handleStatusOnline UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
+			logger.Infof("handleStatusInstalled UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
 		}
 
 		return
@@ -219,17 +231,17 @@ func handleStatusInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 			newDbInfo.Status = curNodeStatus
 			err = nodeentity.UpdateNode(&newDbInfo)
 			if err != nil {
-				logger.Infof("handleStatusOnline UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
+				logger.Infof("handleStatusInstalled UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
 			} else {
-				logger.Infof("handleStatusOnline UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
+				logger.Infof("handleStatusInstalled UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
 			}
 		} else if dbInfo.Status == constants.StatusOffline && curNodeStatus == constants.StatusOnline {
 			newDbInfo.Status = curNodeStatus
 			err = nodeentity.UpdateNode(&newDbInfo)
 			if err != nil {
-				logger.Infof("handleStatusOnline UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
+				logger.Infof("handleStatusInstalled UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
 			} else {
-				logger.Infof("handleStatusOnline UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
+				logger.Infof("handleStatusInstalled UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
 			}
 		}
 	}

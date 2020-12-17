@@ -5,11 +5,11 @@ package httpserver
 import (
 	"context"
 	"fmt"
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	imagemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/image"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
-	"github.com/apulis/ApulisEdge/cloud/pkg/utils"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
@@ -106,38 +106,45 @@ func UploadContainerImage(c *gin.Context) error {
 		return NoReqAppError(c, err.Error())
 	}
 
+	// get cluster
+	clu, err := cluster.GetCluster(userInfo.ClusterId)
+	if err != nil {
+		logger.Infof("UploadContainerImage, can`t find cluster %d", userInfo.ClusterId)
+		return NoReqAppError(c, err.Error())
+	}
+
 	// image load
 	ctx := context.Background()
-	cli, err := utils.NewDockerClient()
+	cli, err := clu.NewDockerClient()
 	if err != nil {
 		return NoReqAppError(c, err.Error())
 	}
-	defer utils.CloseDockerClient(cli)
+	defer clu.CloseDockerClient(cli)
 
-	img, err := utils.DockerImageLoad(ctx, cli, dstFile)
+	img, err := clu.DockerImageLoad(ctx, cli, dstFile)
 	if err != nil {
 		return NoReqAppError(c, err.Error())
 	}
 	logger.Infof("Image load succ, load tag = %s", img)
 
 	// image tag
-	tag, ver, err := utils.GetImageNameAndVersion(img)
+	tag, ver, err := clu.GetImageNameAndVersion(img)
 	if err != nil {
 		return NoReqAppError(c, err.Error())
 	}
 
-	dstImage := "harbor.sigsus.cn:8443/" + "apulisedge/" + orgName + "/" + tag + ":" + ver
-	err = utils.DockerImageTag(ctx, cli, tag+":"+ver, dstImage)
+	dstImage := clu.GetHarborAddress() + "/" + orgName + "/" + tag + ":" + ver
+	err = clu.DockerImageTag(ctx, cli, tag+":"+ver, dstImage)
 	if err != nil {
 		return NoReqAppError(c, err.Error())
 	}
 
 	// img push
-	err = utils.DockerImagePush(ctx, cli, dstImage)
+	err = clu.DockerImagePush(ctx, cli, dstImage)
 	if err != nil {
 		return NoReqAppError(c, err.Error())
 	}
-	logger.Infof("Image push succ, load tag = %s", img)
+	logger.Infof("Image push succ, tag = %s", img)
 
 	return NoReqSuccessResp(c, fmt.Sprintf("'%s' uploaded!", fileHeader.Filename))
 }
