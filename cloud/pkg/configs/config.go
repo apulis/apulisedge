@@ -77,17 +77,16 @@ type AiArtsAuthConfig struct {
 }
 
 type ClusterConfig struct {
-	Id             int64
-	Desc           string
-	Domain         string
-	KubeMaster     string
-	KubeConfFile   string
-	HarborAddress  string
-	HarborProject  string
-	HarborUser     string
-	HarborPasswd   string
-	DownloadServer string
-	DownloadPort   int
+	Id              int64
+	Desc            string
+	Domain          string
+	KubeMaster      string
+	KubeConfFile    string
+	HarborAddress   string
+	HarborProject   string
+	HarborUser      string
+	HarborPasswd    string
+	DownloadAddress string
 }
 
 func InitConfig(configFile string, config *EdgeCloudConfig) {

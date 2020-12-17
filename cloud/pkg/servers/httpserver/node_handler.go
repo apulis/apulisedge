@@ -213,7 +213,7 @@ func GetInstallScripts(c *gin.Context) error {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
 
-	script, err := nodeservice.GetInstallScripts(&reqContent, clu.Domain, clu.HarborAddress, clu.DownloadServer, clu.DownloadPort)
+	script, err := nodeservice.GetInstallScripts(&reqContent, clu.Domain, clu.HarborAddress, clu.DownloadAddress)
 	data := nodemodule.GetInstallScriptRsp{
 		Script: script,
 	}

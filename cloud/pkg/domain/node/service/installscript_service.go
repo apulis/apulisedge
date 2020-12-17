@@ -2,11 +2,10 @@ package nodeservice
 
 import (
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
-	"strconv"
 )
 
 // GetInstallScripts generate install script
-func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgServer string, dwServer string, dwPort int) (string, error) {
+func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgServer string, dwAddress string) (string, error) {
 	var err error
 	var script string
 	var targetArch = req.Arch
@@ -22,9 +21,9 @@ func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgSe
 	script = script + " mkdir -p " + downloadTarget + " && "
 	script = script + " mkdir -p /opt/apulisedge && "
 	// download package and signature
-	script = script + "wget " + dwServer + ":" + strconv.Itoa(dwPort) + "/" + fileName + " -P " + downloadTarget + " && "
-	script = script + "wget " + dwServer + ":" + strconv.Itoa(dwPort) + "/" + signFileName + " -P " + downloadTarget + " && "
-	script = script + "wget " + dwServer + ":" + strconv.Itoa(dwPort) + "/" + pubKeyFileName + " -P " + downloadTarget + " && "
+	script = script + "wget " + dwAddress + "/" + fileName + " -P " + downloadTarget + " && "
+	script = script + "wget " + dwAddress + "/" + signFileName + " -P " + downloadTarget + " && "
+	script = script + "wget " + dwAddress + "/" + pubKeyFileName + " -P " + downloadTarget + " && "
 	// verify file
 	script = script + " openssl dgst -verify " + downloadTarget + "/" + pubKeyFileName + " -sha256 -signature " + downloadTarget + "/" + signFileName + " " + downloadTarget + "/" + fileName + " && "
 	// decompress package
