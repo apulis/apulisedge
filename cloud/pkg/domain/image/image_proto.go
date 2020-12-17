@@ -69,16 +69,24 @@ type DeleteContainerImageVersionReq struct {
 type DeleteContainerImageVersionRsp struct {
 }
 
+// Create image org
+type CreateContainerImageOrgReq struct {
+	OrgName string `json:"orgName"`
+}
+
+type CreateContainerImageOrgRsp struct {
+	Org *imageentity.ContainerImageOrg `json:"org"`
+}
+
 // List image org
 type ListContainerImageOrgReq struct {
-	OrgName  string `json:"orgName"`
-	PageNum  int    `json:"pageNum"`
-	PageSize int    `json:"pageSize"`
+	PageNum  int `json:"pageNum"`
+	PageSize int `json:"pageSize"`
 }
 
 type ListContainerImageOrgRsp struct {
-	Total  int                              `json:"total"`
-	Images *[]imageentity.ContainerImageOrg `json:"imageOrgs"`
+	Total     int                              `json:"total"`
+	ImageOrgs *[]imageentity.ContainerImageOrg `json:"imageOrgs"`
 }
 
 // Delete image org

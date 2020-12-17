@@ -49,7 +49,12 @@ func CreateEdgeNode(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	// TODO validate reqContent
+	// validate request content
+	validate := validator.New()
+	err = validate.Struct(reqContent)
+	if err != nil {
+		return ParameterError(c, &req, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}

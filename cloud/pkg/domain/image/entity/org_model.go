@@ -17,8 +17,8 @@ type ContainerImageOrg struct {
 	ID           int64     `gorm:"column:Id;primary_key"                                    json:"id" binding:"required"`
 	ClusterId    int64     `gorm:"uniqueIndex:cluster_org;column:ClusterId;not null"        json:"clusterId" binding:"required"`
 	OrgName      string    `gorm:"uniqueIndex:cluster_org;column:OrgName;size:255;not null" json:"orgName" binding:"required"`
-	OwnerGroupId int64     `gorm:"uniqueIndex:cluster_org;column:OwnerGroupId;not null"     json:"ownerGroupId" binding:"required"`
-	OwnerUserId  int64     `gorm:"uniqueIndex:cluster_org;column:OwnerUserId;not null"      json:"ownerUserId" binding:"required"`
+	OwnerGroupId int64     `gorm:"column:OwnerGroupId;not null"                             json:"ownerGroupId" binding:"required"`
+	OwnerUserId  int64     `gorm:"column:OwnerUserId;not null"                              json:"ownerUserId" binding:"required"`
 	CreateAt     time.Time `gorm:"column:CreateAt;not null"                                 json:"createAt"`
 	UpdateAt     time.Time `gorm:"column:UpdateAt;not null"                                 json:"updateAt"`
 }

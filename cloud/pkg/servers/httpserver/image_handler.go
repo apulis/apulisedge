@@ -29,6 +29,11 @@ func ImageHandlerRoutes(r *gin.Engine) {
 	// image version
 	group.POST("/listImageVersion", wrapper(ListContainerImageVersion))
 	group.POST("/deleteImageVersion", wrapper(DeleteImageVersion))
+
+	// org
+	group.POST("/createOrg", wrapper(CreateImageOrg))
+	group.POST("/listOrg", wrapper(ListImageOrg))
+	group.POST("/deleteOrg", wrapper(DeleteImageOrg))
 }
 
 func ListContainerImage(c *gin.Context) error {
@@ -196,87 +201,6 @@ func DeleteImage(c *gin.Context) error {
 
 	// delete image
 	err = imageservice.DeleteContainerImage(userInfo, &reqContent)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
-
-	return SuccessResp(c, &req, "OK")
-}
-
-// image version =======================================================================================
-func ListContainerImageVersion(c *gin.Context) error {
-	var err error
-	var req proto.Message
-	var reqContent imagemodule.ListContainerImageVersionReq
-	var imageVers *[]imageentity.UserContainerImageVersionInfo
-	var total int
-
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
-
-	// list image version
-	imageVers, total, err = imageservice.ListContainerImageVersion(userInfo, &reqContent)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
-
-	data := imagemodule.ListContainerImageVersionRsp{
-		Total:         total,
-		ImageVersions: imageVers,
-	}
-
-	return SuccessResp(c, &req, data)
-}
-
-// delete image version
-func DeleteImageVersion(c *gin.Context) error {
-	var err error
-	var req proto.Message
-	var reqContent imagemodule.DeleteContainerImageVersionReq
-
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// validate request content
-	validate := validator.New()
-	err = validate.Struct(reqContent)
-	if err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
-
-	// delete image version
-	err = imageservice.DeleteContainterImageVersion(userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
