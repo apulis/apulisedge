@@ -42,3 +42,12 @@ type DeleteEdgeNodeReq struct {
 
 type DeleteEdgeNodeRsp struct {
 }
+
+type GetInstallScriptReq struct {
+	protocol.ApulisHeader `mapstructure:",squash"`
+	Arch                  string `json:"arch"`
+}
+
+type GetInstallScriptRsp struct {
+	Script string `json:"script"`
+}

@@ -42,3 +42,9 @@ Clusters:
     HarborUser: "kefeng.zhang"
     HarborPasswd: "Apulis123"
     HarborAddress: "harbor.sigsus.cn:8443/apulisedge"
+
+downloadServer:
+  address: 127.0.0.1
+  port: 12315
+  cloudServer: cloud.sigsus.cn
+  imageServer: harbor.sigsus.cn:8443

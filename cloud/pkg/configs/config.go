@@ -17,6 +17,14 @@ type EdgeCloudConfig struct {
 	Db             DbConfig
 	Authentication AuthConfig
 	Clusters       []ClusterConfig
+	ScriptConfig DownloadServerConfig
+}
+
+type DownloadServerConfig struct {
+	DownloadAddress string `yaml:"address"`
+	DownloadPort    int    `yaml:"port"`
+	CloudServer     string `yaml:"cloudServer"`
+	ImageServer     string `yaml:"imageServer"`
 }
 
 type HttpConfig struct {
