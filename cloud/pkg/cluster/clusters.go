@@ -18,14 +18,18 @@ var clusters []Cluster
 
 type Cluster struct {
 	Id              int64
+	Domain          string
 	KubeMaster      string
 	KubeConfFile    string
 	KubeQPS         float32
 	KubeBurst       int
 	KubeContentType string
 	HarborAddress   string
+	HarborProject   string
 	HarborUser      string
 	HarborPasswd    string
+	DownloadServer  string
+	DownloadPort    int
 }
 
 func GetCluster(clusterId int64) (*Cluster, error) {
@@ -39,13 +43,18 @@ func GetCluster(clusterId int64) (*Cluster, error) {
 
 func InitClusters(config *configs.EdgeCloudConfig) {
 	for _, c := range config.Clusters {
-		if c.Id < 0 || c.KubeMaster == "" || c.KubeConfFile == "" {
+		if c.Id < 0 || c.Domain == "" || c.KubeMaster == "" || c.KubeConfFile == "" ||
+			c.HarborAddress == "" || c.HarborProject == "" || c.HarborUser == "" ||
+			c.HarborPasswd == "" {
 			logger.Errorf("Invalid cluster config = %v", c)
 			continue
 		}
 		clu := Cluster{}
+		clu.Domain = c.Domain
 		clu.InitKube(c.KubeMaster, c.KubeConfFile)
-		clu.InitDockerCli(c.HarborAddress, c.HarborUser, c.HarborPasswd)
+		clu.InitDockerCli(c.HarborAddress, c.HarborProject, c.HarborUser, c.HarborPasswd)
+		clu.DownloadServer = c.DownloadServer
+		clu.DownloadPort = c.DownloadPort
 		clusters = append(clusters, clu)
 		logger.Infof("Add cluster = %v", clu)
 	}

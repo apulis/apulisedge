@@ -1,27 +1,12 @@
 package nodeservice
 
 import (
-	"strconv"
-
-	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
+	"strconv"
 )
 
-var DownloadAddress string
-var DownloadPort int
-var CloudServer string
-var ImageServer string
-
-// InitInstallScriptConfig init config
-func InitInstallScriptConfig(config *configs.EdgeCloudConfig) {
-	DownloadAddress = config.ScriptConfig.DownloadAddress
-	DownloadPort = config.ScriptConfig.DownloadPort
-	CloudServer = config.ScriptConfig.CloudServer
-	ImageServer = config.ScriptConfig.ImageServer
-}
-
 // GetInstallScripts generate install script
-func GetInstallScripts(req *nodemodule.GetInstallScriptReq) (string, error) {
+func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgServer string, dwServer string, dwPort int) (string, error) {
 	var err error
 	var script string
 	var targetArch = req.Arch
@@ -37,9 +22,9 @@ func GetInstallScripts(req *nodemodule.GetInstallScriptReq) (string, error) {
 	script = script + " mkdir -p " + downloadTarget + " && "
 	script = script + " mkdir -p /opt/apulisedge && "
 	// download package and signature
-	script = script + "wget " + DownloadAddress + ":" + strconv.Itoa(DownloadPort) + "/" + fileName + " -P " + downloadTarget + " && "
-	script = script + "wget " + DownloadAddress + ":" + strconv.Itoa(DownloadPort) + "/" + signFileName + " -P " + downloadTarget + " && "
-	script = script + "wget " + DownloadAddress + ":" + strconv.Itoa(DownloadPort) + "/" + pubKeyFileName + " -P " + downloadTarget + " && "
+	script = script + "wget " + dwServer + ":" + strconv.Itoa(dwPort) + "/" + fileName + " -P " + downloadTarget + " && "
+	script = script + "wget " + dwServer + ":" + strconv.Itoa(dwPort) + "/" + signFileName + " -P " + downloadTarget + " && "
+	script = script + "wget " + dwServer + ":" + strconv.Itoa(dwPort) + "/" + pubKeyFileName + " -P " + downloadTarget + " && "
 	// verify file
 	script = script + " openssl dgst -verify " + downloadTarget + "/" + pubKeyFileName + " -sha256 -signature " + downloadTarget + "/" + signFileName + " " + downloadTarget + "/" + fileName + " && "
 	// decompress package
@@ -47,7 +32,7 @@ func GetInstallScripts(req *nodemodule.GetInstallScriptReq) (string, error) {
 	// move install script
 	script = script + "cp " + downloadTarget + "/package/scripts/* /opt/apulisedge/" + " && "
 	// run install script
-	script = script + "/opt/apulisedge/install_edge.sh -d " + CloudServer + " -l " + ImageServer + "/apulisedge/apulis/kubeedge-edge:1.0"
+	script = script + "/opt/apulisedge/install_edge.sh -d " + domain + " -l " + imgServer + "/apulisedge/apulis/kubeedge-edge:1.0"
 
 	return script, err
 }

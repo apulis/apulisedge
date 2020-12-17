@@ -37,14 +37,12 @@ Authentication:
 Clusters:
   - Id: 0
     Desc: "for test"
+    Domain: "cloud.sigsus.cn"
     KubeMaster: "https://192.168.1.158:6443"
     KubeConfFile: "/root/.kube/config"
+    HarborAddress: "harbor.sigsus.cn:8443"
+    HarborProject: "apulisedge"
     HarborUser: "kefeng.zhang"
     HarborPasswd: "Apulis123"
-    HarborAddress: "harbor.sigsus.cn:8443/apulisedge"
-
-downloadServer:
-  address: 127.0.0.1
-  port: 12315
-  cloudServer: cloud.sigsus.cn
-  imageServer: harbor.sigsus.cn:8443
+    DownloadServer: "192.168.1.158"
+    DownloadPort: 12315

@@ -3,6 +3,7 @@
 package httpserver
 
 import (
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
 	"github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
@@ -22,7 +23,7 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group.POST("/listNode", wrapper(ListEdgeNodes))
 	group.POST("/desNode", wrapper(DescribeEdgeNode))
 	group.POST("/deleteNode", wrapper(DeleteEdgeNode))
-	group.GET("/scripts", wrapper(GetInstallScripts))
+	group.POST("/scripts", wrapper(GetInstallScripts))
 }
 
 // @Summary create edge node
@@ -192,12 +193,27 @@ func GetInstallScripts(c *gin.Context) error {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	logger.Infoln(req.Content)
 	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
 		return ParameterError(c, &req, err.Error())
 	}
 
-	script, err := nodeservice.GetInstallScripts(&reqContent)
+	// TODO validate reqContent
+
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	// get cluster
+	clu, err := cluster.GetCluster(userInfo.ClusterId)
+	if err != nil {
+		logger.Infof("GetInstallScripts, can`t find cluster %d", userInfo.ClusterId)
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	script, err := nodeservice.GetInstallScripts(&reqContent, clu.Domain, clu.HarborAddress, clu.DownloadServer, clu.DownloadPort)
 	data := nodemodule.GetInstallScriptRsp{
 		Script: script,
 	}

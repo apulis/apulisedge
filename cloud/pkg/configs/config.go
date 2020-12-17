@@ -17,7 +17,7 @@ type EdgeCloudConfig struct {
 	Db             DbConfig
 	Authentication AuthConfig
 	Clusters       []ClusterConfig
-	ScriptConfig DownloadServerConfig
+	ScriptConfig   DownloadServerConfig
 }
 
 type DownloadServerConfig struct {
@@ -77,13 +77,17 @@ type AiArtsAuthConfig struct {
 }
 
 type ClusterConfig struct {
-	Id            int64
-	Desc          string
-	KubeMaster    string
-	KubeConfFile  string
-	HarborUser    string
-	HarborPasswd  string
-	HarborAddress string
+	Id             int64
+	Desc           string
+	Domain         string
+	KubeMaster     string
+	KubeConfFile   string
+	HarborAddress  string
+	HarborProject  string
+	HarborUser     string
+	HarborPasswd   string
+	DownloadServer string
+	DownloadPort   int
 }
 
 func InitConfig(configFile string, config *EdgeCloudConfig) {
@@ -103,5 +107,5 @@ func InitConfig(configFile string, config *EdgeCloudConfig) {
 
 	fmt.Printf("Portal config = %v\n", config.Portal)
 	fmt.Printf("Websocket config = %v\n", config.CloudHub.Websocket)
-	fmt.Printf("Cluster config = %v\n", config.Clusters)
+	fmt.Printf("Cluster config = %+v\n", config.Clusters)
 }

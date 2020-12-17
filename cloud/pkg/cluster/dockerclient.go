@@ -26,12 +26,14 @@ type ImageLoadResult struct {
 }
 
 // init docker cli
-func (c *Cluster) InitDockerCli(harborAddress string, harborUser string, harborPasswd string) {
+func (c *Cluster) InitDockerCli(harborAddress string, harborProject string, harborUser string, harborPasswd string) {
 	c.HarborAddress = harborAddress
+	c.HarborProject = harborProject
 	c.HarborUser = harborUser
 	c.HarborPasswd = harborPasswd
 
-	logger.Infof("HarborUser = %s, HarborPasswd = %s", c.HarborUser, c.HarborPasswd)
+	logger.Infof("HarborAddress = %s, HarborProject = %s, HarborUser = %s, HarborPasswd = %s",
+		c.HarborAddress, c.HarborProject, c.HarborUser, c.HarborPasswd)
 }
 
 func (c *Cluster) GetHarborAddress() string {
