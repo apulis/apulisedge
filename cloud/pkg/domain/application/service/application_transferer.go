@@ -370,7 +370,12 @@ func DeleteK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 	return podClient.Delete(context.Background(), podName(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version, dbInfo.NodeName), metav1.DeleteOptions{})
 }
 
-// Todo add cluster/group/version/nodename
 func podName(clusterId int64, groupId int64, userId int64, appName string, version string, nodeName string) string {
-	return appName + "-" + strconv.FormatInt(userId, 10) + "-" + "deployment"
+	return appName + "-" +
+		version + "-" +
+		nodeName + "-" +
+		strconv.FormatInt(clusterId, 10) + "-" +
+		strconv.FormatInt(groupId, 10) + "-" +
+		strconv.FormatInt(userId, 10) + "-" +
+		"deployment"
 }

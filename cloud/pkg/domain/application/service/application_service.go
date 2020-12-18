@@ -7,6 +7,7 @@ import (
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
+	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"gorm.io/gorm"
@@ -26,6 +27,12 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 
 	var appExist bool
 	var verExist bool
+
+	// check if i have this image
+	imgPath, imgExsit := imageservice.DoIHaveTheImageVersion(userInfo, req.OrgName, req.ContainerImage, req.ContainerImageVersion)
+	if !imgExsit {
+		return "", "", appmodule.ErrImageVersionNotExist
+	}
 
 	// check application exist
 	res := apulisdb.Db.
@@ -89,7 +96,7 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 			ArchType:              req.ArchType,
 			ContainerImage:        req.ContainerImage,
 			ContainerImageVersion: req.ContainerImageVersion,
-			ContainerImagePath:    req.ContainerImagePath,
+			ContainerImagePath:    imgPath,
 			CpuQuota:              req.CpuQuota,
 			MaxCpuQuota:           req.MaxCpuQuota,
 			MemoryQuota:           req.MemoryQuota,

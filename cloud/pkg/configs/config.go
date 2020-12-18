@@ -12,6 +12,7 @@ import (
 type EdgeCloudConfig struct {
 	DebugModel     bool
 	Portal         PortalConfig
+	ContainerImage ImageConfig
 	CloudHub       CloudHubConfig
 	Log            LogConfig
 	Db             DbConfig
@@ -37,6 +38,10 @@ type PortalConfig struct {
 	NodeCheckerInterval        int32
 	ApplicationCheckerInterval int32
 	Http                       HttpConfig
+}
+
+type ImageConfig struct {
+	ImageCheckerInterval int32
 }
 
 type WebsocketConfig struct {
@@ -94,6 +99,7 @@ func InitConfig(configFile string, config *EdgeCloudConfig) {
 
 	// set default
 	viper.SetDefault("DebugModel", false)
+	viper.SetDefault("ContainerImage.ImageCheckerInterval", 10)
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -105,6 +111,7 @@ func InitConfig(configFile string, config *EdgeCloudConfig) {
 	}
 
 	fmt.Printf("Portal config = %v\n", config.Portal)
+	fmt.Printf("Image config = %v\n", config.ContainerImage)
 	fmt.Printf("Websocket config = %v\n", config.CloudHub.Websocket)
 	fmt.Printf("Cluster config = %+v\n", config.Clusters)
 }

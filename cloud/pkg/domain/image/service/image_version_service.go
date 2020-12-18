@@ -3,16 +3,19 @@
 package imageservice
 
 import (
+	"github.com/apulis/ApulisEdge/cloud/pkg/channel"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	imagemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/image"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
+	"strings"
 )
 
 // list container image version
-func ListContainerImageVersion(userInfo proto.ApulisHeader, req *imagemodule.ListContainerImageVersionReq) (*[]imageentity.UserContainerImageVersionInfo, error) {
+func ListContainerImageVersion(userInfo proto.ApulisHeader, req *imagemodule.ListContainerImageVersionReq) (*[]imageentity.UserContainerImageVersionInfo, int, error) {
 	var imageVerInfos []imageentity.UserContainerImageVersionInfo
 
+	total := 0
 	offset := req.PageSize * (req.PageNum - 1)
 	limit := req.PageSize
 
@@ -22,10 +25,11 @@ func ListContainerImageVersion(userInfo proto.ApulisHeader, req *imagemodule.Lis
 		Find(&imageVerInfos)
 
 	if res.Error != nil {
-		return &imageVerInfos, res.Error
+		return &imageVerInfos, total, res.Error
 	}
 
-	return &imageVerInfos, nil
+	total = int(res.RowsAffected)
+	return &imageVerInfos, total, nil
 }
 
 // delete container image version
@@ -41,5 +45,33 @@ func DeleteContainterImageVersion(userInfo proto.ApulisHeader, req *imagemodule.
 		return res.Error
 	}
 
-	return imageentity.DeleteContainerImageVersion(&imageVerInfo)
+	err := imageentity.DeleteContainerImageVersion(&imageVerInfo)
+	if err != nil {
+		return err
+	}
+
+	// delete from harbor async
+	msgChanContext := channel.ChanContextInstance()
+	msgChan := msgChanContext.GetChannel(channel.ModuleNameContainerImage)
+	msgChan <- imageVerInfo
+
+	return nil
+}
+
+func DoIHaveTheImageVersion(userInfo proto.ApulisHeader, orgName string, imgName string, imgVersion string) (string, bool) {
+	var verInfo imageentity.UserContainerImageVersionInfo
+
+	res := apulisdb.Db.Model(&imageentity.UserContainerImageVersionInfo{}).
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and OrgName = ? and ImageName = ? and ImageVersion = ?",
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, orgName, imgName, imgVersion).
+		First(&verInfo)
+	if res.Error == nil {
+		return getImgPathFromDownloadCommand(verInfo.DownloadCommand), true
+	} else {
+		return "", false
+	}
+}
+
+func getImgPathFromDownloadCommand(downloadCommand string) string {
+	return strings.TrimPrefix(strings.Split(downloadCommand, imagemodule.DockerPullPrefix)[1], imagemodule.BlankString)
 }

@@ -4,8 +4,10 @@ package framework
 
 import (
 	"context"
+	"github.com/apulis/ApulisEdge/cloud/pkg/channel"
 	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
+	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	"os"
 	"os/signal"
 	"sync"
@@ -102,9 +104,14 @@ func (app *CloudApp) MainLoop() error {
 	// init clusters
 	app.InitClusters()
 
+	// msg chan
+	msgChanContext := channel.ChanContextInstance()
+	msgChanContext.AddChannel(channel.ModuleNameContainerImage, msgChanContext.NewChannel())
+
 	// init ticker
 	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
 	go applicationservice.CreateApplicationTickerLoop(app.tickerCtx, &app.cloudConfig)
+	go imageservice.ImageAsyncHandleLoop(app.tickerCtx, &app.cloudConfig)
 
 	// quit when signal notifys
 	quit := make(chan os.Signal)

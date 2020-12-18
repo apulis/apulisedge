@@ -9,8 +9,6 @@ import (
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-playground/validator/v10"
-	"github.com/mitchellh/mapstructure"
 )
 
 func NodeHandlerRoutes(r *gin.Engine) {
@@ -41,25 +39,13 @@ func CreateEdgeNode(c *gin.Context) error {
 	var reqContent nodemodule.CreateEdgeNodeReq
 	var node *nodeentity.NodeBasicInfo
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// TODO validate reqContent
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// create node
-	node, err = nodeservice.CreateEdgeNode(userInfo, &reqContent)
+	node, err = nodeservice.CreateEdgeNode(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -86,25 +72,13 @@ func ListEdgeNodes(c *gin.Context) error {
 	var nodes *[]nodeentity.NodeBasicInfo
 	var total int
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// TODO validate reqContent
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// list node
-	nodes, total, err = nodeservice.ListEdgeNodes(userInfo, &reqContent)
+	nodes, total, err = nodeservice.ListEdgeNodes(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -123,25 +97,13 @@ func DescribeEdgeNode(c *gin.Context) error {
 	var reqContent nodemodule.DescribeEdgeNodesReq
 	var nodeInfo *nodeentity.NodeBasicInfo
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// TODO validate reqContent
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// describe node
-	nodeInfo, err = nodeservice.DescribeEdgeNode(userInfo, &reqContent)
+	nodeInfo, err = nodeservice.DescribeEdgeNode(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -158,25 +120,13 @@ func DeleteEdgeNode(c *gin.Context) error {
 	var req proto.Message
 	var reqContent nodemodule.DeleteEdgeNodeReq
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// TODO validate reqContent
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// delete application
-	err = nodeservice.DeleteEdgeNode(userInfo, &reqContent)
+	err = nodeservice.DeleteEdgeNode(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -189,21 +139,9 @@ func GetInstallScripts(c *gin.Context) error {
 	var req proto.Message
 	var reqContent nodemodule.GetInstallScriptReq
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// TODO validate reqContent
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
 	// get cluster

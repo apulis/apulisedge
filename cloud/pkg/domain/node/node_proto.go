@@ -6,6 +6,8 @@ import (
 	"github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 )
 
+// TODO add param validate, like node.ListEdgeNodesReq
+
 // Create edge node
 type CreateEdgeNodeReq struct {
 	Name string `json:"name"`
@@ -17,8 +19,8 @@ type CreateEdgeNodeRsp struct {
 
 // List edge nodes
 type ListEdgeNodesReq struct {
-	PageNum  int `json:"pageNum"`
-	PageSize int `json:"pageSize"`
+	PageNum  int `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize int `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type ListEdgeNodesRsp struct {

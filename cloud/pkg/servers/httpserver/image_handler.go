@@ -11,8 +11,7 @@ import (
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-playground/validator/v10"
-	"github.com/mitchellh/mapstructure"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func ImageHandlerRoutes(r *gin.Engine) {
@@ -21,8 +20,19 @@ func ImageHandlerRoutes(r *gin.Engine) {
 	// add authentication
 	group.Use(Auth())
 
+	// image
 	group.POST("/listImage", wrapper(ListContainerImage))
 	group.POST("/uploadImage", wrapper(UploadContainerImage))
+	group.POST("/deleteImage", wrapper(DeleteImage))
+
+	// image version
+	group.POST("/listImageVersion", wrapper(ListContainerImageVersion))
+	group.POST("/deleteImageVersion", wrapper(DeleteImageVersion))
+
+	// org
+	group.POST("/createOrg", wrapper(CreateImageOrg))
+	group.POST("/listOrg", wrapper(ListImageOrg))
+	group.POST("/deleteOrg", wrapper(DeleteImageOrg))
 }
 
 func ListContainerImage(c *gin.Context) error {
@@ -32,25 +42,13 @@ func ListContainerImage(c *gin.Context) error {
 	var images []imageentity.UserContainerImageInfo
 	var total int
 
-	if err = c.ShouldBindJSON(&req); err != nil {
-		return ParameterError(c, &req, err.Error())
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
 	}
 
-	if err := mapstructure.Decode(req.Content.(map[string]interface{}), &reqContent); err != nil {
-		return ParameterError(c, &req, err.Error())
-	}
-
-	// TODO validate reqContent
-
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
-
-	// list node
-	images, total, err = imageservice.ListContainerImage(userInfo, &reqContent)
+	// list image
+	images, total, err = imageservice.ListContainerImage(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -79,6 +77,11 @@ func ListContainerImage(c *gin.Context) error {
 // upload container image
 func UploadContainerImage(c *gin.Context) error {
 	var err error
+	var reqContent imagemodule.UploadContainerImageReq
+
+	if err = c.ShouldBindWith(&reqContent, binding.FormMultipart); err != nil {
+		return NoReqAppError(c, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -87,17 +90,14 @@ func UploadContainerImage(c *gin.Context) error {
 		return NoReqAppError(c, err.Error())
 	}
 
-	// org
-	orgName := c.PostForm("orgName")
-	if orgName == "" {
-		return NoReqAppError(c, ErrOrgNameNeeded.Error())
+	if !imageservice.DoIHaveTheOrg(userInfo, reqContent.OrgName) {
+		return NoReqAppError(c, ErrIDontHaveOrg.Error())
 	}
 
+	fileHeader := reqContent.File
+	orgName := reqContent.OrgName
+
 	// single file
-	fileHeader, err := c.FormFile("file")
-	if err != nil {
-		return NoReqAppError(c, err.Error())
-	}
 	logger.Infof("Uploading container image, file = %s", fileHeader.Filename)
 
 	dstFile := "/tmp/apulis/images/" + fileHeader.Filename
@@ -133,7 +133,7 @@ func UploadContainerImage(c *gin.Context) error {
 		return NoReqAppError(c, err.Error())
 	}
 
-	dstImage := clu.GetHarborAddress() + "/" + orgName + "/" + tag + ":" + ver
+	dstImage := clu.GetHarborAddress() + "/" + clu.GetHarborProject() + "/" + orgName + "/" + tag + ":" + ver
 	err = clu.DockerImageTag(ctx, cli, tag+":"+ver, dstImage)
 	if err != nil {
 		return NoReqAppError(c, err.Error())
@@ -146,5 +146,31 @@ func UploadContainerImage(c *gin.Context) error {
 	}
 	logger.Infof("Image push succ, tag = %s", img)
 
+	// add to db
+	err = imageservice.AddContainerImage(userInfo, orgName, tag, ver, dstImage)
+	if err != nil {
+		return NoReqAppError(c, err.Error())
+	}
+
 	return NoReqSuccessResp(c, fmt.Sprintf("'%s' uploaded!", fileHeader.Filename))
+}
+
+// delete image
+func DeleteImage(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent imagemodule.DeleteContainerImageReq
+
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+
+	// delete image
+	err = imageservice.DeleteContainerImage(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	return SuccessResp(c, &req, "OK")
 }

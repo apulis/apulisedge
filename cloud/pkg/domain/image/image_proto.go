@@ -4,13 +4,16 @@ package image
 
 import (
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
+	"mime/multipart"
 	"time"
 )
 
+// TODO add param validate, like node.ListEdgeNodesReq
+
 // List image
 type ListContainerImageReq struct {
-	PageNum  int `json:"pageNum"`
-	PageSize int `json:"pageSize"`
+	PageNum  int `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize int `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type RspContainerImageInfo struct {
@@ -30,6 +33,8 @@ type ListContainerImageRsp struct {
 
 // Upload image
 type UploadContainerImageReq struct {
+	File    *multipart.FileHeader `form:"file" binding:"required"`
+	OrgName string                `form:"orgName" binding:"required"`
 }
 
 type UploadContainerImageRsp struct {
@@ -48,13 +53,13 @@ type DeleteContainerImageRsp struct {
 type ListContainerImageVersionReq struct {
 	ImageName string `json:"imageName"`
 	OrgName   string `json:"orgName"`
-	PageNum   int    `json:"pageNum"`
-	PageSize  int    `json:"pageSize"`
+	PageNum   int    `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize  int    `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type ListContainerImageVersionRsp struct {
-	Total  int                                          `json:"total"`
-	Images *[]imageentity.UserContainerImageVersionInfo `json:"imageVersions"`
+	Total         int                                          `json:"total"`
+	ImageVersions *[]imageentity.UserContainerImageVersionInfo `json:"imageVersions"`
 }
 
 // Delete image version
@@ -67,16 +72,24 @@ type DeleteContainerImageVersionReq struct {
 type DeleteContainerImageVersionRsp struct {
 }
 
+// Create image org
+type CreateContainerImageOrgReq struct {
+	OrgName string `json:"orgName"`
+}
+
+type CreateContainerImageOrgRsp struct {
+	Org *imageentity.ContainerImageOrg `json:"org"`
+}
+
 // List image org
 type ListContainerImageOrgReq struct {
-	OrgName  string `json:"orgName"`
-	PageNum  int    `json:"pageNum"`
-	PageSize int    `json:"pageSize"`
+	PageNum  int `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize int `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type ListContainerImageOrgRsp struct {
-	Total  int                              `json:"total"`
-	Images *[]imageentity.ContainerImageOrg `json:"imageOrgs"`
+	Total     int                              `json:"total"`
+	ImageOrgs *[]imageentity.ContainerImageOrg `json:"imageOrgs"`
 }
 
 // Delete image org

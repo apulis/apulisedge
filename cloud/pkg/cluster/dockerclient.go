@@ -40,6 +40,10 @@ func (c *Cluster) GetHarborAddress() string {
 	return c.HarborAddress
 }
 
+func (c *Cluster) GetHarborProject() string {
+	return c.HarborProject
+}
+
 func (c *Cluster) GetImageNameAndVersion(imageTag string) (string, string, error) {
 	var img string
 
