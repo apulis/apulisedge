@@ -10,6 +10,7 @@ import (
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
+	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"time"
 )
@@ -246,15 +247,16 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 
 	// store deploy info
 	deployInfo := &appentity.ApplicationDeployInfo{
-		ClusterId: userInfo.ClusterId,
-		GroupId:   userInfo.GroupId,
-		UserId:    userInfo.UserId,
-		AppName:   req.AppName,
-		NodeName:  req.NodeName,
-		Version:   appVerInfo.Version,
-		Status:    constants.StatusInit,
-		CreateAt:  time.Now(),
-		UpdateAt:  time.Now(),
+		ClusterId:  userInfo.ClusterId,
+		GroupId:    userInfo.GroupId,
+		UserId:     userInfo.UserId,
+		AppName:    req.AppName,
+		NodeName:   req.NodeName,
+		Version:    appVerInfo.Version,
+		Status:     constants.StatusInit,
+		DeployUUID: uuid.NewV4().String(),
+		CreateAt:   time.Now(),
+		UpdateAt:   time.Now(),
 	}
 
 	err = appentity.CreateAppDeploy(deployInfo)

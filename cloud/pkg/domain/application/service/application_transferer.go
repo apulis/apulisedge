@@ -9,10 +9,10 @@ import (
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	applicationentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
+	"github.com/satori/go.uuid"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strconv"
 	"time"
 )
 
@@ -312,7 +312,7 @@ func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: podName(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version, dbInfo.NodeName),
+			Name: dbInfo.DeployUUID,
 		},
 		Spec: corev1.PodSpec{
 			NodeSelector: map[string]string{
@@ -320,7 +320,7 @@ func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 			},
 			Containers: []corev1.Container{
 				{
-					Name:  appVerInfo.ContainerImage,
+					Name:  uuid.NewV4().String(),
 					Image: appVerInfo.ContainerImagePath,
 				},
 			},
@@ -347,7 +347,7 @@ func GetK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) (*corev1.Pod, er
 		return nil, err
 	}
 
-	pod, err := podClient.Get(context.Background(), podName(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version, dbInfo.NodeName), metav1.GetOptions{})
+	pod, err := podClient.Get(context.Background(), dbInfo.DeployUUID, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -367,15 +367,5 @@ func DeleteK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 		return err
 	}
 
-	return podClient.Delete(context.Background(), podName(dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version, dbInfo.NodeName), metav1.DeleteOptions{})
-}
-
-func podName(clusterId int64, groupId int64, userId int64, appName string, version string, nodeName string) string {
-	return appName + "-" +
-		version + "-" +
-		nodeName + "-" +
-		strconv.FormatInt(clusterId, 10) + "-" +
-		strconv.FormatInt(groupId, 10) + "-" +
-		strconv.FormatInt(userId, 10) + "-" +
-		"deployment"
+	return podClient.Delete(context.Background(), dbInfo.DeployUUID, metav1.DeleteOptions{})
 }
