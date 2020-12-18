@@ -4,6 +4,7 @@ package image
 
 import (
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
+	"mime/multipart"
 	"time"
 )
 
@@ -11,8 +12,8 @@ import (
 
 // List image
 type ListContainerImageReq struct {
-	PageNum  int `json:"pageNum"`
-	PageSize int `json:"pageSize"`
+	PageNum  int `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize int `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type RspContainerImageInfo struct {
@@ -32,6 +33,8 @@ type ListContainerImageRsp struct {
 
 // Upload image
 type UploadContainerImageReq struct {
+	File    *multipart.FileHeader `form:"file" binding:"required"`
+	OrgName string                `form:"orgName" binding:"required"`
 }
 
 type UploadContainerImageRsp struct {
@@ -50,8 +53,8 @@ type DeleteContainerImageRsp struct {
 type ListContainerImageVersionReq struct {
 	ImageName string `json:"imageName"`
 	OrgName   string `json:"orgName"`
-	PageNum   int    `json:"pageNum"`
-	PageSize  int    `json:"pageSize"`
+	PageNum   int    `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize  int    `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type ListContainerImageVersionRsp struct {
@@ -80,8 +83,8 @@ type CreateContainerImageOrgRsp struct {
 
 // List image org
 type ListContainerImageOrgReq struct {
-	PageNum  int `json:"pageNum"`
-	PageSize int `json:"pageSize"`
+	PageNum  int `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize int `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type ListContainerImageOrgRsp struct {

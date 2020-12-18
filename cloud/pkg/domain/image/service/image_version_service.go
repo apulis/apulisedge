@@ -3,6 +3,7 @@
 package imageservice
 
 import (
+	"github.com/apulis/ApulisEdge/cloud/pkg/channel"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	imagemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/image"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
@@ -44,7 +45,17 @@ func DeleteContainterImageVersion(userInfo proto.ApulisHeader, req *imagemodule.
 		return res.Error
 	}
 
-	return imageentity.DeleteContainerImageVersion(&imageVerInfo)
+	err := imageentity.DeleteContainerImageVersion(&imageVerInfo)
+	if err != nil {
+		return err
+	}
+
+	// delete from harbor async
+	msgChanContext := channel.ChanContextInstance()
+	msgChan := msgChanContext.GetChannel(channel.ModuleNameContainerImage)
+	msgChan <- imageVerInfo
+
+	return nil
 }
 
 func DoIHaveTheImageVersion(userInfo proto.ApulisHeader, orgName string, imgName string, imgVersion string) (string, bool) {

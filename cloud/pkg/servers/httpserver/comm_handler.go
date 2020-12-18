@@ -24,7 +24,7 @@ func PreHandler(c *gin.Context, req *proto.Message, reqContent interface{}) (*pr
 		return nil, ServerError(c, req)
 	}
 
-	if err = c.ShouldBindJSON(&req); err != nil {
+	if err = c.ShouldBindJSON(req); err != nil {
 		return nil, ParameterError(c, req, err.Error())
 	}
 

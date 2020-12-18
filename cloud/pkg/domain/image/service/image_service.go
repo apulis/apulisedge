@@ -87,6 +87,9 @@ func AddContainerImage(userInfo proto.ApulisHeader, orgName string, imgName stri
 			logger.Errorf("AddContainerImage create image failed. err = %v", err)
 			return err
 		}
+	} else if imgExsit { // just update timestamp
+		tmpImgInfo.UpdateAt = time.Now()
+		_ = imageentity.UpdateContainerImage(&tmpImgInfo)
 	}
 
 	if !imgVerExsit {
@@ -109,6 +112,9 @@ func AddContainerImage(userInfo proto.ApulisHeader, orgName string, imgName stri
 			logger.Errorf("AddContainerImage create image version failed. err = %v", err)
 			return err
 		}
+	} else if imgVerExsit { // just update timestamp
+		tmpImgVerInfo.UpdateAt = time.Now()
+		_ = imageentity.UpdateContainerImageVersion(&tmpImgVerInfo)
 	}
 
 	return nil
@@ -137,5 +143,10 @@ func DeleteContainerImage(userInfo proto.ApulisHeader, req *imagemodule.DeleteCo
 		return res.Error
 	}
 
-	return imageentity.DeleteContainerImage(&imageInfo)
+	err := imageentity.DeleteContainerImage(&imageInfo)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -11,6 +11,7 @@ import (
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func ImageHandlerRoutes(r *gin.Engine) {
@@ -76,6 +77,11 @@ func ListContainerImage(c *gin.Context) error {
 // upload container image
 func UploadContainerImage(c *gin.Context) error {
 	var err error
+	var reqContent imagemodule.UploadContainerImageReq
+
+	if err = c.ShouldBindWith(&reqContent, binding.FormMultipart); err != nil {
+		return NoReqAppError(c, err.Error())
+	}
 
 	// get user info, user info comes from authentication
 	userInfo := proto.ApulisHeader{}
@@ -84,21 +90,14 @@ func UploadContainerImage(c *gin.Context) error {
 		return NoReqAppError(c, err.Error())
 	}
 
-	// org
-	orgName := c.PostForm("orgName")
-	if orgName == "" {
-		return NoReqAppError(c, ErrOrgNameNeeded.Error())
-	}
-
-	if !imageservice.DoIHaveTheOrg(userInfo, orgName) {
+	if !imageservice.DoIHaveTheOrg(userInfo, reqContent.OrgName) {
 		return NoReqAppError(c, ErrIDontHaveOrg.Error())
 	}
 
+	fileHeader := reqContent.File
+	orgName := reqContent.OrgName
+
 	// single file
-	fileHeader, err := c.FormFile("file")
-	if err != nil {
-		return NoReqAppError(c, err.Error())
-	}
 	logger.Infof("Uploading container image, file = %s", fileHeader.Filename)
 
 	dstFile := "/tmp/apulis/images/" + fileHeader.Filename

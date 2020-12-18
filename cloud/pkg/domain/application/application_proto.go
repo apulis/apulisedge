@@ -31,8 +31,8 @@ type CreateEdgeApplicationRsp struct {
 
 // List edge application
 type ListEdgeApplicationReq struct {
-	PageNum  int `json:"pageNum"`
-	PageSize int `json:"pageSize"`
+	PageNum  int `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize int `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type ListEdgeApplicationRsp struct {
@@ -43,8 +43,8 @@ type ListEdgeApplicationRsp struct {
 // List edge application version
 type ListEdgeApplicationVersionReq struct {
 	AppName  string `json:"appName"`
-	PageNum  int    `json:"pageNum"`
-	PageSize int    `json:"pageSize"`
+	PageNum  int    `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize int    `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type ListEdgeApplicationVersionRsp struct {
@@ -73,8 +73,8 @@ type DeleteEdgeApplicationVersionRsp struct {
 type ListEdgeAppDeployReq struct {
 	AppName  string `json:"appName"`
 	Version  string `json:"version"`
-	PageNum  int    `json:"pageNum"`
-	PageSize int    `json:"pageSize"`
+	PageNum  int    `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize int    `json:"pageSize" validate:"gte=1,lte=1000"`
 }
 
 type ListEdgeAppDeployRsp struct {
