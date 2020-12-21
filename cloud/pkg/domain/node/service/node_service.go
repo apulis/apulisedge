@@ -20,7 +20,7 @@ func CreateEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.CreateEdgeNodeR
 	// check type
 	typeExist := false
 	for _, v := range nodemodule.TypesOfNode {
-		if v == req.Type {
+		if v == req.NodeType {
 			typeExist = true
 		}
 	}
@@ -34,7 +34,7 @@ func CreateEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.CreateEdgeNodeR
 		GroupId:          userInfo.GroupId,
 		UserId:           userInfo.UserId,
 		NodeName:         req.Name,
-		NodeType:         req.Type,
+		NodeType:         req.NodeType,
 		Status:           constants.StatusNotInstalled,
 		Roles:            "",
 		ContainerRuntime: "",

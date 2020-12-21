@@ -10,8 +10,8 @@ import (
 
 // Create edge node
 type CreateEdgeNodeReq struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Name     string `json:"name" validate:"required"`
+	NodeType string `json:"nodeType" validate:"required"`
 }
 
 type CreateEdgeNodeRsp struct {
@@ -20,8 +20,8 @@ type CreateEdgeNodeRsp struct {
 
 // List edge nodes
 type ListEdgeNodesReq struct {
-	PageNum  int `json:"pageNum" validate:"gte=1,lte=1000"`
-	PageSize int `json:"pageSize" validate:"gte=1,lte=1000"`
+	PageNum  int `json:"pageNum" validate:"required,gte=1,lte=1000"`
+	PageSize int `json:"pageSize" validate:"required,gte=1,lte=1000"`
 }
 
 type ListEdgeNodesRsp struct {
@@ -31,7 +31,7 @@ type ListEdgeNodesRsp struct {
 
 // Describe edge node protocol
 type DescribeEdgeNodesReq struct {
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required"`
 }
 
 type DescribeEdgeNodesRsp struct {
@@ -40,14 +40,14 @@ type DescribeEdgeNodesRsp struct {
 
 // Delete edge node
 type DeleteEdgeNodeReq struct {
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required"`
 }
 
 type DeleteEdgeNodeRsp struct {
 }
 
 type GetInstallScriptReq struct {
-	Arch string `json:"arch"`
+	Arch string `json:"arch" validate:"required"`
 }
 
 type GetInstallScriptRsp struct {

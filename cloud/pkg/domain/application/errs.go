@@ -14,6 +14,8 @@ var (
 	ErrUnDeploying              = errors.New("undeploying")
 	ErrChangeAppVersionFailed   = errors.New("change app version fail")
 	ErrDeleteStatusNotOffline   = errors.New("delete failed! status not offline")
+	ErrDeleteStatusPublished    = errors.New("delete failed! status is published")
 	ErrDeployStatusNotPublished = errors.New("deploy failed! status not published")
 	ErrWrongRestartPolicy       = errors.New("wrong restart policy")
+	ErrNetworkPortmappingEmpty  = errors.New("need port mapping")
 )

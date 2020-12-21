@@ -10,7 +10,6 @@ import (
 	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
-	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"time"
 )
@@ -33,6 +32,11 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 	imgPath, imgExsit := imageservice.DoIHaveTheImageVersion(userInfo, req.OrgName, req.ContainerImage, req.ContainerImageVersion)
 	if !imgExsit {
 		return "", "", appmodule.ErrImageVersionNotExist
+	}
+
+	// check network type
+	if req.Network.Type == appmodule.NetworkTypePortMapping && len(req.Network.PortMappings) == 0 {
+		return "", "", appmodule.ErrNetworkPortmappingEmpty
 	}
 
 	// check application exist
@@ -87,7 +91,7 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 	}
 
 	// create app version if not exist
-	logger.Infof("PublishAt = %v", time.Time{})
+
 	if !verExist {
 		appVersionInfo = appentity.ApplicationVersionInfo{
 			AppName:               req.AppName,
@@ -184,223 +188,4 @@ func DeleteEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeleteEdg
 	}
 
 	return appentity.DeleteApplication(&appInfo)
-}
-
-// list edge application versions
-func ListEdgeApplicationVersions(userInfo proto.ApulisHeader, req *appmodule.ListEdgeApplicationVersionReq) (*[]appentity.ApplicationVersionInfo, int, error) {
-	var appVerInfos []appentity.ApplicationVersionInfo
-
-	total := 0
-	offset := req.PageSize * (req.PageNum - 1)
-	limit := req.PageSize
-
-	res := apulisdb.Db.Offset(offset).Limit(limit).
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName).
-		Find(&appVerInfos)
-
-	if res.Error != nil {
-		return &appVerInfos, total, res.Error
-	}
-
-	return &appVerInfos, int(res.RowsAffected), nil
-}
-
-// describe edge app version
-func DescribeEdgeAppVersion(userInfo proto.ApulisHeader, req *appmodule.DescribeEdgeAppVersionReq) (*appentity.ApplicationVersionInfo, error) {
-	var appVerInfo appentity.ApplicationVersionInfo
-
-	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.Version).
-		First(&appVerInfo)
-
-	if res.Error != nil {
-		return &appVerInfo, res.Error
-	}
-
-	return &appVerInfo, nil
-}
-
-// publish app version
-func PublishEdgeApplicationVersion(userInfo proto.ApulisHeader, req *appmodule.PublishEdgeApplicationVersionReq) error {
-	var appInfo appentity.ApplicationBasicInfo
-	var appVerInfo appentity.ApplicationVersionInfo
-
-	// get app
-	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName).
-		First(&appInfo)
-	if res.Error != nil {
-		return res.Error
-	}
-
-	// get app version
-	res = apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.Version).
-		First(&appVerInfo)
-	if res.Error != nil {
-		return res.Error
-	}
-
-	if appVerInfo.Status != appmodule.AppStatusUnpublished {
-		return appmodule.ErrChangeAppVersionFailed
-	}
-
-	// app version update field: Status
-	appVerInfo.Status = appmodule.AppStatusPublished
-	appVerInfo.PublishAt = time.Now().String()
-	err := appentity.UpdateApplicationVersion(&appVerInfo)
-	if err != nil {
-		return err
-	}
-
-	// app update field: LatestPubVersion
-	appInfo.LatestPubVersion = req.Version
-	return appentity.UpdateApplication(&appInfo)
-}
-
-// app version offline
-func OfflineEdgeApplicationVersion(userInfo proto.ApulisHeader, req *appmodule.OfflineEdgeApplicationVersionReq) error {
-	var appVerInfo appentity.ApplicationVersionInfo
-
-	// get app version
-	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.Version).
-		First(&appVerInfo)
-	if res.Error != nil {
-		return res.Error
-	}
-
-	if appVerInfo.Status != appmodule.AppStatusPublished {
-		return appmodule.ErrChangeAppVersionFailed
-	}
-
-	appVerInfo.Status = appmodule.AppStatusOffline
-	return appentity.UpdateApplicationVersion(&appVerInfo)
-}
-
-// delete edge application version
-func DeleteEdgeApplicationVersion(userInfo proto.ApulisHeader, req *appmodule.DeleteEdgeApplicationVersionReq) error {
-	var appVerInfo appentity.ApplicationVersionInfo
-
-	// check if any deploy exist
-	var total int64
-	apulisdb.Db.Model(&appentity.ApplicationDeployInfo{}).
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.Version).
-		Count(&total)
-	if total != 0 {
-		return appmodule.ErrDeployExist
-	}
-
-	// get app version and delete
-	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.Version).
-		First(&appVerInfo)
-	if res.Error != nil {
-		return res.Error
-	}
-
-	// check version status
-	if appVerInfo.Status != appmodule.AppStatusOffline {
-		return appmodule.ErrDeleteStatusNotOffline
-	}
-
-	return appentity.DeleteApplicationVersion(&appVerInfo)
-}
-
-// list edge deploys
-func ListEdgeDeploys(userInfo proto.ApulisHeader, req *appmodule.ListEdgeAppDeployReq) (*[]appentity.ApplicationDeployInfo, int, error) {
-	var appDeloys []appentity.ApplicationDeployInfo
-
-	total := 0
-	offset := req.PageSize * (req.PageNum - 1)
-	limit := req.PageSize
-
-	res := apulisdb.Db.Offset(offset).Limit(limit).
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.Version).
-		Find(&appDeloys)
-	if res.Error != nil {
-		return &appDeloys, total, res.Error
-	}
-
-	return &appDeloys, int(res.RowsAffected), nil
-}
-
-// deploy edge application
-func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdgeApplicationReq) error {
-	// get application version
-	var err error
-	var appVerInfo appentity.ApplicationVersionInfo
-
-	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.Version).
-		First(&appVerInfo)
-	if res.Error != nil {
-		logger.Infof("create application deploy failed! err = %v", res.Error)
-		return res.Error
-	}
-
-	// check version status
-	if appVerInfo.Status != appmodule.AppStatusPublished {
-		return appmodule.ErrDeployStatusNotPublished
-	}
-
-	// store deploy info
-	deployInfo := &appentity.ApplicationDeployInfo{
-		ClusterId:  userInfo.ClusterId,
-		GroupId:    userInfo.GroupId,
-		UserId:     userInfo.UserId,
-		AppName:    req.AppName,
-		NodeName:   req.NodeName,
-		Version:    appVerInfo.Version,
-		Status:     constants.StatusInit,
-		DeployUUID: uuid.NewV4().String(),
-		CreateAt:   time.Now(),
-		UpdateAt:   time.Now(),
-	}
-
-	err = appentity.CreateAppDeploy(deployInfo)
-	if err != nil {
-		logger.Infof("create application deploy failed! err = %v", err)
-		return err
-	}
-
-	return nil
-}
-
-// undeploy edge application
-func UnDeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.UnDeployEdgeApplicationReq) error {
-	// get application
-	var err error
-	var appDeployInfo appentity.ApplicationDeployInfo
-
-	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and NodeName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.NodeName, req.Version).
-		First(&appDeployInfo)
-	if res.Error != nil {
-		return res.Error
-	}
-
-	if appDeployInfo.Status == constants.StatusDeleting {
-		return constants.ErrUnDeploying
-	}
-
-	// modify status directly
-	appDeployInfo.Status = constants.StatusDeleting
-
-	err = appentity.UpdateAppDeploy(&appDeployInfo)
-	if err != nil {
-		logger.Infof("delete application deploy failed! err = %v", err)
-		return err
-	}
-
-	return nil
 }
