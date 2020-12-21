@@ -19,6 +19,7 @@ type NodeBasicInfo struct {
 	ClusterId        int64     `gorm:"uniqueIndex:user_node;column:ClusterId;not null"         json:"clusterId" binding:"required"`
 	GroupId          int64     `gorm:"uniqueIndex:user_node;column:GroupId;not null"           json:"groupId" binding:"required"`
 	UserId           int64     `gorm:"uniqueIndex:user_node;column:UserId;not null"            json:"userId" binding:"required"`
+	NodeType         string    `gorm:"column:nodeType;size:128;not null"                       json:"nodeType" binding:"required"`
 	Status           string    `gorm:"column:Status;size:255;not null"                         json:"status" binding:"required"`
 	Roles            string    `gorm:"column:Roles;size:255;not null"                          json:"roles" binding:"required"`
 	ContainerRuntime string    `gorm:"column:ContainerRuntime;size:255;not null"               json:"runtime" binding:"required"`

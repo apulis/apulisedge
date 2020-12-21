@@ -36,6 +36,30 @@ func ListContainerImageVersion(c *gin.Context) error {
 	return SuccessResp(c, &req, data)
 }
 
+// describe image version
+func DescribeContainerImageVersion(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent imagemodule.DescribeContainerImageVersionReq
+
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+
+	// describe application
+	imgVer, err := imageservice.DescribeContainerImageVersion(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := imagemodule.DescribeContainerImageVersionRsp{
+		ImageVersion: imgVer,
+	}
+
+	return SuccessResp(c, &req, data)
+}
+
 // delete image version
 func DeleteImageVersion(c *gin.Context) error {
 	var err error

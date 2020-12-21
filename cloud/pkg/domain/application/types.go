@@ -12,6 +12,13 @@ const (
 	StatusPublished   string = "Published"
 )
 
+// application status
+const (
+	AppStatusUnpublished string = "Unpublished"
+	AppStatusPublished   string = "Published"
+	AppStatusOffline     string = "Offline"
+)
+
 // deploy status
 const (
 	StatusInit      string = "Init"
@@ -33,4 +40,23 @@ const (
 // for ticker
 const (
 	TransferCountEach int = 10
+)
+
+// restart policy
+const (
+	RestartPolicyAlways    string = "Always"
+	RestartPolicyOnFailure string = "OnFailure"
+	RestartPolicyNever     string = "Never"
+)
+
+// network type
+const (
+	NetworkTypeHost        string = "Host"
+	NetworkTypePortMapping string = "PortMapping"
+)
+
+// arch type
+const (
+	ArchX86 string = "x86_64"
+	ArchArm string = "arm64"
 )

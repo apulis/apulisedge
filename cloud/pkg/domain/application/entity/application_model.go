@@ -35,6 +35,7 @@ type ApplicationVersionInfo struct {
 	GroupId               int64     `gorm:"uniqueIndex:app_version;column:GroupId;not null"          json:"groupId" binding:"required"`
 	UserId                int64     `gorm:"uniqueIndex:app_version;column:UserId;not null"           json:"userId" binding:"required"`
 	Version               string    `gorm:"uniqueIndex:app_version;column:Version;size:255;not null" json:"version" binding:"required"`
+	Status                string    `gorm:"column:Status;size:255;not null"                          json:"status" binding:"required"`
 	ArchType              string    `gorm:"column:ArchType;size:64;not null"                         json:"archType" binding:"required"`
 	ContainerImage        string    `gorm:"column:containerImage;size:255;not null"                  json:"containerImage" binding:"required"`
 	ContainerImageVersion string    `gorm:"column:containerImageVersion;size:255;not null"           json:"containerImageVersion" binding:"required"`
@@ -43,8 +44,12 @@ type ApplicationVersionInfo struct {
 	MaxCpuQuota           float32   `gorm:"column:MaxCpuQuota;not null"                              json:"maxCpuQuota" binding:"required"`
 	MemoryQuota           float32   `gorm:"column:MemoryQuota;not null"                              json:"memoryQuota" binding:"required"`
 	MaxMemoryQuota        float32   `gorm:"column:MaxMemoryQuota;not null"                           json:"MaxMemoryQuota" binding:"required"`
+	RestartPolicy         string    `gorm:"column:RestartPolicy;size:128;not null"                   json:"restartPolicy" binding:"required"`
+	Network               string    `gorm:"column:Network;size:512;not null"                         json:"network" binding:"required"`
 	CreateAt              time.Time `gorm:"column:CreateAt;not null"                                 json:"createAt"`
 	UpdateAt              time.Time `gorm:"column:UpdateAt;not null"                                 json:"updateAt"`
+	PublishAt             string    `gorm:"column:PublishAt"                                         json:"publishAt"`
+	OfflineAt             string    `gorm:"column:OfflineAt"                                         json:"offlineAt"`
 }
 
 func (ApplicationBasicInfo) TableName() string {

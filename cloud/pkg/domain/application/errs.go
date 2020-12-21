@@ -7,9 +7,13 @@ import (
 )
 
 var (
-	ErrDeployExist             = errors.New("application deploy exist")
-	ErrApplicationExist        = errors.New("application exist")
-	ErrApplicationVersionExist = errors.New("application version exist")
-	ErrImageVersionNotExist    = errors.New("image version not exist")
-	ErrUnDeploying             = errors.New("undeploying")
+	ErrDeployExist              = errors.New("application deploy exist")
+	ErrApplicationExist         = errors.New("application exist")
+	ErrApplicationVersionExist  = errors.New("application version exist")
+	ErrImageVersionNotExist     = errors.New("image version not exist")
+	ErrUnDeploying              = errors.New("undeploying")
+	ErrChangeAppVersionFailed   = errors.New("change app version fail")
+	ErrDeleteStatusNotOffline   = errors.New("delete failed! status not offline")
+	ErrDeployStatusNotPublished = errors.New("deploy failed! status not published")
+	ErrWrongRestartPolicy       = errors.New("wrong restart policy")
 )

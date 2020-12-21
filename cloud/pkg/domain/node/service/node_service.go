@@ -17,11 +17,24 @@ import (
 var logger = loggers.LogInstance()
 
 func CreateEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.CreateEdgeNodeReq) (*nodeentity.NodeBasicInfo, error) {
+	// check type
+	typeExist := false
+	for _, v := range nodemodule.TypesOfNode {
+		if v == req.Type {
+			typeExist = true
+		}
+	}
+
+	if !typeExist {
+		return nil, nodemodule.ErrNodeTypeNotExist
+	}
+
 	node := &nodeentity.NodeBasicInfo{
 		ClusterId:        userInfo.ClusterId,
 		GroupId:          userInfo.GroupId,
 		UserId:           userInfo.UserId,
 		NodeName:         req.Name,
+		NodeType:         req.Type,
 		Status:           constants.StatusNotInstalled,
 		Roles:            "",
 		ContainerRuntime: "",
@@ -90,4 +103,9 @@ func DeleteEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.DeleteEdgeNodeR
 	}
 
 	return nodeentity.DeleteNode(&nodeInfo)
+}
+
+//////// node type ////////
+func ListEdgeNodeType(userInfo proto.ApulisHeader, req *nodemodule.ListEdgeNodeTypeReq) ([]string, error) {
+	return nodemodule.TypesOfNode, nil
 }

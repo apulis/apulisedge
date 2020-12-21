@@ -11,6 +11,7 @@ import (
 // Create edge node
 type CreateEdgeNodeReq struct {
 	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
 type CreateEdgeNodeRsp struct {
@@ -51,4 +52,13 @@ type GetInstallScriptReq struct {
 
 type GetInstallScriptRsp struct {
 	Script string `json:"script"`
+}
+
+/////////// node type ///////////////
+// List node type
+type ListEdgeNodeTypeReq struct {
+}
+
+type ListEdgeNodeTypeRsq struct {
+	Types []string `json:"types"`
 }

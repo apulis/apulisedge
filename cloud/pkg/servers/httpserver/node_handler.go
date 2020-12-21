@@ -22,6 +22,7 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group.POST("/desNode", wrapper(DescribeEdgeNode))
 	group.POST("/deleteNode", wrapper(DeleteEdgeNode))
 	group.POST("/scripts", wrapper(GetInstallScripts))
+	group.POST("/listType", wrapper(ListEdgeNodeType))
 }
 
 // @Summary create edge node
@@ -154,6 +155,28 @@ func GetInstallScripts(c *gin.Context) error {
 	script, err := nodeservice.GetInstallScripts(&reqContent, clu.Domain, clu.HarborAddress, clu.DownloadAddress)
 	data := nodemodule.GetInstallScriptRsp{
 		Script: script,
+	}
+	return SuccessResp(c, &req, data)
+}
+
+func ListEdgeNodeType(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent nodemodule.ListEdgeNodeTypeReq
+
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+
+	// list type
+	tys, err := nodeservice.ListEdgeNodeType(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := nodemodule.ListEdgeNodeTypeRsq{
+		Types: tys,
 	}
 	return SuccessResp(c, &req, data)
 }

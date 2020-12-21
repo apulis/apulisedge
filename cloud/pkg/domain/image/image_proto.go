@@ -31,6 +31,16 @@ type ListContainerImageRsp struct {
 	Images []RspContainerImageInfo `json:"images"`
 }
 
+// Describe image
+type DescribeContainerImageReq struct {
+	ImageName string `json:"imageName" validate:"required"`
+	OrgName   string `json:"orgName" validate:"required"`
+}
+
+type DescribeContainerImageRsp struct {
+	Image *imageentity.UserContainerImageInfo `json:"image"`
+}
+
 // Upload image
 type UploadContainerImageReq struct {
 	File    *multipart.FileHeader `form:"file" binding:"required"`
@@ -47,55 +57,4 @@ type DeleteContainerImageReq struct {
 }
 
 type DeleteContainerImageRsp struct {
-}
-
-// List image version
-type ListContainerImageVersionReq struct {
-	ImageName string `json:"imageName"`
-	OrgName   string `json:"orgName"`
-	PageNum   int    `json:"pageNum" validate:"gte=1,lte=1000"`
-	PageSize  int    `json:"pageSize" validate:"gte=1,lte=1000"`
-}
-
-type ListContainerImageVersionRsp struct {
-	Total         int                                          `json:"total"`
-	ImageVersions *[]imageentity.UserContainerImageVersionInfo `json:"imageVersions"`
-}
-
-// Delete image version
-type DeleteContainerImageVersionReq struct {
-	ImageName    string `json:"imageName"`
-	OrgName      string `json:"orgName"`
-	ImageVersion string `json:"imageVersion"`
-}
-
-type DeleteContainerImageVersionRsp struct {
-}
-
-// Create image org
-type CreateContainerImageOrgReq struct {
-	OrgName string `json:"orgName"`
-}
-
-type CreateContainerImageOrgRsp struct {
-	Org *imageentity.ContainerImageOrg `json:"org"`
-}
-
-// List image org
-type ListContainerImageOrgReq struct {
-	PageNum  int `json:"pageNum" validate:"gte=1,lte=1000"`
-	PageSize int `json:"pageSize" validate:"gte=1,lte=1000"`
-}
-
-type ListContainerImageOrgRsp struct {
-	Total     int                              `json:"total"`
-	ImageOrgs *[]imageentity.ContainerImageOrg `json:"imageOrgs"`
-}
-
-// Delete image org
-type DeleteContainerImageOrgReq struct {
-	OrgName string `json:"orgName"`
-}
-
-type DeleteContainerImageOrgRsp struct {
 }

@@ -33,6 +33,22 @@ func ListContainerImage(userInfo proto.ApulisHeader, req *imagemodule.ListContai
 	return imageInfos, int(res.RowsAffected), nil
 }
 
+// describe container image
+func DescribeContainerImage(userInfo proto.ApulisHeader, req *imagemodule.DescribeContainerImageReq) (*imageentity.UserContainerImageInfo, error) {
+	var imageInfo imageentity.UserContainerImageInfo
+
+	res := apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ?",
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.ImageName, req.OrgName).
+		First(&imageInfo)
+
+	if res.Error != nil {
+		return &imageInfo, res.Error
+	}
+
+	return &imageInfo, nil
+}
+
 // add container images
 func AddContainerImage(userInfo proto.ApulisHeader, orgName string, imgName string, imgVer string, imgRepo string) error {
 	var tmpImgInfo imageentity.UserContainerImageInfo
@@ -124,17 +140,7 @@ func AddContainerImage(userInfo proto.ApulisHeader, orgName string, imgName stri
 func DeleteContainerImage(userInfo proto.ApulisHeader, req *imagemodule.DeleteContainerImageReq) error {
 	var imageInfo imageentity.UserContainerImageInfo
 
-	// check if any image version exist
-	var total int64
-	apulisdb.Db.Model(&imageentity.UserContainerImageVersionInfo{}).
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.ImageName, req.OrgName).
-		Count(&total)
-	if total != 0 {
-		return imagemodule.ErrImageVersionExist
-	}
-
-	// get image and delete
+	// check image
 	res := apulisdb.Db.
 		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ?",
 			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.ImageName, req.OrgName).
@@ -143,9 +149,22 @@ func DeleteContainerImage(userInfo proto.ApulisHeader, req *imagemodule.DeleteCo
 		return res.Error
 	}
 
-	err := imageentity.DeleteContainerImage(&imageInfo)
-	if err != nil {
-		return err
+	// delete image version
+	res = apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ?",
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.ImageName, req.OrgName).
+		Delete(imageentity.UserContainerImageVersionInfo{})
+	if res.Error != nil {
+		return res.Error
+	}
+
+	// delete image
+	res = apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ?",
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.ImageName, req.OrgName).
+		Delete(imageentity.UserContainerImageInfo{})
+	if res.Error != nil {
+		return res.Error
 	}
 
 	return nil
