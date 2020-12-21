@@ -4,9 +4,11 @@ package applicationservice
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
+	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	applicationentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
 	"github.com/satori/go.uuid"
@@ -310,6 +312,28 @@ func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 		return res.Error
 	}
 
+	var appNetwork appmodule.CreateAppNetwork
+	err = json.Unmarshal([]byte(appVerInfo.Network), &appNetwork)
+	if err != nil {
+		return err
+	}
+	logger.Infof("appNetwork = %+v", appNetwork)
+
+	// host network
+	hn := false
+	var ports []corev1.ContainerPort
+	if appNetwork.Type == appmodule.NetworkTypeHost {
+		hn = true
+	}
+	if appNetwork.Type == appmodule.NetworkTypePortMapping {
+		for _, v := range appNetwork.PortMappings {
+			ports = append(ports, corev1.ContainerPort{
+				ContainerPort: int32(v.ContainerPort),
+				HostPort:      int32(v.HostPort),
+			})
+		}
+	}
+
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: dbInfo.DeployUUID,
@@ -318,10 +342,12 @@ func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
 			NodeSelector: map[string]string{
 				"kubernetes.io/hostname": dbInfo.NodeName,
 			},
+			HostNetwork: hn,
 			Containers: []corev1.Container{
 				{
 					Name:  uuid.NewV4().String(),
 					Image: appVerInfo.ContainerImagePath,
+					Ports: ports,
 				},
 			},
 		},

@@ -3,6 +3,7 @@
 package applicationservice
 
 import (
+	"encoding/json"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
@@ -37,6 +38,10 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 	// check network type
 	if req.Network.Type == appmodule.NetworkTypePortMapping && len(req.Network.PortMappings) == 0 {
 		return "", "", appmodule.ErrNetworkPortmappingEmpty
+	}
+
+	if len(req.Network.PortMappings) == 0 {
+		req.Network.PortMappings = []appmodule.PortMapping{}
 	}
 
 	// check application exist
@@ -91,7 +96,12 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 	}
 
 	// create app version if not exist
-
+	data, err := json.Marshal(req.Network)
+	if err != nil {
+		logger.Errorf("CreateEdgeApplication Marshal network. err = %v", err)
+		return "", "", err
+	}
+	netPolicy := string(data)
 	if !verExist {
 		appVersionInfo = appentity.ApplicationVersionInfo{
 			AppName:               req.AppName,
@@ -109,6 +119,7 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 			MemoryQuota:           req.MemoryQuota,
 			MaxMemoryQuota:        req.MaxMemoryQuota,
 			RestartPolicy:         req.RestartPolicy,
+			Network:               netPolicy,
 			CreateAt:              time.Now(),
 			UpdateAt:              time.Now(),
 			PublishAt:             time.Time{}.String(),
