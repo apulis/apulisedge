@@ -12,6 +12,7 @@ import (
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"gorm.io/gorm"
+	"strings"
 	"time"
 )
 
@@ -28,6 +29,18 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 
 	var appExist bool
 	var verExist bool
+
+	// check type
+	archExist := true
+	for _, v := range req.ArchType {
+		if v != appmodule.ArchX86 && v != appmodule.ArchArm {
+			archExist = false
+		}
+	}
+
+	if !archExist {
+		return "", "", appmodule.ErrArchTypeNotExist
+	}
 
 	// check if i have this image
 	imgPath, imgExsit := imageservice.DoIHaveTheImageVersion(userInfo, req.OrgName, req.ContainerImage, req.ContainerImageVersion)
@@ -102,6 +115,12 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 		return "", "", err
 	}
 	netPolicy := string(data)
+
+	archT := ""
+	for _, v := range req.ArchType {
+		archT = archT + v + ";"
+	}
+	archT = strings.TrimSuffix(archT, ";")
 	if !verExist {
 		appVersionInfo = appentity.ApplicationVersionInfo{
 			AppName:               req.AppName,
@@ -110,7 +129,7 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 			UserId:                userInfo.UserId,
 			Version:               req.Version,
 			Status:                appmodule.AppStatusUnpublished,
-			ArchType:              req.ArchType,
+			ArchType:              archT,
 			ContainerImage:        req.ContainerImage,
 			ContainerImageVersion: req.ContainerImageVersion,
 			ContainerImagePath:    imgPath,

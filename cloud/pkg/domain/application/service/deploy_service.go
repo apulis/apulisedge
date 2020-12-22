@@ -51,55 +51,74 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 		return appmodule.ErrDeployStatusNotPublished
 	}
 
-	// store deploy info
-	deployInfo := &appentity.ApplicationDeployInfo{
-		ClusterId:  userInfo.ClusterId,
-		GroupId:    userInfo.GroupId,
-		UserId:     userInfo.UserId,
-		AppName:    req.AppName,
-		NodeName:   req.NodeName,
-		Version:    appVerInfo.Version,
-		Status:     constants.StatusInit,
-		DeployUUID: uuid.NewV4().String(),
-		CreateAt:   time.Now(),
-		UpdateAt:   time.Now(),
+	totalDeploy := 0
+	for _, node := range req.NodeNames {
+		// store deploy info
+		deployInfo := &appentity.ApplicationDeployInfo{
+			ClusterId:  userInfo.ClusterId,
+			GroupId:    userInfo.GroupId,
+			UserId:     userInfo.UserId,
+			AppName:    req.AppName,
+			NodeName:   node,
+			Version:    appVerInfo.Version,
+			Status:     constants.StatusInit,
+			DeployUUID: uuid.NewV4().String(),
+			CreateAt:   time.Now(),
+			UpdateAt:   time.Now(),
+		}
+
+		err = appentity.CreateAppDeploy(deployInfo)
+		if err != nil {
+			logger.Infof("create application deploy failed! node = %s, err = %v", node, err)
+			continue
+		}
+		totalDeploy++
 	}
 
-	err = appentity.CreateAppDeploy(deployInfo)
-	if err != nil {
-		logger.Infof("create application deploy failed! err = %v", err)
-		return err
+	if totalDeploy == len(req.NodeNames) {
+		return nil
+	} else if totalDeploy > 0 {
+		return appmodule.ErrDeployPartFails
+	} else {
+		return appmodule.ErrDeployAllFails
 	}
-
-	return nil
 }
 
 // undeploy edge application
 func UnDeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.UnDeployEdgeApplicationReq) error {
-	// get application
+	// get application deploy
 	var err error
-	var appDeployInfo appentity.ApplicationDeployInfo
+	var appDeployInfos []appentity.ApplicationDeployInfo
 
 	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and NodeName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.NodeName, req.Version).
-		First(&appDeployInfo)
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and NodeName IN ? and Version = ?",
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.NodeNames, req.Version).
+		Find(&appDeployInfos)
 	if res.Error != nil {
 		return res.Error
 	}
 
-	if appDeployInfo.Status == constants.StatusDeleting {
-		return constants.ErrUnDeploying
+	totalUnDeploy := 0
+	for _, info := range appDeployInfos {
+		if info.Status == constants.StatusDeleting {
+			continue
+		}
+
+		info.Status = constants.StatusDeleting
+		err = appentity.UpdateAppDeploy(&info)
+		if err != nil {
+			logger.Infof("delete application deploy failed! node = %s, err = %v", info.NodeName, err)
+			continue
+		}
+
+		totalUnDeploy++
 	}
 
-	// modify status directly
-	appDeployInfo.Status = constants.StatusDeleting
-
-	err = appentity.UpdateAppDeploy(&appDeployInfo)
-	if err != nil {
-		logger.Infof("delete application deploy failed! err = %v", err)
-		return err
+	if totalUnDeploy == len(req.NodeNames) {
+		return nil
+	} else if totalUnDeploy > 0 {
+		return appmodule.ErrUnDeployPartFails
+	} else {
+		return appmodule.ErrUnDeployAllFails
 	}
-
-	return nil
 }

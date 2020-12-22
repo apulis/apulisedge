@@ -23,9 +23,9 @@ type ListEdgeAppDeployRsp struct {
 
 // Deploy edge application
 type DeployEdgeApplicationReq struct {
-	AppName  string `json:"appName"`
-	NodeName string `json:"nodeName"`
-	Version  string `json:"version"`
+	AppName   string   `json:"appName" validate:"required"`
+	NodeNames []string `json:"nodeNames" validate:"required"`
+	Version   string   `json:"version" validate:"required"`
 }
 
 type DeployEdgeApplicationRsp struct {
@@ -33,9 +33,9 @@ type DeployEdgeApplicationRsp struct {
 
 // undeploy edge application
 type UnDeployEdgeApplicationReq struct {
-	AppName  string `json:"appName"`
-	NodeName string `json:"nodeName"`
-	Version  string `json:"version"`
+	AppName   string   `json:"appName" validate:"required"`
+	NodeNames []string `json:"nodeNames" validate:"required"`
+	Version   string   `json:"version" validate:"required"`
 }
 
 type UnDeployEdgeApplicationRsp struct {

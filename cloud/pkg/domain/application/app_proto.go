@@ -13,7 +13,7 @@ type CreateEdgeApplicationReq struct {
 	AppName               string           `json:"appName"`
 	FunctionType          string           `json:"functionType"`
 	Description           string           `json:"description"`
-	ArchType              string           `json:"archType" validate:"oneof=x86_64 arm64 x86_64;arm64"`
+	ArchType              []string         `json:"archType" validate:"required"`
 	Version               string           `json:"version"`
 	OrgName               string           `json:"orgName"`
 	ContainerImage        string           `json:"containerImage"`
