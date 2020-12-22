@@ -1,6 +1,7 @@
 package nodeservice
 
 import (
+	do "github.com/apulis/ApulisEdge/cloud/pkg/domain"
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
 )
 
@@ -9,6 +10,17 @@ func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgSe
 	var err error
 	var script string
 	var targetArch = req.Arch
+
+	// check type
+	archExist := true
+	if !do.IsArchValid(req.Arch) {
+		archExist = false
+	}
+
+	if !archExist {
+		return "", do.ErrArchTypeNotExist
+	}
+
 	var downloadTarget = "/tmp/apulisedge/"
 	var packageName = "apulisedge_" + targetArch
 	var fileName = packageName + ".tar.gz"

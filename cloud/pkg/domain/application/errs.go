@@ -22,5 +22,4 @@ var (
 	ErrDeployAllFails           = errors.New("all of deploy fails")
 	ErrUnDeployPartFails        = errors.New("part of undeploy fails")
 	ErrUnDeployAllFails         = errors.New("all of undeploy fails")
-	ErrArchTypeNotExist         = errors.New("arch type not exist")
 )
