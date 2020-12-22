@@ -31,6 +31,7 @@ func ApplicationHandlerRoutes(r *gin.Engine) {
 
 	// application deployment
 	group.POST("/listApplicationDeploy", wrapper(ListEdgeAppDeploys))
+	group.POST("/listNodeDeploy", wrapper(ListNodeDeploys))
 	group.POST("/deployApplication", wrapper(DeployEdgeApp))
 	group.POST("/undeployApplication", wrapper(UnDeployEdgeApp))
 }

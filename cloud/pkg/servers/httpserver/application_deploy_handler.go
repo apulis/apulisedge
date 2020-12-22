@@ -23,13 +23,39 @@ func ListEdgeAppDeploys(c *gin.Context) error {
 		return errRsp
 	}
 
-	// list node
+	// list app deploy
 	appDeploys, total, err = appservice.ListEdgeDeploys(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
 
 	data := appmodule.ListEdgeAppDeployRsp{
+		Total:      total,
+		AppDeploys: appDeploys,
+	}
+	return SuccessResp(c, &req, data)
+}
+
+// list node deploys
+func ListNodeDeploys(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent appmodule.ListNodeDeployReq
+	var appDeploys *[]appentity.ApplicationDeployInfo
+	var total int
+
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+
+	// list node deploy
+	appDeploys, total, err = appservice.ListNodeDeploys(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := appmodule.ListNodeDeployRsp{
 		Total:      total,
 		AppDeploys: appDeploys,
 	}

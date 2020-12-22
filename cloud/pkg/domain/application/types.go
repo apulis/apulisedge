@@ -31,6 +31,7 @@ const (
 const (
 	AppUserDefine string = "UserDefine"
 	AppSysDefine  string = "System"
+	AppTypeAll    string = "All"
 )
 
 const (

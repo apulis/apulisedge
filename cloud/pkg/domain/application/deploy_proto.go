@@ -21,6 +21,18 @@ type ListEdgeAppDeployRsp struct {
 	AppDeploys *[]appentity.ApplicationDeployInfo `json:"appDeploys"`
 }
 
+// List node deploy
+type ListNodeDeployReq struct {
+	Name     string `json:"name" validate:"required"`
+	PageNum  int    `json:"pageNum" validate:"gte=1,lte=1000"`
+	PageSize int    `json:"pageSize" validate:"gte=1,lte=1000"`
+}
+
+type ListNodeDeployRsp struct {
+	Total      int
+	AppDeploys *[]appentity.ApplicationDeployInfo `json:"appDeploys"`
+}
+
 // Deploy edge application
 type DeployEdgeApplicationReq struct {
 	AppName   string   `json:"appName" validate:"required"`

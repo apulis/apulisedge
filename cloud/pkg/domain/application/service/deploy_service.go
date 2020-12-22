@@ -31,6 +31,25 @@ func ListEdgeDeploys(userInfo proto.ApulisHeader, req *appmodule.ListEdgeAppDepl
 	return &appDeloys, int(res.RowsAffected), nil
 }
 
+// list node deploys
+func ListNodeDeploys(userInfo proto.ApulisHeader, req *appmodule.ListNodeDeployReq) (*[]appentity.ApplicationDeployInfo, int, error) {
+	var appDeloys []appentity.ApplicationDeployInfo
+
+	total := 0
+	offset := req.PageSize * (req.PageNum - 1)
+	limit := req.PageSize
+
+	res := apulisdb.Db.Offset(offset).Limit(limit).
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?",
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.Name).
+		Find(&appDeloys)
+	if res.Error != nil {
+		return &appDeloys, total, res.Error
+	}
+
+	return &appDeloys, int(res.RowsAffected), nil
+}
+
 // deploy edge application
 func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdgeApplicationReq) error {
 	// get application version

@@ -13,6 +13,7 @@ const (
 )
 
 // NodeName is unique in Cluster/Group/User
+// TODO 小写转大写
 type NodeBasicInfo struct {
 	ID               int64     `gorm:"column:Id;primary_key"                                   json:"id" binding:"required"`
 	NodeName         string    `gorm:"uniqueIndex:user_node;column:NodeName;size:255;not null" json:"name" binding:"required"`
@@ -20,6 +21,9 @@ type NodeBasicInfo struct {
 	GroupId          int64     `gorm:"uniqueIndex:user_node;column:GroupId;not null"           json:"groupId" binding:"required"`
 	UserId           int64     `gorm:"uniqueIndex:user_node;column:UserId;not null"            json:"userId" binding:"required"`
 	NodeType         string    `gorm:"column:nodeType;size:128;not null"                       json:"nodeType" binding:"required"`
+	Arch             string    `gorm:"column:arch;size:128;not null"                           json:"arch" binding:"required"`
+	CpuCore          int       `gorm:"column:cpuCore;not null"                                 json:"cpuCore" binding:"required"`
+	Memory           int64     `gorm:"column:memory;not null"                                  json:"memory" binding:"required"`
 	Status           string    `gorm:"column:Status;size:255;not null"                         json:"status" binding:"required"`
 	Roles            string    `gorm:"column:Roles;size:255;not null"                          json:"roles" binding:"required"`
 	ContainerRuntime string    `gorm:"column:ContainerRuntime;size:255;not null"               json:"runtime" binding:"required"`

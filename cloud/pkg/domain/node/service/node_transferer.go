@@ -78,6 +78,8 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 
 // keep uninstalled or to online/offline
 func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
+	var newDbInfo nodeentity.NodeBasicInfo
+
 	var interIp string
 	var outerIp string
 	var curNodeStatus string
@@ -108,6 +110,24 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	if !nodeExist {
 		logger.Infof("handleStatusNotInstalled name %v not exist in kubernetes", dbInfo.NodeName)
 		return
+	}
+
+	var cpuCore int
+	var mem int64
+	if _, ok := nodeK8sInfo.Status.Capacity[v1.ResourceCPU]; ok {
+		q := nodeK8sInfo.Status.Capacity[v1.ResourceCPU]
+		v, b := (&q).AsInt64()
+		if b {
+			cpuCore = int(v)
+		}
+	}
+
+	if _, ok := nodeK8sInfo.Status.Capacity[v1.ResourceMemory]; ok {
+		q := nodeK8sInfo.Status.Capacity[v1.ResourceMemory]
+		v, b := (&q).AsInt64()
+		if b {
+			mem = v
+		}
 	}
 
 	// create new node and install node
@@ -142,23 +162,19 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	roles = strings.TrimPrefix(roles, ",")
 	roles = strings.TrimSuffix(roles, ",")
 
-	newDbInfo := &nodeentity.NodeBasicInfo{
-		ID:               dbInfo.ID,
-		ClusterId:        dbInfo.ClusterId,
-		GroupId:          dbInfo.GroupId,
-		UserId:           dbInfo.UserId,
-		NodeName:         nodeK8sInfo.Name,
-		Status:           curNodeStatus,
-		Roles:            roles,
-		ContainerRuntime: nodeK8sInfo.Status.NodeInfo.ContainerRuntimeVersion,
-		OsImage:          nodeK8sInfo.Status.NodeInfo.OSImage,
-		InterIp:          interIp,
-		OuterIp:          outerIp,
-		CreateAt:         dbInfo.CreateAt,
-		UpdateAt:         time.Now(),
-	}
+	newDbInfo = *dbInfo
+	newDbInfo.Status = curNodeStatus
+	newDbInfo.Roles = roles
+	newDbInfo.ContainerRuntime = nodeK8sInfo.Status.NodeInfo.ContainerRuntimeVersion
+	newDbInfo.OsImage = nodeK8sInfo.Status.NodeInfo.OSImage
+	newDbInfo.InterIp = interIp
+	newDbInfo.OuterIp = outerIp
+	newDbInfo.CpuCore = cpuCore
+	newDbInfo.Memory = mem
+	newDbInfo.Arch = nodeK8sInfo.Status.NodeInfo.Architecture
+	newDbInfo.UpdateAt = time.Now()
 
-	err = nodeentity.UpdateNode(newDbInfo)
+	err = nodeentity.UpdateNode(&newDbInfo)
 	if err != nil {
 		logger.Infof("NodeTicker install node failed, node = %s, err = %v", dbInfo.NodeName, err)
 	} else {

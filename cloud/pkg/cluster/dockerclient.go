@@ -142,6 +142,7 @@ func (c *Cluster) DockerImagePush(ctx context.Context, cli *client.Client, image
 	}
 	defer res.Close()
 
+	// TODO get err message
 	io.Copy(ioutil.Discard, res)
 	return nil
 }

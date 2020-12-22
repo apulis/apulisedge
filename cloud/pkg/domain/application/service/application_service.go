@@ -162,9 +162,16 @@ func ListEdgeApplications(userInfo proto.ApulisHeader, req *appmodule.ListEdgeAp
 	offset := req.PageSize * (req.PageNum - 1)
 	limit := req.PageSize
 
-	res := apulisdb.Db.Offset(offset).Limit(limit).
-		Where("ClusterId = ? and GroupId = ? and UserId = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId).
-		Find(&appInfos)
+	var res *gorm.DB
+	if req.AppType == appmodule.AppTypeAll {
+		res = apulisdb.Db.Offset(offset).Limit(limit).
+			Where("ClusterId = ? and GroupId = ? and UserId = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId).
+			Find(&appInfos)
+	} else {
+		res = apulisdb.Db.Offset(offset).Limit(limit).
+			Where("ClusterId = ? and GroupId = ? and UserId = ? and AppType = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppType).
+			Find(&appInfos)
+	}
 
 	if res.Error != nil {
 		return &appInfos, total, res.Error

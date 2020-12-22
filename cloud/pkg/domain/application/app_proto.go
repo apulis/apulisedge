@@ -43,8 +43,9 @@ type CreateEdgeApplicationRsp struct {
 
 // List edge application ////////////////////////////////////////////////////////
 type ListEdgeApplicationReq struct {
-	PageNum  int `json:"pageNum" validate:"gte=1,lte=1000"`
-	PageSize int `json:"pageSize" validate:"gte=1,lte=1000"`
+	AppType  string `json:"appType" validate:"oneof=UserDefine System All"`
+	PageNum  int    `json:"pageNum" validate:"required,gte=1,lte=1000"`
+	PageSize int    `json:"pageSize" validate:"required,gte=1,lte=1000"`
 }
 
 type ListEdgeApplicationRsp struct {
