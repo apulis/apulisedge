@@ -1,0 +1,15 @@
+log:
+  path: /var/apulisedge
+  filename: agentcore.log
+
+database:
+  dir: /var/lib/apulisedge
+  type: sqlite3
+  address: 127.0.0.1
+  port: 5432
+  UserName: root
+  Password: root@123
+
+server:
+  address: 192.168.1.118
+  port: 32000
