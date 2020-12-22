@@ -6,7 +6,6 @@ import (
 	"path"
 	"sync"
 
-	"github.com/apulis/ApulisEdge/agent/pkg/common/config"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,18 +15,18 @@ var once sync.Once
 var logger = LogInstance()
 
 // InitLogger initializes log module
-func InitLogger() {
+func InitLogger(config LoggerContext) {
 	// create log dir
-	_, err := os.Stat(config.AppConfig.Log.Path)
+	_, err := os.Stat(config.Path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			os.MkdirAll(config.AppConfig.Log.Path, 0755)
+			os.MkdirAll(config.Path, 0755)
 		} else {
 			logger.Panicln("Fatal log directory error: %s", err)
 		}
 	}
 	// create log file
-	logFilePath := path.Join(config.AppConfig.Log.Path, config.AppConfig.Log.FileName)
+	logFilePath := path.Join(config.Path, config.FileName)
 	fileWriter, err := os.OpenFile(logFilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 	if err != nil {
 		logger.Panicln("Fatal error open log file: %s", err)
