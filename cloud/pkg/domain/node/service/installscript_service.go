@@ -14,6 +14,7 @@ func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgSe
 	var fileName = packageName + ".tar.gz"
 	var pubKeyFileName = packageName + ".key"
 	var signFileName = packageName + ".sig"
+	var kubeedgeImageName = "apulisedge/apulis/kubeedge-edge:1.0-" + targetArch
 
 	// clean env
 	script = "rm -rf " + downloadTarget + " && "
@@ -31,7 +32,7 @@ func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgSe
 	// move install script
 	script = script + "cp " + downloadTarget + "/package/scripts/* /opt/apulisedge/" + " && "
 	// run install script
-	script = script + "/opt/apulisedge/install_edge.sh -d " + domain + " -l " + imgServer + "/apulisedge/apulis/kubeedge-edge:1.0"
+	script = script + "/opt/apulisedge/install_edge.sh -d " + domain + " -l " + imgServer + "/" + kubeedgeImageName
 
 	return script, err
 }

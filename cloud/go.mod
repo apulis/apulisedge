@@ -9,7 +9,7 @@ require (
 	github.com/containerd/containerd v1.4.3 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v19.03.6
+	github.com/docker/docker v17.12.0-ce-rc1.0.20200204220554-5f6d6f3f2203+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
