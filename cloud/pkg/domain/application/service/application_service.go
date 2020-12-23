@@ -4,8 +4,8 @@ package applicationservice
 
 import (
 	"encoding/json"
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
-	"github.com/apulis/ApulisEdge/cloud/pkg/domain"
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
@@ -34,13 +34,13 @@ func CreateEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.CreateEdg
 	// check type
 	archExist := true
 	for _, v := range req.ArchType {
-		if !domain.IsArchValid(v) {
+		if !cluster.IsArchValid(v) {
 			archExist = false
 		}
 	}
 
 	if !archExist {
-		return "", "", domain.ErrArchTypeNotExist
+		return "", "", cluster.ErrArchTypeNotExist
 	}
 
 	// check if i have this image

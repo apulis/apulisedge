@@ -14,27 +14,27 @@ const (
 )
 
 type UserContainerImageInfo struct {
-	ID        int64     `gorm:"column:Id;primary_key"                                   json:"id" binding:"required"`
-	ClusterId int64     `gorm:"uniqueIndex:user_img;column:ClusterId;not null"          json:"clusterId" binding:"required"`
-	GroupId   int64     `gorm:"uniqueIndex:user_img;column:GroupId;not null"            json:"groupId" binding:"required"`
-	UserId    int64     `gorm:"uniqueIndex:user_img;column:UserId;not null"             json:"userId" binding:"required"`
-	ImageName string    `gorm:"uniqueIndex:user_img;column:ImageName;size:255;not null" json:"imageName" binding:"required"`
-	OrgName   string    `gorm:"uniqueIndex:user_img;column:OrgName;size:255;not null"   json:"orgName" binding:"required"`
+	ID        int64     `gorm:"column:Id;primary_key"                                   json:"id"`
+	ClusterId int64     `gorm:"uniqueIndex:user_img;column:ClusterId;not null"          json:"clusterId"`
+	GroupId   int64     `gorm:"uniqueIndex:user_img;column:GroupId;not null"            json:"groupId"`
+	UserId    int64     `gorm:"uniqueIndex:user_img;column:UserId;not null"             json:"userId"`
+	ImageName string    `gorm:"uniqueIndex:user_img;column:ImageName;size:255;not null" json:"imageName"`
+	OrgName   string    `gorm:"uniqueIndex:user_img;column:OrgName;size:255;not null"   json:"orgName"`
 	CreateAt  time.Time `gorm:"column:CreateAt;not null"                                json:"createAt"`
 	UpdateAt  time.Time `gorm:"column:UpdateAt;not null"                                json:"updateAt"`
 }
 
 type UserContainerImageVersionInfo struct {
-	ID              int64     `gorm:"column:Id;primary_key"                                              json:"id" binding:"required"`
-	ClusterId       int64     `gorm:"uniqueIndex:user_img_version;column:ClusterId;not null"             json:"clusterId" binding:"required"`
-	GroupId         int64     `gorm:"uniqueIndex:user_img_version;column:GroupId;not null"               json:"groupId" binding:"required"`
-	UserId          int64     `gorm:"uniqueIndex:user_img_version;column:UserId;not null"                json:"userId" binding:"required"`
-	ImageName       string    `gorm:"uniqueIndex:user_img_version;column:ImageName;size:255;not null"    json:"imageName" binding:"required"`
-	OrgName         string    `gorm:"uniqueIndex:user_img_version;column:OrgName;size:255;not null"      json:"orgName" binding:"required"`
-	ImageId         string    `gorm:"column:ImageId;size:512;not null"                                   json:"imageId" binding:"required"`
-	ImageVersion    string    `gorm:"uniqueIndex:user_img_version;column:ImageVersion;size:255;not null" json:"imageVersion" binding:"required"`
-	ImageSize       float32   `gorm:"column:ImageSize;not null"                                          json:"imageSize" binding:"required"`
-	DownloadCommand string    `gorm:"column:DownloadCommand;size:512;not null"                           json:"DownloadCommand" binding:"required"`
+	ID              int64     `gorm:"column:Id;primary_key"                                              json:"id"`
+	ClusterId       int64     `gorm:"uniqueIndex:user_img_version;column:ClusterId;not null"             json:"clusterId"`
+	GroupId         int64     `gorm:"uniqueIndex:user_img_version;column:GroupId;not null"               json:"groupId"`
+	UserId          int64     `gorm:"uniqueIndex:user_img_version;column:UserId;not null"                json:"userId"`
+	ImageName       string    `gorm:"uniqueIndex:user_img_version;column:ImageName;size:255;not null"    json:"imageName"`
+	OrgName         string    `gorm:"uniqueIndex:user_img_version;column:OrgName;size:255;not null"      json:"orgName"`
+	ImageId         string    `gorm:"column:ImageId;size:512;not null"                                   json:"imageId"`
+	ImageVersion    string    `gorm:"uniqueIndex:user_img_version;column:ImageVersion;size:255;not null" json:"imageVersion"`
+	ImageSize       float32   `gorm:"column:ImageSize;not null"                                          json:"imageSize"`
+	DownloadCommand string    `gorm:"column:DownloadCommand;size:512;not null"                           json:"DownloadCommand"`
 	CreateAt        time.Time `gorm:"column:CreateAt;not null"                                           json:"createAt"`
 	UpdateAt        time.Time `gorm:"column:UpdateAt;not null"                                           json:"updateAt"`
 }

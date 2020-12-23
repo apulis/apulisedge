@@ -55,9 +55,3 @@ const (
 	NetworkTypeHost        string = "Host"
 	NetworkTypePortMapping string = "PortMapping"
 )
-
-// arch type
-const (
-	ArchX86 string = "x86_64"
-	ArchArm string = "arm64"
-)

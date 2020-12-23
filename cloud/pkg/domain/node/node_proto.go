@@ -47,6 +47,7 @@ type DeleteEdgeNodeRsp struct {
 }
 
 type GetInstallScriptReq struct {
+	Name string `json:"name" validate:"required"`
 	Arch string `json:"arch" validate:"required"`
 }
 
@@ -59,6 +60,15 @@ type GetInstallScriptRsp struct {
 type ListEdgeNodeTypeReq struct {
 }
 
-type ListEdgeNodeTypeRsq struct {
+type ListEdgeNodeTypeRsp struct {
+	Types []string `json:"types"`
+}
+
+/////////// arch type ///////////////
+// List arch type
+type ListArchTypeReq struct {
+}
+
+type ListArchTypeRsp struct {
 	Types []string `json:"types"`
 }

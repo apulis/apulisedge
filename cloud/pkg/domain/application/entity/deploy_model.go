@@ -13,15 +13,15 @@ const (
 )
 
 type ApplicationDeployInfo struct {
-	ID         int64     `gorm:"column:Id;primary_key"                                          json:"id" binding:"required"`
-	ClusterId  int64     `gorm:"uniqueIndex:app_deploy;column:ClusterId;not null"               json:"clusterId" binding:"required"`
-	GroupId    int64     `gorm:"uniqueIndex:app_deploy;column:GroupId;not null"                 json:"groupId" binding:"required"`
-	UserId     int64     `gorm:"uniqueIndex:app_deploy;column:UserId;not null"                  json:"userId" binding:"required"`
-	NodeName   string    `gorm:"uniqueIndex:app_deploy;column:NodeName;size:255;not null"       json:"nodeName" binding:"required"`
-	AppName    string    `gorm:"uniqueIndex:app_deploy;index:;column:AppName;size:255;not null" json:"appName" binding:"required"`
-	Version    string    `gorm:"column:Version;size:255;not null"                               json:"version" binding:"required"`
-	Status     string    `gorm:"column:Status;size:255;not null"                                json:"status" binding:"required"`
-	DeployUUID string    `gorm:"column:DeployUUID;index:uuid;size:255;not null"                 json:"deployUUID" binding:"required"`
+	ID         int64     `gorm:"column:Id;primary_key"                                          json:"id"`
+	ClusterId  int64     `gorm:"uniqueIndex:app_deploy;column:ClusterId;not null"               json:"clusterId"`
+	GroupId    int64     `gorm:"uniqueIndex:app_deploy;column:GroupId;not null"                 json:"groupId"`
+	UserId     int64     `gorm:"uniqueIndex:app_deploy;column:UserId;not null"                  json:"userId"`
+	NodeName   string    `gorm:"uniqueIndex:app_deploy;column:NodeName;size:255;not null"       json:"nodeName"`
+	AppName    string    `gorm:"uniqueIndex:app_deploy;index:;column:AppName;size:255;not null" json:"appName"`
+	Version    string    `gorm:"column:Version;size:255;not null"                               json:"version"`
+	Status     string    `gorm:"column:Status;size:255;not null"                                json:"status"`
+	DeployUUID string    `gorm:"column:DeployUUID;index:uuid;size:255;not null"                 json:"deployUUID"`
 	CreateAt   time.Time `gorm:"column:CreateAt;not null"                                       json:"createAt"`
 	UpdateAt   time.Time `gorm:"column:UpdateAt;not null"                                       json:"updateAt"`
 }

@@ -3,6 +3,7 @@
 package nodeservice
 
 import (
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
@@ -29,12 +30,21 @@ func CreateEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.CreateEdgeNodeR
 		return nil, nodemodule.ErrNodeTypeNotExist
 	}
 
+	// get cluster
+	clu, err := cluster.GetCluster(userInfo.ClusterId)
+	if err != nil {
+		logger.Infof("CreateEdgeNode, can`t find cluster %d", userInfo.ClusterId)
+		return nil, cluster.ErrFindCluster
+	}
+	uniqName := clu.GetUniqueName(cluster.ResourceNode)
+
 	node := &nodeentity.NodeBasicInfo{
 		ClusterId:        userInfo.ClusterId,
 		GroupId:          userInfo.GroupId,
 		UserId:           userInfo.UserId,
 		NodeName:         req.Name,
 		NodeType:         req.NodeType,
+		UniqueName:       uniqName,
 		Arch:             "",
 		CpuCore:          0,
 		Memory:           0,
@@ -111,4 +121,9 @@ func DeleteEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.DeleteEdgeNodeR
 //////// node type ////////
 func ListEdgeNodeType(userInfo proto.ApulisHeader, req *nodemodule.ListEdgeNodeTypeReq) ([]string, error) {
 	return nodemodule.TypesOfNode, nil
+}
+
+//////// arch type ////////
+func ListArchType(userInfo proto.ApulisHeader, req *nodemodule.ListArchTypeReq) ([]string, error) {
+	return []string{cluster.ArchArm, cluster.ArchX86}, nil
 }
