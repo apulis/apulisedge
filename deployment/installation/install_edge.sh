@@ -180,7 +180,7 @@ runEdgecore()
 main()
 {
     if which getopt > /dev/null 2>&1; then
-        OPTS=$(getopt d:i: "$*" 2>/dev/null)
+        OPTS=$(getopt d:i:h:l: "$*" 2>/dev/null)
         if [ ! $? ]; then
             printf "%s\\n" "$USAGE"
             exit 2
