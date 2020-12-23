@@ -4,16 +4,28 @@ package configs
 
 import (
 	"fmt"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 type EdgeCloudConfig struct {
-	DebugModel bool
-	Portal     PortalConfig
-	CloudHub   CloudHubConfig
-	Log        LogConfig
-	Db         DbConfig
+	DebugModel     bool
+	Portal         PortalConfig
+	ContainerImage ImageConfig
+	CloudHub       CloudHubConfig
+	Log            LogConfig
+	Db             DbConfig
+	Authentication AuthConfig
+	Clusters       []ClusterConfig
+	ScriptConfig   DownloadServerConfig
+}
+
+type DownloadServerConfig struct {
+	DownloadAddress string `yaml:"address"`
+	DownloadPort    int    `yaml:"port"`
+	CloudServer     string `yaml:"cloudServer"`
+	ImageServer     string `yaml:"imageServer"`
 }
 
 type HttpConfig struct {
@@ -23,8 +35,13 @@ type HttpConfig struct {
 }
 
 type PortalConfig struct {
-	NodeCheckerInterval int32
-	Http                HttpConfig
+	NodeCheckerInterval        int32
+	ApplicationCheckerInterval int32
+	Http                       HttpConfig
+}
+
+type ImageConfig struct {
+	ImageCheckerInterval int32
 }
 
 type WebsocketConfig struct {
@@ -54,11 +71,35 @@ type DbConfig struct {
 	MaxIdleConns int
 }
 
+type AuthConfig struct {
+	AuthType   string
+	AiArtsAuth AiArtsAuthConfig
+	// TODO add other auth
+}
+
+type AiArtsAuthConfig struct {
+	Key string
+}
+
+type ClusterConfig struct {
+	Id              int64
+	Desc            string
+	Domain          string
+	KubeMaster      string
+	KubeConfFile    string
+	HarborAddress   string
+	HarborProject   string
+	HarborUser      string
+	HarborPasswd    string
+	DownloadAddress string
+}
+
 func InitConfig(configFile string, config *EdgeCloudConfig) {
 	viper.SetConfigFile(configFile)
 
 	// set default
 	viper.SetDefault("DebugModel", false)
+	viper.SetDefault("ContainerImage.ImageCheckerInterval", 10)
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -69,5 +110,8 @@ func InitConfig(configFile string, config *EdgeCloudConfig) {
 		panic(fmt.Errorf("Fatal error unmarshal config file: %s \n", err))
 	}
 
-	fmt.Println(config.CloudHub.Websocket)
+	fmt.Printf("Portal config = %v\n", config.Portal)
+	fmt.Printf("Image config = %v\n", config.ContainerImage)
+	fmt.Printf("Websocket config = %v\n", config.CloudHub.Websocket)
+	fmt.Printf("Cluster config = %+v\n", config.Clusters)
 }

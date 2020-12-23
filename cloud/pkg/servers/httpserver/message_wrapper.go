@@ -45,6 +45,18 @@ func SuccessResp(c *gin.Context, req *proto.Message, content interface{}) error 
 	return nil
 }
 
+func NoReqSuccessResp(c *gin.Context, content interface{}) error {
+	res := APISuccessResp{
+		Code: SUCCESS_CODE,
+		Msg:  "OK",
+		Data: content,
+	}
+	rsp := proto.NewRawMessage()
+	rsp.FillBody(res)
+	c.JSON(http.StatusOK, rsp)
+	return nil
+}
+
 //////////////// Error Message //////////////////
 func (e *APIErrorResp) Error() string {
 	return e.Msg
@@ -60,6 +72,15 @@ func HandleNotFound(c *gin.Context) {
 
 }
 
+func ErrorNoBodyResp(code int, msg string) *APIErrorResp {
+	errMsg := &APIErrorResp{
+		Code: code,
+		Msg:  msg,
+	}
+
+	return errMsg
+}
+
 func ErrorResp(c *gin.Context, req *proto.Message, code int, msg string) (*proto.Message, *APIErrorResp) {
 	errMsg := &APIErrorResp{
 		Code: code,
@@ -67,6 +88,11 @@ func ErrorResp(c *gin.Context, req *proto.Message, code int, msg string) (*proto
 	}
 	rsp := req.NewRespByMessage(req, errMsg)
 	return rsp, errMsg
+}
+
+func NoBodyUnAuthorizedError(msg string) *APIErrorResp {
+	rsp := ErrorNoBodyResp(AUTH_ERROR_CODE, msg)
+	return rsp
 }
 
 func UnAuthorizedError(c *gin.Context, req *proto.Message, msg string) *APIErrorResp {
@@ -103,6 +129,12 @@ func AppError(c *gin.Context, req *proto.Message, errCode int, msg string) *APIE
 	rsp, err := ErrorResp(c, req, errCode, msg)
 	c.JSON(http.StatusBadRequest, rsp)
 	return err
+}
+
+func NoReqAppError(c *gin.Context, msg string) *APIErrorResp {
+	rsp := ErrorNoBodyResp(AUTH_ERROR_CODE, msg)
+	c.JSON(http.StatusBadRequest, rsp)
+	return rsp
 }
 
 func ServeError(c *gin.Context, req *proto.Message, errCode int, msg string) *APIErrorResp {

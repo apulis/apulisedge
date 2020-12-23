@@ -27,20 +27,20 @@ const (
 
 // Message struct
 type Message struct {
-	Header  MessageHeader `json:"header"`
-	Router  MessageRoute  `json:"route,omitempty"`
-	Content interface{}   `json:"content"`
+	Header  MessageHeader `json:"header" binding:"required,dive"`
+	Router  MessageRoute  `json:"route" binding:"required,dive"`
+	Content interface{}   `json:"content" binding:"required"`
 }
 
 // MessageRoute contains structure of message
 type MessageRoute struct {
 	// where the message come from
-	Source string `json:"source,omitempty"`
+	Source string `json:"source" binding:"required"`
 	// where the message will broadcasted to
 	Group string `json:"group,omitempty"`
 
 	// what's the operation on resource
-	Operation string `json:"operation,omitempty"`
+	Operation string `json:"operation" binding:"required"`
 	// what's the resource want to operate
 	Resource string `json:"resource,omitempty"`
 }
@@ -48,12 +48,12 @@ type MessageRoute struct {
 // MessageHeader defines message header details
 type MessageHeader struct {
 	// the message uuid
-	ID string `json:"msg_id"`
+	ID string `json:"msg_id" binding:"required"`
 	// the response message parentid must be same with message received
 	// please use NewRespByMessage to new response message
 	ParentID string `json:"parent_msg_id,omitempty"`
 	// the time of creating
-	Timestamp int64 `json:"timestamp"`
+	Timestamp int64 `json:"timestamp" binding:"required"`
 	// specific resource version for the message, if any.
 	// it's currently backed by resource version of the k8s object saved in the Content field.
 	// kubeedge leverages the concept of message resource version to achieve reliable transmission.

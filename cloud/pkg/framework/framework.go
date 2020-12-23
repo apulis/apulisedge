@@ -4,17 +4,24 @@ package framework
 
 import (
 	"context"
-	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
-	"github.com/apulis/ApulisEdge/cloud/pkg/database"
-	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
-	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/node/entity"
-	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/node/service"
-	"github.com/apulis/ApulisEdge/cloud/pkg/servers/httpserver"
-	"github.com/urfave/cli/v2"
+	"github.com/apulis/ApulisEdge/cloud/pkg/channel"
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
+	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
+	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
+	"github.com/apulis/ApulisEdge/cloud/pkg/database"
+	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
+	applicationservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/service"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
+	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
+	"github.com/apulis/ApulisEdge/cloud/pkg/servers/httpserver"
+	"github.com/urfave/cli/v2"
 )
 
 var logger = loggers.LogInstance()
@@ -26,6 +33,7 @@ type CloudApp struct {
 	cloudConfig      configs.EdgeCloudConfig
 	tickerCancelFunc context.CancelFunc
 	tickerCtx        context.Context
+	clusters         []configs.ClusterConfig
 }
 
 var once sync.Once
@@ -86,8 +94,24 @@ func (app *CloudApp) MainLoop() error {
 	// init tables
 	app.InitTables()
 
+	// init auth
+	err := app.InitAuth()
+	if err != nil {
+		logger.Errorf("Auth init failed, err = %v", err)
+		return err
+	}
+
+	// init clusters
+	app.InitClusters()
+
+	// msg chan
+	msgChanContext := channel.ChanContextInstance()
+	msgChanContext.AddChannel(channel.ModuleNameContainerImage, msgChanContext.NewChannel())
+
 	// init ticker
 	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
+	go applicationservice.CreateApplicationTickerLoop(app.tickerCtx, &app.cloudConfig)
+	go imageservice.ImageAsyncHandleLoop(app.tickerCtx, &app.cloudConfig)
 
 	// quit when signal notifys
 	quit := make(chan os.Signal)
@@ -118,6 +142,20 @@ func (app *CloudApp) InitDatabase() {
 	database.InitDatabase(&app.cloudConfig)
 }
 
+func (app *CloudApp) InitAuth() error {
+	return httpserver.InitAuth(&app.cloudConfig)
+}
+
+func (app *CloudApp) InitClusters() {
+	cluster.InitClusters(&app.cloudConfig)
+}
+
 func (app *CloudApp) InitTables() {
 	database.CreateTableIfNotExists(nodeentity.NodeBasicInfo{})
+	database.CreateTableIfNotExists(appentity.ApplicationBasicInfo{})
+	database.CreateTableIfNotExists(appentity.ApplicationVersionInfo{})
+	database.CreateTableIfNotExists(appentity.ApplicationDeployInfo{})
+	database.CreateTableIfNotExists(imageentity.UserContainerImageInfo{})
+	database.CreateTableIfNotExists(imageentity.UserContainerImageVersionInfo{})
+	database.CreateTableIfNotExists(imageentity.ContainerImageOrg{})
 }

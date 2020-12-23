@@ -9,6 +9,8 @@ import (
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
+	"log"
 )
 
 var Db *gorm.DB
@@ -28,9 +30,16 @@ func InitDatabase(config *configs.EdgeCloudConfig) {
 		panic(err)
 	}
 
+	newLogger := gormlogger.New(
+		log.New(logger.Out, "\r\n", log.LstdFlags),
+		gormlogger.Config{
+			LogLevel: gormlogger.Warn,
+		},
+	)
+
 	Db, err = gorm.Open(mysql.New(mysql.Config{
 		Conn: sqlDb,
-	}), &gorm.Config{})
+	}), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +51,9 @@ func InitDatabase(config *configs.EdgeCloudConfig) {
 
 func CreateTableIfNotExists(modelType interface{}) error {
 	var err error
-	if err = Db.AutoMigrate(modelType); err != nil {
+	if err = Db.
+		Set("gorm:table_options", "ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8").
+		AutoMigrate(modelType); err != nil {
 		logger.Errorf("AutoMigrate failed! table = %s", modelType)
 	}
 	return err

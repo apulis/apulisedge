@@ -4,6 +4,7 @@
 # ===
 # common
 ARCH= # will be init latter
+NODENAME=$(hostname)
 LOG_DIR=/var/log/apulisedge
 INSTALL_LOG_FILE=${LOG_DIR}/installer.log
 SCRIPT_DIR=/opt/apulisedge
@@ -62,15 +63,28 @@ LOG_ERROR()
 
 envCheck()
 {
+    # === check no kubeedge
+    containerID=`docker ps | grep ${KUBEEDGE_EDGE_IMAGE} | awk '{print $1}'`
+    if [[ "$containerID" != "" ]]; then
+        LOG_ERROR "There is already a kubeedge client running. Please stop it and retry."
+        return 1
+    fi
+
+    # === check hostname case
+    HOSTNAME=`hostname`
+    REGEX_OUTPUT=`echo ${HOSTNAME} | grep -P "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*" -o`
+    if [[ ! "${HOSTNAME}" == "${REGEX_OUTPUT}" ]]; then
+        LOG_ERROR "Subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*') "
+        return 1
+    fi
+
     # === check docker install status and version
     if [[ ! `command -v docker` ]]; then
-        LOG_ERROR "ERROR !!!"
         LOG_ERROR "Docker is not found but is required on node."
         LOG_ERROR "Please install docker and then try again."
     fi
     result=$(docker info 2>&1 | sed -n '1p' | grep Cannot | grep connect | grep Docker)
     if [ -n "${result}" ]; then
-        LOG_ERROR "ERROR !!!"
         LOG_ERROR "docker is not start, please start first."
         return 1
     fi
@@ -85,7 +99,6 @@ envCheck()
             LOG_INFO "check docker version success"
         else
             LOG_ERROR "docker version is too low, mini support version is ${DESIRE_DOCKER_VERSION}."
-            LOG_ERROR "docker version is too low, mini support version is ${DESIRE_DOCKER_VERSION}."
             return 1
         fi
     fi
@@ -93,7 +106,6 @@ envCheck()
     # === check download package
     LOG_INFO "check download package:${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE}"
     if [[ ! -e ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE} ]];then
-        LOG_ERROR "ERROR !!!"
         LOG_ERROR "Can't find kubeedge.tar.gz"
         LOG_ERROR "Please fix and then try again."
         return 1
@@ -102,7 +114,6 @@ envCheck()
     # === check input params
     LOG_INFO "check input params:SERVER_DOMAIN"
     if [[ "${SERVER_DOMAIN}" = "" ]]; then
-        LOG_ERROR "ERROR !!!"
         LOG_ERROR "Cloud server domain is not specified."
         LOG_ERROR "Please fix and then try again."
         return 1
@@ -123,6 +134,8 @@ envInit()
     LOG_INFO "decompress file..."
     cp ${APULISEDGE_PACKAGE_DOWNLOAD_PATH}/${KUBEEDGE_TAR_FILE} ${KUBEEDGE_HOME_PATH}
     tar -zxvf ${KUBEEDGE_HOME_PATH}/${KUBEEDGE_TAR_FILE}
+    cp -r ${KUBEEDGE_HOME_PATH}/package/ca ${KUBEEDGE_HOME_PATH}/
+    cp -r ${KUBEEDGE_HOME_PATH}/package/certs ${KUBEEDGE_HOME_PATH}/
     LOG_INFO "file decompressed."
     LOG_INFO "Initializing completed."
 
@@ -137,11 +150,14 @@ runEdgecore()
     cd ${KUBEEDGE_HOME_PATH}
     # generate edgecore runtime config
     mkdir -p config
+    mkdir -p /var/lib/edged
     LOG_INFO "create edgecore config file..."
     docker run ${KUBEEDGE_EDGE_IMAGE} /bin/bash -c "edgecore --minconfig" | tee config/edgecore.yaml
     sed -i "s#httpServer:\ .*10002#httpServer: https://${SERVER_DOMAIN}:10002#g" config/edgecore.yaml
     sed -i "s#server:\ .*10001#server: ${SERVER_DOMAIN}:10001#g" config/edgecore.yaml
     sed -i "s#server:\ .*10000#server: ${SERVER_DOMAIN}:10000#g" config/edgecore.yaml
+    sed -i "s#hostnameOverride:\ .*#hostnameOverride:\ ${NODENAME}#g" config/edgecore.yaml
+    sed -i "/.*token:\ .*/d" config/edgecore.yaml
     # run edgecore image
     LOG_INFO "config file generated."
     systemctl enable docker.service
@@ -152,6 +168,8 @@ runEdgecore()
     --privileged=true \
     --network=host \
     -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /var/lib/edged:/var/lib/edged \
+    -v /var/lib/docker:/var/lib/docker \
     -v ${KUBEEDGE_DATABASES_DIR}:${KUBEEDGE_DATABASES_DIR} \
     -v ${KUBEEDGE_LOG_DIR}:${KUBEEDGE_LOG_DIR} \
     -v ${KUBEEDGE_HOME_PATH}:${KUBEEDGE_HOME_PATH} \
@@ -162,7 +180,7 @@ runEdgecore()
 main()
 {
     if which getopt > /dev/null 2>&1; then
-        OPTS=$(getopt d:i: "$*" 2>/dev/null)
+        OPTS=$(getopt d:i:h:l: "$*" 2>/dev/null)
         if [ ! $? ]; then
             printf "%s\\n" "$USAGE"
             exit 2
@@ -181,6 +199,16 @@ main()
                 shift;
                 shift;
                 ;;
+                -l)
+                KUBEEDGE_EDGE_IMAGE="$2"
+                shift;
+                shift;
+                ;;
+                -h)
+                NODENAME="$2"
+                shift;
+                shift;
+                ;;
                 --)
                 shift
                 break
@@ -194,8 +222,8 @@ main()
     fi
 
     # === init some variables
-    ARCH="$(getArch $(uname -m))"
-    KUBEEDGE_TAR_FILE=kubeedgeRuntime-${ARCH}.tar.gz
+    ARCH="$(uname -m)"
+    KUBEEDGE_TAR_FILE=apulisedge_${ARCH}.tar.gz
 
     # === init log
     mkdir -p ${LOG_DIR}

@@ -2,6 +2,8 @@
 
 package httpserver
 
+import "errors"
+
 const (
 	SUCCESS_CODE = 0
 
@@ -24,13 +26,24 @@ const (
 	FILEPATH_NOT_VALID_CODE     = 30007
 	COMPRESS_PATH_ERROR_CODE    = 30008
 
-	// dataset
-	//上传大文件template目录满
-	UPLOAD_TEMPDIR_FULL_CODE = 30101
-	//无法删除正在使用的数据集
-	DATASET_IS_STILL_USE_CODE = 30102
-	//已经存在同名的数据集
-	DATASET_IS_EXISTED = 30103
+	// application
+	APP_STILL_HAVE_DEPLOY = 30101
 
 	REMOTE_SERVE_ERROR_CODE = 40000
+)
+
+// user manage
+const (
+	InvalidClusterId int64 = -1
+	InvalidGroupId   int64 = -1
+	InvalidUserId    int64 = -1
+)
+
+var (
+	ErrInvalidClusterId = errors.New("Invalid cluster id")
+	ErrInvalidGroupId   = errors.New("Invalid group id")
+	ErrInvalidUserId    = errors.New("Invalid user id")
+	ErrInvalidUserInfo  = errors.New("Invalid user info")
+	ErrOrgNameNeeded    = errors.New("Need org name")
+	ErrIDontHaveOrg     = errors.New("I don`t have this org")
 )
