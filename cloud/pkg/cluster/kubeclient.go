@@ -103,3 +103,12 @@ func (c *Cluster) DescribeNode(name string) (result *v1.Node, err error) {
 	result, err = nodeClient.Get(context.Background(), name, metav1.GetOptions{})
 	return result, err
 }
+
+func (c *Cluster) DeleteNode(node *v1.Node) error {
+	nodeClient, err := c.GetNodeClient()
+	if err != nil {
+		return err
+	}
+
+	return nodeClient.Delete(context.Background(), node.Name, metav1.DeleteOptions{})
+}

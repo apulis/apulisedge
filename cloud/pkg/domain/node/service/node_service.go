@@ -98,7 +98,7 @@ func DescribeEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.DescribeEdgeN
 func DeleteEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.DeleteEdgeNodeReq) error {
 	var nodeInfo nodeentity.NodeBasicInfo
 
-	// first: check if any deploy exist
+	// check if any deploy exist
 	var total int64
 	apulisdb.Db.Model(&appentity.ApplicationDeployInfo{}).
 		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.Name).
@@ -107,7 +107,7 @@ func DeleteEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.DeleteEdgeNodeR
 		return appmodule.ErrDeployExist
 	}
 
-	// second: get node and delete
+	// get node and delete
 	res := apulisdb.Db.
 		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.Name).
 		First(&nodeInfo)
@@ -115,7 +115,15 @@ func DeleteEdgeNode(userInfo proto.ApulisHeader, req *nodemodule.DeleteEdgeNodeR
 		return res.Error
 	}
 
-	return nodeentity.DeleteNode(&nodeInfo)
+	if nodeInfo.Status == nodemodule.StatusDeleting {
+		return nodemodule.ErrDeleteStatusDeleting
+	}
+
+	// update status
+	nodeInfo.Status = nodemodule.StatusDeleting
+	nodeInfo.UpdateAt = time.Now()
+
+	return nodeentity.UpdateNode(&nodeInfo)
 }
 
 //////// node type ////////
