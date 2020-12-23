@@ -29,6 +29,7 @@ var statusHandlerMap = map[string]statusHandler{
 	constants.StatusRunning:   handleStatusRunning,
 	constants.StatusAbnormal:  handleStatusAbnormal,
 	constants.StatusDeleting:  handleStatusDeleting,
+	constants.StatusUpdating:  handleStatusUpdating,
 }
 
 // CreateNodeCheckLoop transferer of edge application status
@@ -252,6 +253,10 @@ func handleStatusRunning(appDeployInfo *applicationentity.ApplicationDeployInfo)
 	}
 }
 
+func handleStatusUpdating(appDeployInfo *applicationentity.ApplicationDeployInfo) {
+
+}
+
 func handleStatusDeleting(appDeployInfo *applicationentity.ApplicationDeployInfo) {
 	var deployExist bool
 
@@ -355,7 +360,7 @@ func CreateK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error 
 				},
 				Spec: corev1.PodSpec{
 					NodeSelector: map[string]string{
-						"kubernetes.io/hostname": dbInfo.NodeName,
+						"kubernetes.io/hostname": dbInfo.UniqueName,
 					},
 					HostNetwork:   hn,
 					RestartPolicy: corev1.RestartPolicy(appVerInfo.RestartPolicy),

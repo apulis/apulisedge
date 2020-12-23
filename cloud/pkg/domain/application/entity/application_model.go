@@ -27,7 +27,6 @@ type ApplicationBasicInfo struct {
 	UpdateAt         time.Time `gorm:"column:UpdateAt;not null"                              json:"updateAt"`
 }
 
-// TODO port mapping
 type ApplicationVersionInfo struct {
 	ID                    int64     `gorm:"column:Id;primary_key"                                    json:"id"`
 	AppName               string    `gorm:"uniqueIndex:app_version;column:AppName;size:255;not null" json:"appName"`

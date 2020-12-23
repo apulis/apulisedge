@@ -20,6 +20,8 @@ var (
 	ErrNetworkPortmappingEmpty  = errors.New("need port mapping")
 	ErrDeployPartFails          = errors.New("part of deploy fails")
 	ErrDeployAllFails           = errors.New("all of deploy fails")
+	ErrUpdatePartFails          = errors.New("part of deploy update fails")
+	ErrUpdateAllFails           = errors.New("all of deploy update fails")
 	ErrUnDeployPartFails        = errors.New("part of undeploy fails")
 	ErrUnDeployAllFails         = errors.New("all of undeploy fails")
 )

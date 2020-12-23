@@ -18,6 +18,7 @@ type ApplicationDeployInfo struct {
 	GroupId    int64     `gorm:"uniqueIndex:app_deploy;column:GroupId;not null"                 json:"groupId"`
 	UserId     int64     `gorm:"uniqueIndex:app_deploy;column:UserId;not null"                  json:"userId"`
 	NodeName   string    `gorm:"uniqueIndex:app_deploy;column:NodeName;size:255;not null"       json:"nodeName"`
+	UniqueName string    `gorm:"column:UniqueName;size:255;not null"                            json:"uniqueName"`
 	AppName    string    `gorm:"uniqueIndex:app_deploy;index:;column:AppName;size:255;not null" json:"appName"`
 	Version    string    `gorm:"column:Version;size:255;not null"                               json:"version"`
 	Status     string    `gorm:"column:Status;size:255;not null"                                json:"status"`

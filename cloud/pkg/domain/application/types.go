@@ -24,6 +24,7 @@ const (
 	StatusInit      string = "Init"
 	StatusDeploying string = "Deploying"
 	StatusRunning   string = "Running"
+	StatusUpdating  string = "Updating"
 	StatusAbnormal  string = "Abnormal"
 	StatusDeleting  string = "Deleting"
 )
