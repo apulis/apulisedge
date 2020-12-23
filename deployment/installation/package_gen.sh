@@ -63,7 +63,6 @@ genCertAndKey() {
         return 0
     fi
     LOG_INFO "CA and Certs has not been generated, generating..."
-    read -r ans
     ensureCA
     genCsr $name
     genCert $name

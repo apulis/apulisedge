@@ -71,7 +71,6 @@ main()
         ${process[${i}]}
         if [ $? -ne 0 ]; then
             LOG_ERROR "process-${process[${i}]} failed"
-            exit 1
         fi
     done
     LOG_INFO "=== uninstall completed"
