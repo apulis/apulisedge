@@ -222,7 +222,7 @@ main()
     fi
 
     # === init some variables
-    ARCH="$(uname -m)"
+    ARCH=$(getArch "$(uname -m)")
     KUBEEDGE_TAR_FILE=apulisedge_${ARCH}.tar.gz
 
     # === init log

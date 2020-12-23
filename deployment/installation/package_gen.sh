@@ -2,7 +2,7 @@
 # ===
 # === ENV variables
 # ===
-ARCH=$(uname -m)
+ARCH= # will be init latter
 PACKAGE_NAME="package"
 PACKAGE_PATH="/tmp/apulisedge/${PACKAGE_NAME}/"
 LOG_DIR=/var/log/apulisedge
@@ -14,6 +14,26 @@ INSTALL_SCRIPT_PATH="${PACKAGE_PATH}/scripts"
 # ===
 # === funtion statements
 # ===
+getArch()
+{
+    case $1 in
+    aarch64)
+        echo arm64
+        ;;
+    x86_64)
+        echo amd64
+        ;;
+    amd64) # FreeBSD.
+        echo amd64
+        ;;
+    arm64) # FreeBSD.
+        echo arm64
+        ;;
+    *)
+        ;;
+    esac
+}
+
 LOG_INFO()
 {
     message="$(date +%Y-%m-%dT%H:%M:%S) | INFO | $*"
@@ -213,7 +233,7 @@ main()
 # main "$@"
 
 # now amd and arm packages are the same
-ARCH="x86_64"
+ARCH="amd64"
 main "$@"
-ARCH="aarch64"
+ARCH="arm64"
 main "$@"
