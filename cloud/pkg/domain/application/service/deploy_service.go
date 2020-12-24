@@ -133,6 +133,8 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 		return res.Error
 	}
 
+	archArr := strings.Split(appVerInfo.ArchType, ";")
+
 	// check version status
 	if appVerInfo.Status != appmodule.AppStatusPublished {
 		return appmodule.ErrDeployStatusNotPublished
@@ -141,10 +143,13 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 	totalDeploy := 0
 	var targetStatus string
 	for _, node := range req.NodeNames {
+		nodeInfo = nodeentity.NodeBasicInfo{}
+		deployInfo = appentity.ApplicationDeployInfo{}
+
 		// get node
 		res = apulisdb.Db.
-			Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?",
-				userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, node).
+			Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ? and Arch IN ?",
+				userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, node, archArr).
 			First(&nodeInfo)
 		if res.Error != nil {
 			logger.Infof("get node failed! node = %s, err = %v", node, res.Error)
@@ -169,7 +174,7 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 
 		if targetStatus == constants.StatusInit {
 			// store deploy info
-			deployInfo := &appentity.ApplicationDeployInfo{
+			newDeploy := &appentity.ApplicationDeployInfo{
 				ClusterId:          userInfo.ClusterId,
 				GroupId:            userInfo.GroupId,
 				UserId:             userInfo.UserId,
@@ -185,7 +190,7 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 				UpdateAt:           time.Now(),
 			}
 
-			err = appentity.CreateAppDeploy(deployInfo)
+			err = appentity.CreateAppDeploy(newDeploy)
 			if err != nil {
 				logger.Infof("create application deploy failed! node = %s, err = %v", node, err)
 				continue
