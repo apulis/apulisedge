@@ -11,11 +11,11 @@ import (
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	applicationentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
-	"github.com/satori/go.uuid"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
 	"time"
 )
@@ -24,12 +24,12 @@ type statusHandler func(appDeployInfo *applicationentity.ApplicationDeployInfo)
 
 // status transfer
 var statusHandlerMap = map[string]statusHandler{
-	constants.StatusInit:      handleStatusInit,
-	constants.StatusDeploying: handleStatusDeploying,
-	constants.StatusRunning:   handleStatusRunning,
-	constants.StatusAbnormal:  handleStatusAbnormal,
-	constants.StatusDeleting:  handleStatusDeleting,
-	constants.StatusUpdating:  handleStatusUpdating,
+	constants.StatusInit:       handleStatusInit,
+	constants.StatusDeploying:  handleStatusDeploying,
+	constants.StatusRunning:    handleStatusRunning,
+	constants.StatusAbnormal:   handleStatusAbnormal,
+	constants.StatusDeleting:   handleStatusDeleting,
+	constants.StatusUpdateInit: handleStatusUpdateInit,
 }
 
 // CreateNodeCheckLoop transferer of edge application status
@@ -257,8 +257,50 @@ func handleStatusRunning(appDeployInfo *applicationentity.ApplicationDeployInfo)
 	}
 }
 
-func handleStatusUpdating(appDeployInfo *applicationentity.ApplicationDeployInfo) {
+func handleStatusUpdateInit(appDeployInfo *applicationentity.ApplicationDeployInfo) {
+	var deployExist bool
 
+	// check deploy status
+	_, err := GetK8sDeployment(appDeployInfo)
+	if err == nil {
+		deployExist = true
+	} else {
+		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
+			deployExist = false
+		} else {
+			logger.Infof("handleStatusUpdateInit GetK8sDeployment! err = %v", err)
+			return
+		}
+	}
+
+	if !deployExist {
+		appDeployInfo.Status = constants.StatusInit
+		appDeployInfo.UpdateAt = time.Now()
+		err := applicationentity.UpdateAppDeploy(appDeployInfo)
+		if err != nil {
+			logger.Infof("handleStatusUpdateInit update deployment failed!")
+		}
+
+		logger.Infof("handleStatusUpdateInit deployment disappeared! return to init status!")
+		return
+	}
+
+	err = UpdateK8sDeployment(appDeployInfo)
+	if err != nil {
+		logger.Infof("handleStatusUpdateInit update deploy failed! err = %v", err)
+		return
+	}
+
+	// update status
+	appDeployInfo.Status = constants.StatusDeploying
+	appDeployInfo.UpdateAt = time.Now()
+	err = applicationentity.UpdateAppDeploy(appDeployInfo)
+	if err != nil {
+		logger.Infof("handleStatusUpdateInit update deployment failed when deploying!")
+		return
+	}
+
+	logger.Infof("handleStatusUpdateInit update deploy successful! status to %s", constants.StatusDeploying)
 }
 
 func handleStatusDeleting(appDeployInfo *applicationentity.ApplicationDeployInfo) {
@@ -370,7 +412,7 @@ func CreateK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error 
 					RestartPolicy: corev1.RestartPolicy(appVerInfo.RestartPolicy),
 					Containers: []corev1.Container{
 						{
-							Name:  uuid.NewV4().String(),
+							Name:  dbInfo.ContainerUUID,
 							Image: appVerInfo.ContainerImagePath,
 							Ports: ports,
 						},
@@ -381,6 +423,60 @@ func CreateK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error 
 	}
 
 	_, err = deployClient.Create(context.Background(), deployment, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error {
+	var appVerInfo applicationentity.ApplicationVersionInfo
+
+	clu, err := cluster.GetCluster(dbInfo.ClusterId)
+	if err != nil {
+		return err
+	}
+
+	deployClient, err := clu.GetDeploymentClient(constants.DefaultNamespace)
+	if err != nil {
+		return err
+	}
+
+	res := apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
+			dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version).
+		First(&appVerInfo)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	deployment, err := deployClient.Get(context.Background(), dbInfo.DeployUUID, metav1.GetOptions{})
+	if err != nil {
+		logger.Infof("err to get deployment, app = %s, version = %s, node = %s, deployId = %s",
+			dbInfo.AppName, dbInfo.Version, dbInfo.NodeName, dbInfo.DeployUUID)
+		return err
+	}
+
+	// add rolling update strategy
+	maxSur := intstr.FromInt(1)
+	maxUna := intstr.FromInt(1)
+	for i, _ := range deployment.Spec.Template.Spec.Containers {
+		if deployment.Spec.Template.Spec.Containers[i].Name == dbInfo.ContainerUUID {
+			deployment.Spec.Template.Spec.Containers[i].Image = appVerInfo.ContainerImagePath
+		}
+	}
+
+	deployment.Spec.MinReadySeconds = 5
+	deployment.Spec.Strategy = v1.DeploymentStrategy{
+		Type: v1.RollingUpdateDeploymentStrategyType,
+		RollingUpdate: &v1.RollingUpdateDeployment{
+			MaxSurge:       &maxSur,
+			MaxUnavailable: &maxUna,
+		},
+	}
+
+	_, err = deployClient.Update(context.Background(), deployment, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}
@@ -422,109 +518,3 @@ func DeleteK8sDeployment(dbInfo *applicationentity.ApplicationDeployInfo) error 
 
 	return deployClient.Delete(context.Background(), dbInfo.DeployUUID, metav1.DeleteOptions{})
 }
-
-//func CreateK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
-//	var appVerInfo applicationentity.ApplicationVersionInfo
-//
-//	clu, err := cluster.GetCluster(dbInfo.ClusterId)
-//	if err != nil {
-//		return err
-//	}
-//
-//	podClient, err := clu.GetPodClient(constants.DefaultNamespace)
-//	if err != nil {
-//		return err
-//	}
-//
-//	res := apulisdb.Db.
-//		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-//			dbInfo.ClusterId, dbInfo.GroupId, dbInfo.UserId, dbInfo.AppName, dbInfo.Version).
-//		First(&appVerInfo)
-//	if res.Error != nil {
-//		return res.Error
-//	}
-//
-//	var appNetwork appmodule.CreateAppNetwork
-//	err = json.Unmarshal([]byte(appVerInfo.Network), &appNetwork)
-//	if err != nil {
-//		return err
-//	}
-//	logger.Infof("appNetwork = %+v", appNetwork)
-//
-//	// host network
-//	hn := false
-//	var ports []corev1.ContainerPort
-//	if appNetwork.Type == appmodule.NetworkTypeHost {
-//		hn = true
-//	}
-//	if appNetwork.Type == appmodule.NetworkTypePortMapping {
-//		for _, v := range appNetwork.PortMappings {
-//			ports = append(ports, corev1.ContainerPort{
-//				ContainerPort: int32(v.ContainerPort),
-//				HostPort:      int32(v.HostPort),
-//			})
-//		}
-//	}
-//
-//	pod := &corev1.Pod{
-//		ObjectMeta: metav1.ObjectMeta{
-//			Name: dbInfo.DeployUUID,
-//		},
-//		Spec: corev1.PodSpec{
-//			NodeSelector: map[string]string{
-//				"kubernetes.io/hostname": dbInfo.NodeName,
-//			},
-//			HostNetwork:   hn,
-//			RestartPolicy: corev1.RestartPolicy(appVerInfo.RestartPolicy),
-//			Containers: []corev1.Container{
-//				{
-//					Name:  uuid.NewV4().String(),
-//					Image: appVerInfo.ContainerImagePath,
-//					Ports: ports,
-//				},
-//			},
-//		},
-//	}
-//
-//	_, err = podClient.Create(context.Background(), pod, metav1.CreateOptions{})
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
-//
-//func GetK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) (*corev1.Pod, error) {
-//	clu, err := cluster.GetCluster(dbInfo.ClusterId)
-//	if err != nil {
-//		logger.Infof("GetK8sPod, can`t find cluster %d", dbInfo.ClusterId)
-//		return nil, err
-//	}
-//
-//	podClient, err := clu.GetPodClient(constants.DefaultNamespace)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	pod, err := podClient.Get(context.Background(), dbInfo.DeployUUID, metav1.GetOptions{})
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return pod, nil
-//}
-//
-//func DeleteK8sPod(dbInfo *applicationentity.ApplicationDeployInfo) error {
-//	clu, err := cluster.GetCluster(dbInfo.ClusterId)
-//	if err != nil {
-//		logger.Infof("DeleteK8sPod, can`t find cluster %d", dbInfo.ClusterId)
-//		return err
-//	}
-//
-//	podClient, err := clu.GetPodClient(constants.DefaultNamespace)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return podClient.Delete(context.Background(), dbInfo.DeployUUID, metav1.DeleteOptions{})
-//}

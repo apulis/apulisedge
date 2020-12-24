@@ -13,7 +13,9 @@ var (
 )
 
 const (
-	ResourceNode string = "node"
+	ResourceNode      string = "node"
+	ResourceDeploy    string = "deploy"
+	ResourceContainer string = "container"
 )
 
 var logger = loggers.LogInstance()

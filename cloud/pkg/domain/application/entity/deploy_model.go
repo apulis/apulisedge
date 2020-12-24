@@ -24,6 +24,7 @@ type ApplicationDeployInfo struct {
 	ContainerImagePath string    `gorm:"column:containerImagePath;size:255;not null"                    json:"containerImagePath"`
 	Status             string    `gorm:"column:Status;size:255;not null"                                json:"status"`
 	DeployUUID         string    `gorm:"column:DeployUUID;index:uuid;size:255;not null"                 json:"deployUUID"`
+	ContainerUUID      string    `gorm:"column:ContainerUUID;size:255;not null"                         json:"containerUUID"`
 	CreateAt           time.Time `gorm:"column:CreateAt;not null"                                       json:"createAt"`
 	UpdateAt           time.Time `gorm:"column:UpdateAt;not null"                                       json:"updateAt"`
 }

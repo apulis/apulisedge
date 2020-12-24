@@ -3,6 +3,7 @@
 package applicationservice
 
 import (
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
@@ -10,7 +11,6 @@ import (
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
-	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"strings"
 	"time"
@@ -117,6 +117,13 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 	var newDeployInfo appentity.ApplicationDeployInfo
 	var nodeInfo nodeentity.NodeBasicInfo
 
+	// get cluster
+	clu, err := cluster.GetCluster(userInfo.ClusterId)
+	if err != nil {
+		logger.Infof("DeployEdgeApplication, can`t find cluster %d", userInfo.ClusterId)
+		return cluster.ErrFindCluster
+	}
+
 	res := apulisdb.Db.
 		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
 			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.Version).
@@ -157,7 +164,7 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 				continue
 			}
 		} else {
-			targetStatus = constants.StatusUpdating
+			targetStatus = constants.StatusUpdateInit
 		}
 
 		if targetStatus == constants.StatusInit {
@@ -172,7 +179,8 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 				Version:            appVerInfo.Version,
 				ContainerImagePath: appVerInfo.ContainerImagePath,
 				Status:             constants.StatusInit,
-				DeployUUID:         uuid.NewV4().String(),
+				DeployUUID:         clu.GetUniqueName(cluster.ResourceDeploy),
+				ContainerUUID:      clu.GetUniqueName(cluster.ResourceContainer),
 				CreateAt:           time.Now(),
 				UpdateAt:           time.Now(),
 			}
@@ -183,7 +191,7 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 				continue
 			}
 			totalDeploy++
-		} else if targetStatus == constants.StatusUpdating {
+		} else if targetStatus == constants.StatusUpdateInit {
 			if deployInfo.Version == req.Version {
 				logger.Infof("deploy application deploy same version, skipped! node = %s, version = %s", node, deployInfo.Version)
 				continue
@@ -196,8 +204,9 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 			}
 
 			newDeployInfo = deployInfo
-			newDeployInfo.Status = constants.StatusUpdating
+			newDeployInfo.Status = constants.StatusUpdateInit
 			newDeployInfo.Version = req.Version
+			newDeployInfo.ContainerImagePath = appVerInfo.ContainerImagePath
 			newDeployInfo.UpdateAt = time.Now()
 
 			err = appentity.UpdateAppDeploy(&newDeployInfo)
@@ -207,7 +216,6 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 			}
 			totalDeploy++
 		}
-
 	}
 
 	if totalDeploy == len(req.NodeNames) {

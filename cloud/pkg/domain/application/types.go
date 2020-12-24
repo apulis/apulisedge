@@ -21,12 +21,12 @@ const (
 
 // deploy status
 const (
-	StatusInit      string = "Init"
-	StatusDeploying string = "Deploying"
-	StatusRunning   string = "Running"
-	StatusUpdating  string = "Updating"
-	StatusAbnormal  string = "Abnormal"
-	StatusDeleting  string = "Deleting"
+	StatusInit       string = "Init"
+	StatusDeploying  string = "Deploying"
+	StatusRunning    string = "Running"
+	StatusUpdateInit string = "UpdateInit"
+	StatusAbnormal   string = "Abnormal"
+	StatusDeleting   string = "Deleting"
 )
 
 const (
