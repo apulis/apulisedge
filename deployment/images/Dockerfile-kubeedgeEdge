@@ -1,7 +1,7 @@
 FROM alpine:3.11 as builder
 
 WORKDIR /root/
-ENV EDGE_ARCH arm64
+ENV EDGE_ARCH ${arch}
 ARG downloadscript_path=download_kubeedge.sh
 ENV downloadscript_path ${downloadscript_path}
 

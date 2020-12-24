@@ -12,6 +12,26 @@ DOWNLOAD_KUBEEDGE_SCRIPT_PATH=deployment/images/download_kubeedge.sh
 # ===
 # === function statement
 # ===
+getArch()
+{
+    case $1 in
+    aarch64)
+        echo arm64
+        ;;
+    x86_64)
+        echo amd64
+        ;;
+    amd64) # FreeBSD.
+        echo amd64
+        ;;
+    arm64) # FreeBSD.
+        echo arm64
+        ;;
+    *)
+        ;;
+    esac
+}
+
 buildAgent()
 {
     docker build . -f ${DOCKERFILE_DIR}/${APULISEDGE_AGENT_DOCKERFLE} -t apulis/apulisedge-agent:1.0
@@ -24,7 +44,7 @@ buildCloud()
 
 buildKubeedgeEdge()
 {
-    docker build . -f ${DOCKERFILE_DIR}/${KUBEEDGE_EDGE_DOCKERFLE} --build-arg downloadscript_path=${DOWNLOAD_KUBEEDGE_SCRIPT_PATH} -t apulis/kubeedge-edge:1.0
+    docker build . -f ${DOCKERFILE_DIR}/${KUBEEDGE_EDGE_DOCKERFLE} --build-arg downloadscript_path=${DOWNLOAD_KUBEEDGE_SCRIPT_PATH} --build-arg arch=$(getArch "$(uname -m)") -t apulis/kubeedge-edge:1.0
 }
 
 buildKubeedgeCloud()
