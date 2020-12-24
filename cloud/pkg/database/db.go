@@ -33,7 +33,7 @@ func InitDatabase(config *configs.EdgeCloudConfig) {
 	newLogger := gormlogger.New(
 		log.New(logger.Out, "\r\n", log.LstdFlags),
 		gormlogger.Config{
-			LogLevel: gormlogger.Warn,
+			LogLevel: gormlogger.Info,
 		},
 	)
 

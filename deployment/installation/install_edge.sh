@@ -63,6 +63,13 @@ LOG_ERROR()
 
 envCheck()
 {
+    # === check no kubeedge
+    containerID=`docker ps | grep ${KUBEEDGE_EDGE_IMAGE} | awk '{print $1}'`
+    if [[ "$containerID" != "" ]]; then
+        LOG_ERROR "There is already a kubeedge client running. Please stop it and retry."
+        return 1
+    fi
+
     # === check hostname case
     HOSTNAME=`hostname`
     REGEX_OUTPUT=`echo ${HOSTNAME} | grep -P "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*" -o`
@@ -173,7 +180,7 @@ runEdgecore()
 main()
 {
     if which getopt > /dev/null 2>&1; then
-        OPTS=$(getopt d:i: "$*" 2>/dev/null)
+        OPTS=$(getopt d:i:h:l: "$*" 2>/dev/null)
         if [ ! $? ]; then
             printf "%s\\n" "$USAGE"
             exit 2
@@ -215,7 +222,7 @@ main()
     fi
 
     # === init some variables
-    ARCH="$(uname -m)"
+    ARCH=$(getArch "$(uname -m)")
     KUBEEDGE_TAR_FILE=apulisedge_${ARCH}.tar.gz
 
     # === init log

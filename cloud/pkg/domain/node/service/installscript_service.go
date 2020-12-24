@@ -47,6 +47,7 @@ func GetInstallScripts(userInfo proto.ApulisHeader, req *nodemodule.GetInstallSc
 	var fileName = packageName + ".tar.gz"
 	var pubKeyFileName = packageName + ".key"
 	var signFileName = packageName + ".sig"
+	var kubeedgeImageName = "apulisedge/apulis/kubeedge-edge:1.0-" + targetArch
 
 	// clean env
 	script = "rm -rf " + downloadTarget + " && "
@@ -65,7 +66,7 @@ func GetInstallScripts(userInfo proto.ApulisHeader, req *nodemodule.GetInstallSc
 	script = script + "cp " + downloadTarget + "/package/scripts/* /opt/apulisedge/" + " && "
 	// run install script
 	script = script + "/opt/apulisedge/install_edge.sh -d " + clu.Domain +
-		" -l " + clu.HarborAddress + "/apulisedge/apulis/kubeedge-edge:1.0" +
+		" -l " + clu.HarborAddress + "/" + kubeedgeImageName +
 		" -h " + nodeInfo.UniqueName
 
 	return script, err
