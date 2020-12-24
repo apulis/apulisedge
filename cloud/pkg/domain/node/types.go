@@ -11,6 +11,7 @@ const (
 	StatusOnline       string = "Online"
 	StatusOffline      string = "Offline"
 	StatusNotInstalled string = "NotInstalled"
+	StatusDeleting     string = "Deleting"
 )
 
 // node roles
@@ -24,3 +25,6 @@ const (
 const (
 	TransferCountEach int = 10
 )
+
+// node types
+var TypesOfNode = []string{"Raspberrypi 4B", "Atlas 500"}

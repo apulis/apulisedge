@@ -6,6 +6,7 @@ import (
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
 	appservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/service"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +24,7 @@ func ListEdgeAppDeploys(c *gin.Context) error {
 		return errRsp
 	}
 
-	// list node
+	// list app deploy
 	appDeploys, total, err = appservice.ListEdgeDeploys(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
@@ -32,6 +33,58 @@ func ListEdgeAppDeploys(c *gin.Context) error {
 	data := appmodule.ListEdgeAppDeployRsp{
 		Total:      total,
 		AppDeploys: appDeploys,
+	}
+	return SuccessResp(c, &req, data)
+}
+
+// list node deploys
+func ListNodeDeploys(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent appmodule.ListNodeDeployReq
+	var appDeploys *[]appentity.ApplicationDeployInfo
+	var total int
+
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+
+	// list node deploy
+	appDeploys, total, err = appservice.ListNodeDeploys(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := appmodule.ListNodeDeployRsp{
+		Total:      total,
+		AppDeploys: appDeploys,
+	}
+	return SuccessResp(c, &req, data)
+}
+
+// list node can deploy
+func ListNodeCanDeploy(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent appmodule.ListNodeCanDeployReq
+	var nodes *[]nodeentity.NodeBasicInfo
+	var total int
+
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+
+	// list node deploy
+	nodes, total, err = appservice.ListNodeCanDeploy(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := appmodule.ListNodeCanDeployRsp{
+		Total: total,
+		Nodes: nodes,
 	}
 	return SuccessResp(c, &req, data)
 }

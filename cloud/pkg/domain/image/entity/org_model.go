@@ -14,11 +14,11 @@ const (
 
 // The simplest implement, add RBAC if need
 type ContainerImageOrg struct {
-	ID           int64     `gorm:"column:Id;primary_key"                                    json:"id" binding:"required"`
-	ClusterId    int64     `gorm:"uniqueIndex:cluster_org;column:ClusterId;not null"        json:"clusterId" binding:"required"`
-	OrgName      string    `gorm:"uniqueIndex:cluster_org;column:OrgName;size:255;not null" json:"orgName" binding:"required"`
-	OwnerGroupId int64     `gorm:"column:OwnerGroupId;not null"                             json:"ownerGroupId" binding:"required"`
-	OwnerUserId  int64     `gorm:"column:OwnerUserId;not null"                              json:"ownerUserId" binding:"required"`
+	ID           int64     `gorm:"column:Id;primary_key"                                    json:"id"`
+	ClusterId    int64     `gorm:"uniqueIndex:cluster_org;column:ClusterId;not null"        json:"clusterId"`
+	OrgName      string    `gorm:"uniqueIndex:cluster_org;column:OrgName;size:255;not null" json:"orgName"`
+	OwnerGroupId int64     `gorm:"column:OwnerGroupId;not null"                             json:"ownerGroupId"`
+	OwnerUserId  int64     `gorm:"column:OwnerUserId;not null"                              json:"ownerUserId"`
 	CreateAt     time.Time `gorm:"column:CreateAt;not null"                                 json:"createAt"`
 	UpdateAt     time.Time `gorm:"column:UpdateAt;not null"                                 json:"updateAt"`
 }

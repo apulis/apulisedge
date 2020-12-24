@@ -23,6 +23,7 @@ var statusHandlerMap = map[string]statusHandler{
 	constants.StatusNotInstalled: handleStatusNotInstalled,
 	constants.StatusOnline:       handleStatusOnline,
 	constants.StatusOffline:      handleStatusOffline,
+	constants.StatusDeleting:     handleStatusDelete,
 }
 
 // CreateNodeCheckLoop transferer of edge node status
@@ -67,7 +68,11 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 		} else {
 			for i := 0; i < int(res.RowsAffected); i++ {
 				logger.Debugf("NodeTicker handle node = %v", nodeInfos[i])
-				statusHandlerMap[nodeInfos[i].Status](&nodeInfos[i])
+				if _, ok := statusHandlerMap[nodeInfos[i].Status]; ok {
+					statusHandlerMap[nodeInfos[i].Status](&nodeInfos[i])
+				} else {
+					logger.Errorf("NodeTicker: No valid handler, status = %s", nodeInfos[i].Status)
+				}
 			}
 		}
 
@@ -78,6 +83,8 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 
 // keep uninstalled or to online/offline
 func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
+	var newDbInfo nodeentity.NodeBasicInfo
+
 	var interIp string
 	var outerIp string
 	var curNodeStatus string
@@ -92,22 +99,41 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	}
 
 	// get node info from k8s
-	nodeK8sInfo, err := clu.DescribeNode(dbInfo.NodeName)
+	nodeK8sInfo, err := clu.DescribeNode(dbInfo.UniqueName)
 	if err == nil {
 		nodeExist = true
 	} else {
 		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
 			nodeExist = false
 		} else {
-			logger.Infof("handleStatusNotInstalled DescribeNode failed! name = %v, err = %v", dbInfo.NodeName, err)
+			logger.Infof("handleStatusNotInstalled DescribeNode failed! nodeName = %s, uniName = %s, err = %v",
+				dbInfo.NodeName, dbInfo.UniqueName, err)
 			return
 		}
 	}
 
 	// node not exist in k8s, try next time
 	if !nodeExist {
-		logger.Infof("handleStatusNotInstalled name %v not exist in kubernetes", dbInfo.NodeName)
+		logger.Infof("handleStatusNotInstalled name %s not exist in kubernetes. nodeName = %s", dbInfo.UniqueName, dbInfo.NodeName)
 		return
+	}
+
+	var cpuCore int
+	var mem int64
+	if _, ok := nodeK8sInfo.Status.Capacity[v1.ResourceCPU]; ok {
+		q := nodeK8sInfo.Status.Capacity[v1.ResourceCPU]
+		v, b := (&q).AsInt64()
+		if b {
+			cpuCore = int(v)
+		}
+	}
+
+	if _, ok := nodeK8sInfo.Status.Capacity[v1.ResourceMemory]; ok {
+		q := nodeK8sInfo.Status.Capacity[v1.ResourceMemory]
+		v, b := (&q).AsInt64()
+		if b {
+			mem = v
+		}
 	}
 
 	// create new node and install node
@@ -142,27 +168,23 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	roles = strings.TrimPrefix(roles, ",")
 	roles = strings.TrimSuffix(roles, ",")
 
-	newDbInfo := &nodeentity.NodeBasicInfo{
-		ID:               dbInfo.ID,
-		ClusterId:        dbInfo.ClusterId,
-		GroupId:          dbInfo.GroupId,
-		UserId:           dbInfo.UserId,
-		NodeName:         nodeK8sInfo.Name,
-		Status:           curNodeStatus,
-		Roles:            roles,
-		ContainerRuntime: nodeK8sInfo.Status.NodeInfo.ContainerRuntimeVersion,
-		OsImage:          nodeK8sInfo.Status.NodeInfo.OSImage,
-		InterIp:          interIp,
-		OuterIp:          outerIp,
-		CreateAt:         dbInfo.CreateAt,
-		UpdateAt:         time.Now(),
-	}
+	newDbInfo = *dbInfo
+	newDbInfo.Status = curNodeStatus
+	newDbInfo.Roles = roles
+	newDbInfo.ContainerRuntime = nodeK8sInfo.Status.NodeInfo.ContainerRuntimeVersion
+	newDbInfo.OsImage = nodeK8sInfo.Status.NodeInfo.OSImage
+	newDbInfo.InterIp = interIp
+	newDbInfo.OuterIp = outerIp
+	newDbInfo.CpuCore = cpuCore
+	newDbInfo.Memory = mem
+	newDbInfo.Arch = nodeK8sInfo.Status.NodeInfo.Architecture
+	newDbInfo.UpdateAt = time.Now()
 
-	err = nodeentity.UpdateNode(newDbInfo)
+	err = nodeentity.UpdateNode(&newDbInfo)
 	if err != nil {
-		logger.Infof("NodeTicker install node failed, node = %s, err = %v", dbInfo.NodeName, err)
+		logger.Infof("NodeTicker install node failed, node = %s, uniq = %s, err = %v", dbInfo.NodeName, dbInfo.UniqueName, err)
 	} else {
-		logger.Infof("NodeTicker install node succ, node = %s, turn to status %s", dbInfo.NodeName, newDbInfo.Status)
+		logger.Infof("NodeTicker install node succ, node = %s, uniq = %s, turn to status %s", dbInfo.NodeName, dbInfo.UniqueName, newDbInfo.Status)
 	}
 }
 
@@ -173,6 +195,44 @@ func handleStatusOnline(dbInfo *nodeentity.NodeBasicInfo) {
 
 func handleStatusOffline(dbInfo *nodeentity.NodeBasicInfo) {
 	handleStatusInstalled(dbInfo)
+}
+
+func handleStatusDelete(dbInfo *nodeentity.NodeBasicInfo) {
+	var nodeExist bool
+
+	clu, err := cluster.GetCluster(dbInfo.ClusterId)
+	if err != nil {
+		logger.Infof("handleStatusDelete, can`t find cluster %d", dbInfo.ClusterId)
+		return
+	}
+
+	// get node info from k8s
+	nodeK8sInfo, err := clu.DescribeNode(dbInfo.UniqueName)
+	if err == nil {
+		nodeExist = true
+	} else {
+		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
+			nodeExist = false
+		} else {
+			logger.Infof("handleStatusDelete DescribeNode failed! nodeName = %s, uniq = %s, err = %v",
+				dbInfo.NodeName, dbInfo.UniqueName, err)
+			return
+		}
+	}
+
+	if !nodeExist {
+		err = nodeentity.DeleteNode(dbInfo)
+		if err != nil {
+			logger.Infof("handleStatusDelete Delete From DB failed! nodeName = %s, uniq = %s, err = %v",
+				dbInfo.NodeName, dbInfo.UniqueName, err)
+		}
+	} else {
+		err = clu.DeleteNode(nodeK8sInfo)
+		if err != nil {
+			logger.Infof("handleStatusDelete Delete From k8s failed! nodeName = %s, uniq = %s, err = %v",
+				dbInfo.NodeName, dbInfo.UniqueName, err)
+		}
+	}
 }
 
 func handleStatusInstalled(dbInfo *nodeentity.NodeBasicInfo) {
@@ -188,14 +248,15 @@ func handleStatusInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	}
 
 	// get node info from k8s
-	nodeK8sInfo, err := clu.DescribeNode(dbInfo.NodeName)
+	nodeK8sInfo, err := clu.DescribeNode(dbInfo.UniqueName)
 	if err == nil {
 		nodeExist = true
 	} else {
 		if errors.ReasonForError(err) == metav1.StatusReasonNotFound {
 			nodeExist = false
 		} else {
-			logger.Infof("handleStatusInstalled DescribeNode failed! name = %v, err = %v", dbInfo.NodeName, err)
+			logger.Infof("handleStatusInstalled DescribeNode failed! nodeName = %s, uniq = %s, err = %v",
+				dbInfo.NodeName, dbInfo.UniqueName, err)
 			// TODO try many times, if failed, turn to offline
 			return
 		}
@@ -208,11 +269,11 @@ func handleStatusInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 		newDbInfo.UpdateAt = time.Now()
 		err = nodeentity.UpdateNode(&newDbInfo)
 		if err != nil {
-			logger.Infof("handleStatusInstalled UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
+			logger.Infof("handleStatusInstalled UpdateNode failed, node = %s, uniq = %s, err = %v", dbInfo.NodeName, dbInfo.UniqueName, err)
 		} else {
-			logger.Infof("handleStatusInstalled UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
+			logger.Infof("handleStatusInstalled UpdateNode succ, node = %s, uniq = %s, turn to status = %s",
+				dbInfo.NodeName, dbInfo.UniqueName, newDbInfo.Status)
 		}
-
 		return
 	} else {
 		for _, cond := range nodeK8sInfo.Status.Conditions {
@@ -231,17 +292,19 @@ func handleStatusInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 			newDbInfo.Status = curNodeStatus
 			err = nodeentity.UpdateNode(&newDbInfo)
 			if err != nil {
-				logger.Infof("handleStatusInstalled UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
+				logger.Infof("handleStatusInstalled UpdateNode failed, node = %s, uniq = %s, err = %v", dbInfo.NodeName, dbInfo.UniqueName, err)
 			} else {
-				logger.Infof("handleStatusInstalled UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
+				logger.Infof("handleStatusInstalled UpdateNode succ, node = %s, uniq = %s, turn to status = %s",
+					dbInfo.NodeName, dbInfo.UniqueName, newDbInfo.Status)
 			}
 		} else if dbInfo.Status == constants.StatusOffline && curNodeStatus == constants.StatusOnline {
 			newDbInfo.Status = curNodeStatus
 			err = nodeentity.UpdateNode(&newDbInfo)
 			if err != nil {
-				logger.Infof("handleStatusInstalled UpdateNode failed, node = %s, err = %v", dbInfo.NodeName, err)
+				logger.Infof("handleStatusInstalled UpdateNode failed, node = %s, uniq = %s, err = %v", dbInfo.NodeName, dbInfo.UniqueName, err)
 			} else {
-				logger.Infof("handleStatusInstalled UpdateNode succ, node = %s, turn to status = %s", dbInfo.NodeName, newDbInfo.Status)
+				logger.Infof("handleStatusInstalled UpdateNode succ, node = %s, uniq = %s, turn to status = %s",
+					dbInfo.NodeName, dbInfo.UniqueName, newDbInfo.Status)
 			}
 		}
 	}

@@ -32,6 +32,22 @@ func ListContainerImageVersion(userInfo proto.ApulisHeader, req *imagemodule.Lis
 	return &imageVerInfos, total, nil
 }
 
+// describe container image version
+func DescribeContainerImageVersion(userInfo proto.ApulisHeader, req *imagemodule.DescribeContainerImageVersionReq) (*imageentity.UserContainerImageVersionInfo, error) {
+	var imageVerInfo imageentity.UserContainerImageVersionInfo
+
+	res := apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and ImageName = ? and OrgName = ? and ImageVersion = ?",
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.ImageName, req.OrgName, req.ImageVersion).
+		First(&imageVerInfo)
+
+	if res.Error != nil {
+		return &imageVerInfo, res.Error
+	}
+
+	return &imageVerInfo, nil
+}
+
 // delete container image version
 func DeleteContainterImageVersion(userInfo proto.ApulisHeader, req *imagemodule.DeleteContainerImageVersionReq) error {
 	var imageVerInfo imageentity.UserContainerImageVersionInfo

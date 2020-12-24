@@ -22,11 +22,13 @@ func ImageHandlerRoutes(r *gin.Engine) {
 
 	// image
 	group.POST("/listImage", wrapper(ListContainerImage))
+	group.POST("/describeImage", wrapper(DescribeContainerImage))
 	group.POST("/uploadImage", wrapper(UploadContainerImage))
 	group.POST("/deleteImage", wrapper(DeleteImage))
 
 	// image version
 	group.POST("/listImageVersion", wrapper(ListContainerImageVersion))
+	group.POST("/describeImageVersion", wrapper(DescribeContainerImageVersion))
 	group.POST("/deleteImageVersion", wrapper(DeleteImageVersion))
 
 	// org
@@ -69,6 +71,30 @@ func ListContainerImage(c *gin.Context) error {
 			UpdateAt:     images[i].UpdateAt,
 		}
 		data.Images = append(data.Images, img)
+	}
+
+	return SuccessResp(c, &req, data)
+}
+
+// describe image
+func DescribeContainerImage(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent imagemodule.DescribeContainerImageReq
+
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+
+	// describe application
+	img, err := imageservice.DescribeContainerImage(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := imagemodule.DescribeContainerImageRsp{
+		Image: img,
 	}
 
 	return SuccessResp(c, &req, data)

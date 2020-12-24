@@ -12,6 +12,12 @@ var (
 	ErrFindCluster = errors.New("cluster not exist")
 )
 
+const (
+	ResourceNode      string = "node"
+	ResourceDeploy    string = "deploy"
+	ResourceContainer string = "container"
+)
+
 var logger = loggers.LogInstance()
 
 var clusters []Cluster

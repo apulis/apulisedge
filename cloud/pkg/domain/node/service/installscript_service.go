@@ -1,14 +1,47 @@
 package nodeservice
 
 import (
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
+	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 )
 
 // GetInstallScripts generate install script
-func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgServer string, dwAddress string) (string, error) {
+func GetInstallScripts(userInfo proto.ApulisHeader, req *nodemodule.GetInstallScriptReq) (string, error) {
 	var err error
 	var script string
-	var targetArch = req.Arch
+	var nodeInfo nodeentity.NodeBasicInfo
+
+	targetArch := req.Arch
+
+	// get cluster
+	clu, err := cluster.GetCluster(userInfo.ClusterId)
+	if err != nil {
+		logger.Infof("GetInstallScripts, can`t find cluster %d", userInfo.ClusterId)
+		return "", cluster.ErrFindCluster
+	}
+
+	// get node
+	res := apulisdb.Db.
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?",
+			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.Name).
+		First(&nodeInfo)
+	if res.Error != nil {
+		return "", res.Error
+	}
+
+	// check type
+	archExist := true
+	if !cluster.IsArchValid(req.Arch) {
+		archExist = false
+	}
+
+	if !archExist {
+		return "", cluster.ErrArchTypeNotExist
+	}
+
 	var downloadTarget = "/tmp/apulisedge/"
 	var packageName = "apulisedge_" + targetArch
 	var fileName = packageName + ".tar.gz"
@@ -22,9 +55,9 @@ func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgSe
 	script = script + " mkdir -p " + downloadTarget + " && "
 	script = script + " mkdir -p /opt/apulisedge && "
 	// download package and signature
-	script = script + "wget " + dwAddress + "/" + fileName + " -P " + downloadTarget + " && "
-	script = script + "wget " + dwAddress + "/" + signFileName + " -P " + downloadTarget + " && "
-	script = script + "wget " + dwAddress + "/" + pubKeyFileName + " -P " + downloadTarget + " && "
+	script = script + "wget " + clu.DownloadAddress + "/" + fileName + " -P " + downloadTarget + " && "
+	script = script + "wget " + clu.DownloadAddress + "/" + signFileName + " -P " + downloadTarget + " && "
+	script = script + "wget " + clu.DownloadAddress + "/" + pubKeyFileName + " -P " + downloadTarget + " && "
 	// verify file
 	script = script + " openssl dgst -verify " + downloadTarget + "/" + pubKeyFileName + " -sha256 -signature " + downloadTarget + "/" + signFileName + " " + downloadTarget + "/" + fileName + " && "
 	// decompress package
@@ -32,7 +65,9 @@ func GetInstallScripts(req *nodemodule.GetInstallScriptReq, domain string, imgSe
 	// move install script
 	script = script + "cp " + downloadTarget + "/package/scripts/* /opt/apulisedge/" + " && "
 	// run install script
-	script = script + "/opt/apulisedge/install_edge.sh -d " + domain + " -l " + imgServer + "/" + kubeedgeImageName
+	script = script + "/opt/apulisedge/install_edge.sh -d " + clu.Domain +
+		" -l " + clu.HarborAddress + "/" + kubeedgeImageName +
+		" -h " + nodeInfo.UniqueName
 
 	return script, err
 }

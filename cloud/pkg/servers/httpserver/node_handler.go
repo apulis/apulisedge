@@ -3,7 +3,6 @@
 package httpserver
 
 import (
-	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
 	"github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
@@ -22,6 +21,8 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group.POST("/desNode", wrapper(DescribeEdgeNode))
 	group.POST("/deleteNode", wrapper(DeleteEdgeNode))
 	group.POST("/scripts", wrapper(GetInstallScripts))
+	group.POST("/listType", wrapper(ListEdgeNodeType))
+	group.POST("/listArchType", wrapper(ListArchType))
 }
 
 // @Summary create edge node
@@ -144,16 +145,57 @@ func GetInstallScripts(c *gin.Context) error {
 		return errRsp
 	}
 
-	// get cluster
-	clu, err := cluster.GetCluster(userInfo.ClusterId)
+	script, err := nodeservice.GetInstallScripts(*userInfo, &reqContent)
 	if err != nil {
-		logger.Infof("GetInstallScripts, can`t find cluster %d", userInfo.ClusterId)
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
 
-	script, err := nodeservice.GetInstallScripts(&reqContent, clu.Domain, clu.HarborAddress, clu.DownloadAddress)
 	data := nodemodule.GetInstallScriptRsp{
 		Script: script,
+	}
+	return SuccessResp(c, &req, data)
+}
+
+func ListEdgeNodeType(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent nodemodule.ListEdgeNodeTypeReq
+
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+
+	// list type
+	tys, err := nodeservice.ListEdgeNodeType(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := nodemodule.ListEdgeNodeTypeRsp{
+		Types: tys,
+	}
+	return SuccessResp(c, &req, data)
+}
+
+func ListArchType(c *gin.Context) error {
+	var err error
+	var req proto.Message
+	var reqContent nodemodule.ListArchTypeReq
+
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+
+	// list type
+	tys, err := nodeservice.ListArchType(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	data := nodemodule.ListArchTypeRsp{
+		Types: tys,
 	}
 	return SuccessResp(c, &req, data)
 }
