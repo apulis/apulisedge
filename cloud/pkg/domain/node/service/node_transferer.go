@@ -68,7 +68,11 @@ func NodeTicker(config *configs.EdgeCloudConfig) {
 		} else {
 			for i := 0; i < int(res.RowsAffected); i++ {
 				logger.Debugf("NodeTicker handle node = %v", nodeInfos[i])
-				statusHandlerMap[nodeInfos[i].Status](&nodeInfos[i])
+				if _, ok := statusHandlerMap[nodeInfos[i].Status]; ok {
+					statusHandlerMap[nodeInfos[i].Status](&nodeInfos[i])
+				} else {
+					logger.Errorf("NodeTicker: No valid handler, status = %s", nodeInfos[i].Status)
+				}
 			}
 		}
 

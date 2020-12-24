@@ -36,26 +36,13 @@ type ListNodeDeployRsp struct {
 
 // List node can deploy
 type ListNodeCanDeployReq struct {
-	AppName  string `json:"appName" validate:"required"`
-	Version  string `json:"version" validate:"required"`
-	PageNum  int    `json:"pageNum" validate:"required,gte=1,lte=1000"`
-	PageSize int    `json:"pageSize" validate:"required,gte=1,lte=1000"`
+	AppName       string `json:"appName" validate:"required"`
+	TargetVersion string `json:"targetVersion" validate:"required"`
+	PageNum       int    `json:"pageNum" validate:"required,gte=1,lte=1000"`
+	PageSize      int    `json:"pageSize" validate:"required,gte=1,lte=1000"`
 }
 
 type ListNodeCanDeployRsp struct {
-	Total int
-	Nodes *[]nodeentity.NodeBasicInfo `json:"nodes"`
-}
-
-// List node can update
-type ListNodeCanUpdateReq struct {
-	AppName  string `json:"appName" validate:"required"`
-	Version  string `json:"version" validate:"required"`
-	PageNum  int    `json:"pageNum" validate:"required,gte=1,lte=1000"`
-	PageSize int    `json:"pageSize" validate:"required,gte=1,lte=1000"`
-}
-
-type ListNodeCanUpdateRsp struct {
 	Total int
 	Nodes *[]nodeentity.NodeBasicInfo `json:"nodes"`
 }
@@ -68,16 +55,6 @@ type DeployEdgeApplicationReq struct {
 }
 
 type DeployEdgeApplicationRsp struct {
-}
-
-// Update deploy edge application
-type UpdateDeployEdgeApplicationReq struct {
-	AppName       string   `json:"appName" validate:"required"`
-	NodeNames     []string `json:"nodeNames" validate:"required"`
-	TargetVersion string   `json:"targetVersion" validate:"required"`
-}
-
-type UpdateDeployEdgeApplicationRsp struct {
 }
 
 // undeploy edge application

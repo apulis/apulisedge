@@ -13,18 +13,19 @@ const (
 )
 
 type ApplicationDeployInfo struct {
-	ID         int64     `gorm:"column:Id;primary_key"                                          json:"id"`
-	ClusterId  int64     `gorm:"uniqueIndex:app_deploy;column:ClusterId;not null"               json:"clusterId"`
-	GroupId    int64     `gorm:"uniqueIndex:app_deploy;column:GroupId;not null"                 json:"groupId"`
-	UserId     int64     `gorm:"uniqueIndex:app_deploy;column:UserId;not null"                  json:"userId"`
-	NodeName   string    `gorm:"uniqueIndex:app_deploy;column:NodeName;size:255;not null"       json:"nodeName"`
-	UniqueName string    `gorm:"column:UniqueName;size:255;not null"                            json:"uniqueName"`
-	AppName    string    `gorm:"uniqueIndex:app_deploy;index:;column:AppName;size:255;not null" json:"appName"`
-	Version    string    `gorm:"column:Version;size:255;not null"                               json:"version"`
-	Status     string    `gorm:"column:Status;size:255;not null"                                json:"status"`
-	DeployUUID string    `gorm:"column:DeployUUID;index:uuid;size:255;not null"                 json:"deployUUID"`
-	CreateAt   time.Time `gorm:"column:CreateAt;not null"                                       json:"createAt"`
-	UpdateAt   time.Time `gorm:"column:UpdateAt;not null"                                       json:"updateAt"`
+	ID                 int64     `gorm:"column:Id;primary_key"                                          json:"id"`
+	ClusterId          int64     `gorm:"uniqueIndex:app_deploy;column:ClusterId;not null"               json:"clusterId"`
+	GroupId            int64     `gorm:"uniqueIndex:app_deploy;column:GroupId;not null"                 json:"groupId"`
+	UserId             int64     `gorm:"uniqueIndex:app_deploy;column:UserId;not null"                  json:"userId"`
+	NodeName           string    `gorm:"uniqueIndex:app_deploy;column:NodeName;size:255;not null"       json:"nodeName"`
+	UniqueName         string    `gorm:"column:UniqueName;size:255;not null"                            json:"uniqueName"`
+	AppName            string    `gorm:"uniqueIndex:app_deploy;index:;column:AppName;size:255;not null" json:"appName"`
+	Version            string    `gorm:"column:Version;size:255;not null"                               json:"version"`
+	ContainerImagePath string    `gorm:"column:containerImagePath;size:255;not null"                    json:"containerImagePath"`
+	Status             string    `gorm:"column:Status;size:255;not null"                                json:"status"`
+	DeployUUID         string    `gorm:"column:DeployUUID;index:uuid;size:255;not null"                 json:"deployUUID"`
+	CreateAt           time.Time `gorm:"column:CreateAt;not null"                                       json:"createAt"`
+	UpdateAt           time.Time `gorm:"column:UpdateAt;not null"                                       json:"updateAt"`
 }
 
 type PortMappingInfo struct {

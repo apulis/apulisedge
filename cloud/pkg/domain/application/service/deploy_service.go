@@ -11,6 +11,7 @@ import (
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/satori/go.uuid"
+	"gorm.io/gorm"
 	"strings"
 	"time"
 )
@@ -55,15 +56,10 @@ func ListNodeDeploys(userInfo proto.ApulisHeader, req *appmodule.ListNodeDeployR
 
 // list node can deploy
 func ListNodeCanDeploy(userInfo proto.ApulisHeader, req *appmodule.ListNodeCanDeployReq) (*[]nodeentity.NodeBasicInfo, int, error) {
-	return listNodeCanDeployOrUpdate(userInfo, req.PageSize, req.PageNum, req.AppName, req.Version, "NodeName NOT IN ?")
+	return listNodeCanDeployOrUpdate(userInfo, req.PageSize, req.PageNum, req.AppName, req.TargetVersion, "NodeName NOT IN ?")
 }
 
-// list node can update
-func ListNodeCanUpdate(userInfo proto.ApulisHeader, req *appmodule.ListNodeCanUpdateReq) (*[]nodeentity.NodeBasicInfo, int, error) {
-	return listNodeCanDeployOrUpdate(userInfo, req.PageSize, req.PageNum, req.AppName, req.Version, "NodeName IN ?")
-}
-
-func listNodeCanDeployOrUpdate(userInfo proto.ApulisHeader, pageSize, pageNum int, appName, version string, nodeQueryStr string) (*[]nodeentity.NodeBasicInfo, int, error) {
+func listNodeCanDeployOrUpdate(userInfo proto.ApulisHeader, pageSize, pageNum int, appName, targetVersion string, nodeQueryStr string) (*[]nodeentity.NodeBasicInfo, int, error) {
 	var appVerInfo appentity.ApplicationVersionInfo
 	var nodeInfos []nodeentity.NodeBasicInfo
 	var deployInfos []appentity.ApplicationDeployInfo
@@ -74,15 +70,15 @@ func listNodeCanDeployOrUpdate(userInfo proto.ApulisHeader, pageSize, pageNum in
 
 	// get app version
 	res := apulisdb.Db.Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-		userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, appName, version).
+		userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, appName, targetVersion).
 		First(&appVerInfo)
 	if res.Error != nil {
 		return &nodeInfos, total, res.Error
 	}
 
-	// get node already has deploy
-	res = apulisdb.Db.Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ?",
-		userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, appName).
+	// get node already has deploy this version
+	res = apulisdb.Db.Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
+		userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, appName, targetVersion).
 		Find(&deployInfos)
 	if res.Error != nil {
 		return &nodeInfos, total, res.Error
@@ -117,6 +113,8 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 	// get application version
 	var err error
 	var appVerInfo appentity.ApplicationVersionInfo
+	var deployInfo appentity.ApplicationDeployInfo
+	var newDeployInfo appentity.ApplicationDeployInfo
 	var nodeInfo nodeentity.NodeBasicInfo
 
 	res := apulisdb.Db.
@@ -134,7 +132,9 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 	}
 
 	totalDeploy := 0
+	var targetStatus string
 	for _, node := range req.NodeNames {
+		// get node
 		res = apulisdb.Db.
 			Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?",
 				userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, node).
@@ -144,27 +144,70 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 			continue
 		}
 
-		// store deploy info
-		deployInfo := &appentity.ApplicationDeployInfo{
-			ClusterId:  userInfo.ClusterId,
-			GroupId:    userInfo.GroupId,
-			UserId:     userInfo.UserId,
-			AppName:    req.AppName,
-			NodeName:   node,
-			UniqueName: nodeInfo.UniqueName,
-			Version:    appVerInfo.Version,
-			Status:     constants.StatusInit,
-			DeployUUID: uuid.NewV4().String(),
-			CreateAt:   time.Now(),
-			UpdateAt:   time.Now(),
+		// get deploy
+		res = apulisdb.Db.
+			Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and NodeName = ?",
+				userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, node).
+			First(&deployInfo)
+		if res.Error != nil {
+			if res.Error == gorm.ErrRecordNotFound {
+				targetStatus = constants.StatusInit
+			} else {
+				logger.Infof("get app deploy failed! node = %s, err = %v", node, err)
+				continue
+			}
+		} else {
+			targetStatus = constants.StatusUpdating
 		}
 
-		err = appentity.CreateAppDeploy(deployInfo)
-		if err != nil {
-			logger.Infof("create application deploy failed! node = %s, err = %v", node, err)
-			continue
+		if targetStatus == constants.StatusInit {
+			// store deploy info
+			deployInfo := &appentity.ApplicationDeployInfo{
+				ClusterId:          userInfo.ClusterId,
+				GroupId:            userInfo.GroupId,
+				UserId:             userInfo.UserId,
+				AppName:            req.AppName,
+				NodeName:           node,
+				UniqueName:         nodeInfo.UniqueName,
+				Version:            appVerInfo.Version,
+				ContainerImagePath: appVerInfo.ContainerImagePath,
+				Status:             constants.StatusInit,
+				DeployUUID:         uuid.NewV4().String(),
+				CreateAt:           time.Now(),
+				UpdateAt:           time.Now(),
+			}
+
+			err = appentity.CreateAppDeploy(deployInfo)
+			if err != nil {
+				logger.Infof("create application deploy failed! node = %s, err = %v", node, err)
+				continue
+			}
+			totalDeploy++
+		} else if targetStatus == constants.StatusUpdating {
+			if deployInfo.Version == req.Version {
+				logger.Infof("deploy application deploy same version, skipped! node = %s, version = %s", node, deployInfo.Version)
+				continue
+			}
+
+			if deployInfo.ContainerImagePath == appVerInfo.ContainerImagePath {
+				logger.Infof("deploy application deploy same container, skipped! node = %s, version = %s, container = %s",
+					node, deployInfo.Version, deployInfo.ContainerImagePath)
+				continue
+			}
+
+			newDeployInfo = deployInfo
+			newDeployInfo.Status = constants.StatusUpdating
+			newDeployInfo.Version = req.Version
+			newDeployInfo.UpdateAt = time.Now()
+
+			err = appentity.UpdateAppDeploy(&newDeployInfo)
+			if err != nil {
+				logger.Infof("update application deploy failed! node = %s, err = %v", node, err)
+				continue
+			}
+			totalDeploy++
 		}
-		totalDeploy++
+
 	}
 
 	if totalDeploy == len(req.NodeNames) {
@@ -173,67 +216,6 @@ func DeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.DeployEdg
 		return appmodule.ErrDeployPartFails
 	} else {
 		return appmodule.ErrDeployAllFails
-	}
-}
-
-// update deploy edge application
-func UpdateDeployEdgeApplication(userInfo proto.ApulisHeader, req *appmodule.UpdateDeployEdgeApplicationReq) error {
-	// get application version
-	var err error
-	var appVerInfo appentity.ApplicationVersionInfo
-	var deployInfo appentity.ApplicationDeployInfo
-	var newDeployInfo appentity.ApplicationDeployInfo
-
-	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and Version = ?",
-			userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, req.TargetVersion).
-		First(&appVerInfo)
-	if res.Error != nil {
-		logger.Infof("get application version info failed! err = %v", res.Error)
-		return res.Error
-	}
-
-	// check version status
-	if appVerInfo.Status != appmodule.AppStatusPublished {
-		return appmodule.ErrDeployStatusNotPublished
-	}
-
-	totalUpdate := 0
-	for _, node := range req.NodeNames {
-		// get deploy
-		res = apulisdb.Db.
-			Where("ClusterId = ? and GroupId = ? and UserId = ? and AppName = ? and NodeName = ?",
-				userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.AppName, node).
-			First(&deployInfo)
-		if res.Error != nil {
-			logger.Infof("update application deploy failed! node = %s, err = %v", node, err)
-			continue
-		}
-
-		if deployInfo.Version == req.TargetVersion {
-			logger.Infof("update application deploy same version! node = %s, version = %s", node, deployInfo.Version)
-			continue
-		}
-
-		newDeployInfo = deployInfo
-		newDeployInfo.Status = constants.StatusUpdating
-		newDeployInfo.Version = req.TargetVersion
-		newDeployInfo.UpdateAt = time.Now()
-
-		err = appentity.UpdateAppDeploy(&newDeployInfo)
-		if err != nil {
-			logger.Infof("update application deploy failed! node = %s, err = %v", node, err)
-			continue
-		}
-		totalUpdate++
-	}
-
-	if totalUpdate == len(req.NodeNames) {
-		return nil
-	} else if totalUpdate > 0 {
-		return appmodule.ErrUpdatePartFails
-	} else {
-		return appmodule.ErrUpdateAllFails
 	}
 }
 

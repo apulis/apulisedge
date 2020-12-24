@@ -89,32 +89,6 @@ func ListNodeCanDeploy(c *gin.Context) error {
 	return SuccessResp(c, &req, data)
 }
 
-// list node can update
-func ListNodeCanUpdate(c *gin.Context) error {
-	var err error
-	var req proto.Message
-	var reqContent appmodule.ListNodeCanUpdateReq
-	var nodes *[]nodeentity.NodeBasicInfo
-	var total int
-
-	userInfo, errRsp := PreHandler(c, &req, &reqContent)
-	if errRsp != nil {
-		return errRsp
-	}
-
-	// list node update
-	nodes, total, err = appservice.ListNodeCanUpdate(*userInfo, &reqContent)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
-
-	data := appmodule.ListNodeCanUpdateRsp{
-		Total: total,
-		Nodes: nodes,
-	}
-	return SuccessResp(c, &req, data)
-}
-
 // deploy edge application
 func DeployEdgeApp(c *gin.Context) error {
 	var err error
@@ -128,26 +102,6 @@ func DeployEdgeApp(c *gin.Context) error {
 
 	// deploy application
 	err = appservice.DeployEdgeApplication(*userInfo, &reqContent)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
-
-	return SuccessResp(c, &req, "OK")
-}
-
-// update deploy edge application
-func UpdateDeployEdgeApp(c *gin.Context) error {
-	var err error
-	var req proto.Message
-	var reqContent appmodule.UpdateDeployEdgeApplicationReq
-
-	userInfo, errRsp := PreHandler(c, &req, &reqContent)
-	if errRsp != nil {
-		return errRsp
-	}
-
-	// deploy application
-	err = appservice.UpdateDeployEdgeApplication(*userInfo, &reqContent)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}

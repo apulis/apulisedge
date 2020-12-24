@@ -33,10 +33,8 @@ func ApplicationHandlerRoutes(r *gin.Engine) {
 	group.POST("/listApplicationDeploy", wrapper(ListEdgeAppDeploys))
 	group.POST("/listNodeDeploy", wrapper(ListNodeDeploys))
 	group.POST("/deployApplication", wrapper(DeployEdgeApp))
-	group.POST("/updateDeployApplication", wrapper(UpdateDeployEdgeApp))
 	group.POST("/undeployApplication", wrapper(UnDeployEdgeApp))
 	group.POST("/listCanDeployNode", wrapper(ListNodeCanDeploy))
-	group.POST("/listCanUpdateNode", wrapper(ListNodeCanUpdate))
 }
 
 // list edge apps

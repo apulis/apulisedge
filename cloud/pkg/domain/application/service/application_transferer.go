@@ -74,7 +74,11 @@ func ApplicationTicker(config *configs.EdgeCloudConfig) {
 		} else {
 			for i := 0; i < int(res.RowsAffected); i++ {
 				logger.Debugf("ApplicationTicker handle application = %v", appDeployInfos[i])
-				statusHandlerMap[appDeployInfos[i].Status](&appDeployInfos[i])
+				if _, ok := statusHandlerMap[appDeployInfos[i].Status]; ok {
+					statusHandlerMap[appDeployInfos[i].Status](&appDeployInfos[i])
+				} else {
+					logger.Errorf("ApplicationTicker: No valid handler, status = %s", appDeployInfos[i].Status)
+				}
 			}
 		}
 
