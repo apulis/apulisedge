@@ -30,10 +30,17 @@ func InitDatabase(config *configs.EdgeCloudConfig) {
 		panic(err)
 	}
 
+	var lvl gormlogger.LogLevel
+	if config.DebugModel {
+		lvl = gormlogger.Info
+	} else {
+		lvl = gormlogger.Warn
+	}
+
 	newLogger := gormlogger.New(
 		log.New(logger.Out, "\r\n", log.LstdFlags),
 		gormlogger.Config{
-			LogLevel: gormlogger.Info,
+			LogLevel: lvl,
 		},
 	)
 

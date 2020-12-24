@@ -114,7 +114,7 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 
 	// node not exist in k8s, try next time
 	if !nodeExist {
-		logger.Infof("handleStatusNotInstalled name %s not exist in kubernetes. nodeName = %s", dbInfo.UniqueName, dbInfo.NodeName)
+		logger.Debugf("handleStatusNotInstalled name %s not exist in kubernetes. nodeName = %s", dbInfo.UniqueName, dbInfo.NodeName)
 		return
 	}
 
