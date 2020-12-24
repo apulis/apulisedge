@@ -7,6 +7,7 @@ APULISEDGE_CLOUD_DOCKERFLE=Dockerfile-apulisEdgeCloud
 KUBEEDGE_EDGE_DOCKERFLE=Dockerfile-kubeedgeEdge
 KUBEEDGE_CLOUD_DOCKERFLE=Dockerfile-kubeedgeCloud
 DOWNLOAD_KUBEEDGE_SCRIPT_PATH=deployment/images/download_kubeedge.sh
+ARCH= # init latter
 
 
 # ===
@@ -44,7 +45,7 @@ buildCloud()
 
 buildKubeedgeEdge()
 {
-    docker build . -f ${DOCKERFILE_DIR}/${KUBEEDGE_EDGE_DOCKERFLE} --build-arg downloadscript_path=${DOWNLOAD_KUBEEDGE_SCRIPT_PATH} arch=$(getArch "$(uname -m)") -t apulis/kubeedge-edge:1.0
+    docker build . -f ${DOCKERFILE_DIR}/${KUBEEDGE_EDGE_DOCKERFLE} --build-arg downloadscript_path=${DOWNLOAD_KUBEEDGE_SCRIPT_PATH} --build-arg arch=${ARCH} -t apulis/kubeedge-edge:1.0-${ARCH}
 }
 
 buildKubeedgeCloud()
@@ -74,6 +75,9 @@ buildApulisedge()
 
 main()
 {
+    # === init some variables
+    ARCH=$(getArch "$(uname -m)")
+
     cd ../..
     $1 $2
 }

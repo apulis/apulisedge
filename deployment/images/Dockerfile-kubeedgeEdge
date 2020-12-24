@@ -1,6 +1,7 @@
 FROM alpine:3.11 as builder
 
 WORKDIR /root/
+ARG arch=arm64
 ENV EDGE_ARCH ${arch}
 ARG downloadscript_path=download_kubeedge.sh
 ENV downloadscript_path ${downloadscript_path}
@@ -16,6 +17,9 @@ RUN chmod +x /download_kubeedge.sh;
 RUN /download_kubeedge.sh ${EDGE_ARCH}
 
 FROM ubuntu:18.04 as server
+
+ENV GODEBUG=x509ignoreCN=0
+
 COPY --from=0 /usr/local/bin/edgecore /usr/local/bin
 RUN apt-get update -y
 RUN apt-get install -y iptables
