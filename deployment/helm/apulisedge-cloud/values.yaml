@@ -1,0 +1,23 @@
+apulis:
+  namespace: default
+  cloud:
+    env:
+      harborHostName: harbor.apulis.cn
+      harborIp: 192.168.1.158
+      cloudHostName: cloud.sigsus.cn
+      cloudIp: 192.168.1.158
+      downloadSvrPort: 12315
+      kubeMasterHostName: 192.168.1.158
+      kubeMasterPort: 6443
+    replicas: 1
+    image:
+      name: apulisedge-cloud
+      repository: harbor.apulis.cn/apulisedge/apulisedge-cloud
+      tag: "1.0"
+      pullPolicy: Always
+    config:
+      dbUser: root
+      dbPass: root@123
+      dbHost: 192.168.1.158
+      portalPort: 8080
+      hubPort: 8081

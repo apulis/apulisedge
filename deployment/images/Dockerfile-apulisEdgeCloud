@@ -1,6 +1,7 @@
 FROM golang:1.13.7-alpine3.11 as builder
 
 ENV GO111MODULE on
+ENV GOPROXY https://goproxy.cn,direct
 RUN umask 022
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
@@ -10,7 +11,7 @@ RUN apk --no-cache add curl git build-base
 
 RUN mkdir -p /go/src/apulis
 ADD ./cloud /go/src/apulis
-RUN cd /go/src/apulis/cmd; GO111MODULE=${GO111MODULE} go build -o /go/bin/ApulisEdgeCloud;
+RUN cd /go/src/apulis/cmd; GO111MODULE=${GO111MODULE} go build -v -o /go/bin/ApulisEdgeCloud;
 
 
 FROM alpine:3.11 as server
