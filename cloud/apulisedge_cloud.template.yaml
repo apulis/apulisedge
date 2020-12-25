@@ -34,6 +34,8 @@ Authentication:
   AiArtsAuth:
     key: "Sign key for JWT"
 
+DebugModel: false
+
 Clusters:
   - Id: 0
     Desc: "for test"
