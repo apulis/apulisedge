@@ -4,10 +4,10 @@ metadata:
   name: apulisedge
 spec:
   rules:
-    - http:
+    - host: edge.apulis.cn
+      http:
         paths:
-          - path: /apulisEdge
-            pathType: Prefix
-            backend:
-              serviceName: apulisedge-cloud
-              servicePort: 80
+        - path: /apulisEdge
+          backend:
+            serviceName: apulisedge-cloud
+            servicePort: 80

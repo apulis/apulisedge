@@ -32,7 +32,7 @@ data:
       Password: {{ .dbPass }}
       Host: {{ .dbHost }}
       Port: 3306
-      Database: ApulisEdgeCloudDB
+      Database: {{ .database }}
       MaxOpenConns: 10
       MaxIdleConns: 2
 

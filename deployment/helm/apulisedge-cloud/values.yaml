@@ -21,3 +21,4 @@ apulis:
       dbHost: 192.168.1.158
       portalPort: 8080
       hubPort: 8081
+      database: ApulisEdgeCloudDB
