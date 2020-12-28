@@ -3,8 +3,9 @@
 package nodeentity
 
 import (
-	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	"time"
+
+	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 )
 
 // table contants
@@ -32,6 +33,17 @@ type NodeBasicInfo struct {
 	OuterIp          string    `gorm:"column:OuterIp;size:255"                                 json:"outerIp"`
 	CreateAt         time.Time `gorm:"column:CreateAt;not null"                                json:"createAt"`
 	UpdateAt         time.Time `gorm:"column:UpdateAt;not null"                                json:"updateAt"`
+}
+
+// NodeOfBatchInfo is one case of batch before comfirmation
+type NodeOfBatchInfo struct {
+	ID       int64     `gorm:"column:Id;primary_key"                                   json:"id"`
+	NodeName string    `gorm:"uniqueIndex:user_node;column:NodeName;size:255;not null" json:"name"`
+	Address  string    `gorm:"column:Address" json:"address"`
+	Port     string    `gorm:"column:Port" json:"port"`
+	Password string    `gorm:"column:Password" json:"password"`
+	CreateAt time.Time `gorm:"column:CreateAt;not null"                                json:"createAt"`
+	UpdateAt time.Time `gorm:"column:UpdateAt;not null"                                json:"updateAt"`
 }
 
 func (NodeBasicInfo) TableName() string {

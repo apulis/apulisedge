@@ -4,7 +4,7 @@ package httpserver
 
 import (
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
-	"github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 	"github.com/gin-gonic/gin"
@@ -23,6 +23,7 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group.POST("/scripts", wrapper(GetInstallScripts))
 	group.POST("/listType", wrapper(ListEdgeNodeType))
 	group.POST("/listArchType", wrapper(ListArchType))
+	group.POST("/file", wrapper(UploadNodeFile))
 }
 
 // @Summary create edge node
@@ -197,5 +198,38 @@ func ListArchType(c *gin.Context) error {
 	data := nodemodule.ListArchTypeRsp{
 		Types: tys,
 	}
+	return SuccessResp(c, &req, data)
+}
+
+func UploadNodeFile(c *gin.Context) error {
+	var req proto.Message
+	data := "success"
+	file, err := c.FormFile("data")
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+	err = c.SaveUploadedFile(file, "/tmp/apulisedge/upload/nodeBatch")
+
+	return SuccessResp(c, &req, data)
+}
+
+func GetTempNodesBatchList(c *gin.Context) error {
+	var req proto.Message
+	data := "success"
+
+	return SuccessResp(c, &req, data)
+}
+
+func ConfirmNodesBatch(c *gin.Context) error {
+	var req proto.Message
+	data := "success"
+
+	return SuccessResp(c, &req, data)
+}
+
+func DeleteNodeOfBatch(c *gin.Context) error {
+	var req proto.Message
+	data := "success"
+
 	return SuccessResp(c, &req, data)
 }

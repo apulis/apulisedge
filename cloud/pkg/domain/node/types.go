@@ -11,6 +11,7 @@ const (
 	StatusOnline       string = "Online"
 	StatusOffline      string = "Offline"
 	StatusNotInstalled string = "NotInstalled"
+	StatusInstalling   string = "Installing"
 	StatusDeleting     string = "Deleting"
 )
 
