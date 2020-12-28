@@ -3,8 +3,9 @@
 package nodeentity
 
 import (
-	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 	"time"
+
+	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
 )
 
 // table contants
@@ -34,6 +35,23 @@ type NodeBasicInfo struct {
 	UpdateAt         time.Time `gorm:"column:UpdateAt;not null"                                json:"updateAt"`
 }
 
+// NodeOfBatchInfo is one case of batch before comfirmation
+type NodeOfBatchInfo struct {
+	ID        int64     `gorm:"column:Id;primary_key"                                   json:"id"`
+	ClusterId int64     `gorm:"uniqueIndex:user_node;column:ClusterId;not null"         json:"clusterId"`
+	GroupId   int64     `gorm:"uniqueIndex:user_node;column:GroupId;not null"           json:"groupId"`
+	UserId    int64     `gorm:"uniqueIndex:user_node;column:UserId;not null"            json:"userId"`
+	NodeName  string    `gorm:"uniqueIndex:user_node;column:NodeName;size:255;not null" json:"name"`
+	NodeType  string    `gorm:"column:NodeType;size:128;not null"                       json:"nodeType"`
+	Arch      string    `gorm:"column:Arch;size:128;not null"                           json:"arch"`
+	Address   string    `gorm:"column:Address" json:"address"`
+	Port      string    `gorm:"column:Port" json:"port"`
+	Sudoer    string    `gorm:"column:Sudoer"                                         json:"sudoer"`
+	Password  string    `gorm:"column:Password" json:"password"`
+	CreateAt  time.Time `gorm:"column:CreateAt;not null"                                json:"createAt"`
+	UpdateAt  time.Time `gorm:"column:UpdateAt;not null"                                json:"updateAt"`
+}
+
 func (NodeBasicInfo) TableName() string {
 	return TableNodeBasicInfo
 }
@@ -47,5 +65,9 @@ func UpdateNode(nodeInfo *NodeBasicInfo) error {
 }
 
 func DeleteNode(nodeInfo *NodeBasicInfo) error {
+	return apulisdb.Db.Delete(nodeInfo).Error
+}
+
+func DeleteNodeOfBatch(nodeInfo *NodeOfBatchInfo) error {
 	return apulisdb.Db.Delete(nodeInfo).Error
 }

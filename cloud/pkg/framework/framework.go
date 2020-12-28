@@ -4,14 +4,15 @@ package framework
 
 import (
 	"context"
-	"github.com/apulis/ApulisEdge/cloud/pkg/channel"
-	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
-	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
-	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/apulis/ApulisEdge/cloud/pkg/channel"
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
+	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
+	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"github.com/apulis/ApulisEdge/cloud/pkg/database"
@@ -152,6 +153,7 @@ func (app *CloudApp) InitClusters() {
 
 func (app *CloudApp) InitTables() {
 	database.CreateTableIfNotExists(nodeentity.NodeBasicInfo{})
+	database.CreateTableIfNotExists(nodeentity.NodeOfBatchInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationBasicInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationVersionInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationDeployInfo{})

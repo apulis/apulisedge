@@ -3,7 +3,7 @@
 package node
 
 import (
-	"github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 )
 
 // TODO add param validate, like node.ListEdgeNodesReq
@@ -46,6 +46,9 @@ type DeleteEdgeNodeReq struct {
 type DeleteEdgeNodeRsp struct {
 }
 
+type DeleteNodeOfBatchReq struct {
+	Name string `json:"name" validate:"required"`
+}
 type GetInstallScriptReq struct {
 	Name string `json:"name" validate:"required"`
 	Arch string `json:"arch" validate:"required"`

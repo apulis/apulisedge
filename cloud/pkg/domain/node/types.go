@@ -11,6 +11,7 @@ const (
 	StatusOnline       string = "Online"
 	StatusOffline      string = "Offline"
 	StatusNotInstalled string = "NotInstalled"
+	StatusInstalling   string = "Installing"
 	StatusDeleting     string = "Deleting"
 )
 
@@ -25,6 +26,8 @@ const (
 const (
 	TransferCountEach int = 10
 )
+
+var CSVSavePath string = "/tmp/apulisedge/upload/nodeBatch"
 
 // node types
 var TypesOfNode = []string{"Raspberrypi 4B", "Atlas 500"}
