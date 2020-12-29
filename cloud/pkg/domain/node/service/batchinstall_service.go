@@ -3,6 +3,7 @@ package nodeservice
 import (
 	"encoding/csv"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -14,8 +15,19 @@ import (
 	proto "github.com/apulis/ApulisEdge/cloud/pkg/protocol"
 )
 
-func AnalyzeCSV(userInfo proto.ApulisHeader) error {
-	filein, err := ioutil.ReadFile(nodemodule.CSVSavePath)
+func init() {
+	_, err := os.Stat(nodemodule.CSVSavePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			os.MkdirAll(nodemodule.CSVSavePath, 0755)
+		} else {
+			logger.Panicln("Fatal create file directory error: %s", err)
+		}
+	}
+}
+
+func AnalyzeCSV(userInfo proto.ApulisHeader, filePath string) error {
+	filein, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		logger.Errorln(err.Error())
 		return err
@@ -26,8 +38,31 @@ func AnalyzeCSV(userInfo proto.ApulisHeader) error {
 		logger.Errorln(err.Error())
 		return err
 	}
-	for _, line := range records {
-		logger.Infoln(line)
+	titles := records[0]
+	titlesMap := make(map[string]int)
+	for i := 0; i < len(titles); i++ {
+		titlesMap[titles[i]] = i
+	}
+	for i := 1; i < len(records); i++ {
+		line := records[i]
+		batchNode := &nodeentity.NodeOfBatchInfo{
+			ClusterId: userInfo.ClusterId,
+			GroupId:   userInfo.GroupId,
+			UserId:    userInfo.UserId,
+			NodeName:  line[titlesMap["name"]],
+			NodeType:  line[titlesMap["nodeType"]],
+			Arch:      line[titlesMap["arch"]],
+			Address:   line[titlesMap["ip"]],
+			Port:      line[titlesMap["port"]],
+			Sudoer:    line[titlesMap["sudoer"]],
+			Password:  line[titlesMap["password"]],
+			CreateAt:  time.Now(),
+			UpdateAt:  time.Now(),
+		}
+		err := nodeentity.CreateNodeOfBatch(batchNode)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -36,9 +71,15 @@ func AnalyzeCSV(userInfo proto.ApulisHeader) error {
 func ListBatchList(userInfo proto.ApulisHeader) (*[]nodeentity.NodeOfBatchInfo, error) {
 	var batchInfos []nodeentity.NodeOfBatchInfo
 
+	logger.Infoln("get db")
+	logger.Infoln(userInfo.ClusterId)
+	logger.Infoln(userInfo.GroupId)
+	logger.Infoln(userInfo.UserId)
 	res := apulisdb.Db.
 		Where("ClusterId = ? and GroupId = ? and UserId = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId).
 		Find(&batchInfos)
+	logger.Infoln("get done")
+	logger.Infoln(batchInfos)
 
 	if res.Error != nil {
 		return &batchInfos, res.Error
@@ -95,7 +136,7 @@ func DeleteNodeOfBatch(userInfo proto.ApulisHeader, req *nodemodule.DeleteNodeOf
 	var nodeOfBatchInfo nodeentity.NodeOfBatchInfo
 
 	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.Name).
+		Where("ClusterId = ? and GroupId = ? and UserId = ? and ID = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, req.ID).
 		First(&nodeOfBatchInfo)
 	if res.Error != nil {
 		return res.Error

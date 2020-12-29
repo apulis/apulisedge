@@ -47,7 +47,7 @@ type DeleteEdgeNodeRsp struct {
 }
 
 type DeleteNodeOfBatchReq struct {
-	Name string `json:"name" validate:"required"`
+	ID int64 `json:"id" validate:"required"`
 }
 type GetInstallScriptReq struct {
 	Name string `json:"name" validate:"required"`

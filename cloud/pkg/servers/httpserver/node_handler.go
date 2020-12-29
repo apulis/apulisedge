@@ -3,6 +3,9 @@
 package httpserver
 
 import (
+	"path"
+	"time"
+
 	nodemodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/node"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
@@ -23,7 +26,11 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group.POST("/scripts", wrapper(GetInstallScripts))
 	group.POST("/listType", wrapper(ListEdgeNodeType))
 	group.POST("/listArchType", wrapper(ListArchType))
-	group.POST("/file", wrapper(UploadNodeFile))
+
+	group.POST("/batchcsv", wrapper(UploadNodeFile))
+	group.POST("/batch", wrapper(ConfirmNodesBatch))
+	group.GET("/batch", wrapper(GetTempNodesBatchList))
+	group.DELETE("/batch", wrapper(DeleteNodeOfBatch))
 }
 
 // @Summary create edge node
@@ -208,26 +215,37 @@ func UploadNodeFile(c *gin.Context) error {
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
-	err = c.SaveUploadedFile(file, nodemodule.CSVSavePath)
+	csvPath := path.Join(nodemodule.CSVSavePath, time.Now().Format(time.RFC3339)+".csv")
+	err = c.SaveUploadedFile(file, csvPath)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
-
-	var reqContent nodemodule.CreateEdgeNodeReq
-	userInfo, errRsp := PreHandler(c, &req, &reqContent)
-	if errRsp != nil {
-		return errRsp
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
-	go nodeservice.AnalyzeCSV(*userInfo)
+	go nodeservice.AnalyzeCSV(userInfo, csvPath)
 
 	return SuccessResp(c, &req, data)
 }
 
 func GetTempNodesBatchList(c *gin.Context) error {
 	var req proto.Message
-	data := "success"
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	var err error
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+	batchList, err := nodeservice.ListBatchList(userInfo)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
 
-	return SuccessResp(c, &req, data)
+	return SuccessResp(c, &req, batchList)
 }
 
 func ConfirmNodesBatch(c *gin.Context) error {
@@ -239,7 +257,16 @@ func ConfirmNodesBatch(c *gin.Context) error {
 
 func DeleteNodeOfBatch(c *gin.Context) error {
 	var req proto.Message
+	var reqContent nodemodule.DeleteNodeOfBatchReq
 	data := "success"
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+	err := nodeservice.DeleteNodeOfBatch(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
 
 	return SuccessResp(c, &req, data)
 }

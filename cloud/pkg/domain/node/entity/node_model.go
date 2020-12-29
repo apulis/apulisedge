@@ -68,6 +68,10 @@ func DeleteNode(nodeInfo *NodeBasicInfo) error {
 	return apulisdb.Db.Delete(nodeInfo).Error
 }
 
+func CreateNodeOfBatch(nodeInfo *NodeOfBatchInfo) error {
+	return apulisdb.Db.Create(nodeInfo).Error
+}
+
 func DeleteNodeOfBatch(nodeInfo *NodeOfBatchInfo) error {
 	return apulisdb.Db.Delete(nodeInfo).Error
 }
