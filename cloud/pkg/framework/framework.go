@@ -4,17 +4,13 @@ package framework
 
 import (
 	"context"
-	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
-	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
-	"github.com/apulis/ApulisEdge/cloud/pkg/channel"
 	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
-	imageservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/service"
 
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"github.com/apulis/ApulisEdge/cloud/pkg/database"
