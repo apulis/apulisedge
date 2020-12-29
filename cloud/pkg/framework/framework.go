@@ -4,6 +4,8 @@ package framework
 
 import (
 	"context"
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
+	imageentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/image/entity"
 	"os"
 	"os/signal"
 	"sync"
@@ -17,9 +19,7 @@ import (
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"github.com/apulis/ApulisEdge/cloud/pkg/database"
 	appentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
-	applicationservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/service"
 	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
-	nodeservice "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/service"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	"github.com/apulis/ApulisEdge/cloud/pkg/servers/httpserver"
 	"github.com/urfave/cli/v2"
@@ -104,15 +104,6 @@ func (app *CloudApp) MainLoop() error {
 
 	// init clusters
 	app.InitClusters()
-
-	// msg chan
-	msgChanContext := channel.ChanContextInstance()
-	msgChanContext.AddChannel(channel.ModuleNameContainerImage, msgChanContext.NewChannel())
-
-	// init ticker
-	go nodeservice.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
-	go applicationservice.CreateApplicationTickerLoop(app.tickerCtx, &app.cloudConfig)
-	go imageservice.ImageAsyncHandleLoop(app.tickerCtx, &app.cloudConfig)
 
 	// quit when signal notifys
 	quit := make(chan os.Signal)

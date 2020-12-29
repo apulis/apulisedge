@@ -69,7 +69,10 @@ func HandleNotFound(c *gin.Context) {
 	_ = c.ShouldBindJSON(&req)
 	rsp, _ := ErrorResp(c, &req, NOT_FOUND_ERROR_CODE, http.StatusText(http.StatusNotFound))
 	c.JSON(http.StatusNotFound, rsp)
+}
 
+func HandleProb(c *gin.Context) {
+	c.JSON(http.StatusOK, "OK")
 }
 
 func ErrorNoBodyResp(code int, msg string) *APIErrorResp {

@@ -63,6 +63,33 @@ LOG_ERROR()
 
 envCheck()
 {
+    # check linux core version
+    main=`uname -r | awk -F . '{print $1}'`
+    minor=`uname -r | awk -F . '{print $2}'`
+    if [ "$main" -ge 3 ]; then
+        if [ "$minor" -lt 10 ]; then
+            LOG_ERROR "Linux core version is too old to support!"
+            return 1
+        fi
+    else
+        LOG_ERROR "Linux core version is too old to support!"
+        return 1
+    fi
+    # check cgroups
+    if [[ ! -e "/proc/cgroups" ]]; then
+        LOG_ERROR "Can't find /proc/cgroups! System might not support cgroups."
+        return 1
+    else
+        for subsystem in `cat /proc/cgroups`
+        do
+            subsystem_name=$(echo ${subsystem} | awk '{print $1}')
+            is_enabled=$(echo ${subsystem} | awk '{print $4}')
+            if [ ! "$is_enabled" = 1 ]; then
+                LOG_ERROR "Cgroups $subsystem_name is not enabled."
+                return 1
+            fi
+        done
+    fi
     # === check no kubeedge
     containerID=`docker ps | grep ${KUBEEDGE_EDGE_IMAGE} | awk '{print $1}'`
     if [[ "$containerID" != "" ]]; then

@@ -30,4 +30,4 @@ const (
 var CSVSavePath string = "/tmp/apulisedge/upload/nodeBatch"
 
 // node types
-var TypesOfNode = []string{"Raspberrypi 4B", "Atlas 500"}
+var TypesOfNode = []string{"Raspberrypi 4B", "Atlas 500", "Generic"}

@@ -1,6 +1,6 @@
 // Copyright 2020 Apulis Technology Inc. All rights reserved.
 
-package applicationservice
+package applicationticker
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	appmodule "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	constants "github.com/apulis/ApulisEdge/cloud/pkg/domain/application"
 	applicationentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/application/entity"
+	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -19,6 +20,8 @@ import (
 	"k8s.io/utils/pointer"
 	"time"
 )
+
+var logger = loggers.LogInstance()
 
 type statusHandler func(appDeployInfo *applicationentity.ApplicationDeployInfo)
 
