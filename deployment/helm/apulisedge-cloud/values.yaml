@@ -1,10 +1,11 @@
+clusterDomain: cluster.local
 apulis:
   namespace: default
   cloud:
     env:
       harborHostName: harbor.apulis.cn
       harborIp: 192.168.1.158
-      cloudHostName: cloud.sigsus.cn
+      cloudHostName: cloud.apulis.cn
       cloudIp: 192.168.1.158
       downloadSvrPort: 12315
       kubeMasterHostName: 192.168.1.158
@@ -12,13 +13,24 @@ apulis:
     replicas: 1
     image:
       name: apulisedge-cloud
-      repository: harbor.apulis.cn/apulisedge/apulisedge-cloud
+      repository: harbor.apulis.cn:8443/apulisedge/apulisedge-cloud
       tag: "1.0"
       pullPolicy: Always
     config:
-      dbUser: root
-      dbPass: root@123
-      dbHost: 192.168.1.158
       portalPort: 8080
       hubPort: 8081
       database: ApulisEdgeCloudDB
+      nodeCheckerInterval: 30
+      applicationCheckerInterval: 30
+  mysql:
+    # full domain: {dbSubDomain}.{namespace}.svc.{clusterDomain}, like ==> mysql.apulis.svc.cluster.local
+    dbAppName: apulisedge-mysql
+    dbUser: root
+    dbPass: root@123
+    image:
+      repository: harbor.apulis.cn:8443/apulisedge/mysql/mysql-server
+      tag: "8.0"
+
+
+
+

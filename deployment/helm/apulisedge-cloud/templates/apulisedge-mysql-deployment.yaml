@@ -1,0 +1,67 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ .Values.apulis.mysql.dbAppName }}
+  namespace: {{ .Values.apulis.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.apulis.mysql.dbAppName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.apulis.mysql.dbAppName }}
+    spec:
+      nodeSelector:
+        mysql-server: active
+        archType: amd64
+      initContainers:
+      - name: mysql-init
+        image: docker.io/library/busybox:1.32.0
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - "-c"
+        - |
+          set -ex
+          cat > /docker-entrypoint-initdb.d/mysql-apulisedge-init.sql <<EOF
+          create database {{ .Values.apulis.cloud.config.database }} default character set utf8;
+          EOF
+        volumeMounts:
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+      containers:
+      - name: mysql
+        image: "{{ .Values.apulis.mysql.image.repository }}:{{ .Values.apulis.mysql.image.tag }}"
+        env:
+        - name: MYSQL_ROOT_HOST
+          value: "{{ .Values.apulis.mysql.dbAppName }}.{{ .Values.apulis.namespace }}.svc.{{ .Values.clusterDomain }}"
+        - name: MYSQL_ROOT_PASSWORD
+          value: {{ .Values.apulis.mysql.dbPass }}
+        ports:
+        - name: mysql
+          containerPort: 3306
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        - name: mysql-log
+          mountPath: /var/log/mysql
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+      imagePullSecrets:
+      - name: svccred
+      volumes:
+      - name: mysql-storage
+        hostPath:
+          path: /var/lib/mysql
+      - name: mysql-log
+        hostPath:
+          path: /var/log/mysql
+      - name: mysql-initdb
+        emptyDir: {}
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
