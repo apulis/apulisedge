@@ -1,0 +1,64 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ .Values.mysql.dbAppName }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mysql.dbAppName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mysql.dbAppName }}
+    spec:
+      nodeSelector:
+        mysql-server: active
+        archType: amd64
+      initContainers:
+      - name: mysql-init
+        image: docker.io/library/busybox:1.32.0
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - "-c"
+        - |
+          set -ex
+          cat > /docker-entrypoint-initdb.d/mysql-apulis-init.sql <<EOF
+          CREATE USER '{{ .Values.mysql.dbUser }}'@'%' IDENTIFIED BY '{{ .Values.mysql.dbPass }}';
+          GRANT ALL ON *.* TO '{{ .Values.mysql.dbUser }}'@'%';
+          FLUSH PRIVILEGES;
+          EOF
+        volumeMounts:
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+      containers:
+      - name: mysql
+        image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
+        ports:
+        - name: mysql
+          containerPort: 3306
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        - name: mysql-log
+          mountPath: /var/log/mysql
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+      imagePullSecrets:
+      - name: svccred
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: apulis-mysql-data-pvc
+      - name: mysql-log
+        persistentVolumeClaim:
+          claimName: apulis-mysql-log-pvc
+      - name: mysql-initdb
+        emptyDir: {}
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

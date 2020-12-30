@@ -1,0 +1,32 @@
+{{- $setNfs := (eq .Values.mysql.persistentVolumeType "nfs") }}
+{{- if $setNfs }}
+{{- range .Values.mysql.persistentVolumes }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .name }}
+spec:
+  capacity:
+    storage: {{ .capacity }}
+  accessModes:
+    - ReadWriteMany
+  storageClassName: manual
+  mountOptions:
+    - timeo=20
+    - tcp
+  nfs:
+    {{- if not (empty $.Values.mysql.nfsServer) }}
+    server: {{ $.Values.mysql.nfsServer }}
+    {{- end }}
+    {{- if not (empty .path) }}
+    path: {{ .path }}
+    {{- end }}
+{{- end }}
+{{- end }}
+
+
+
+
+
+

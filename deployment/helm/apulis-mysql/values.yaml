@@ -1,0 +1,25 @@
+namespace: default
+mysql:
+  dbAppName: apulis-mysql
+  dbUser: root
+  dbPass: root@123
+  image:
+    repository: docker.io/mysql/mysql-server
+    tag: "8.0"
+
+  dataClaimCapacity: 1000Mi
+  logClaimCapacity: 1000Mi
+
+  persistentVolumeType: nfs
+  nfsServer: 172.16.16.3
+  persistentVolumes:
+    - name: apulis-mysql-v1
+      capacity: 1000Mi
+      path: /apulis/mysql/v1
+    - name: apulis-mysql-v2
+      capacity: 1000Mi
+      path: /apulis/mysql/v2
+
+
+
+
