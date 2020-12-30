@@ -9,10 +9,11 @@ RUN mkdir -p /etc/apulisedge
 RUN apk update
 RUN apk --no-cache add curl git build-base
 
-RUN mkdir -p /go/src/apulis
-ADD ./cloud /go/src/apulis
-RUN cd /go/src/apulis/cmd; GO111MODULE=${GO111MODULE} go build -v -o /go/bin/ApulisEdgeCloud;
-
+RUN mkdir -p /go/src
+RUN mkdir -p /go/bin
+RUN cd /go/src; git clone https://oauth2:FaEZpionqFc619w_3UvB@apulis-gitlab.apulis.cn/apulis/apulisedge.git apulisedge
+RUN cd /go/src/apulisedge; git checkout feature/cloud_dev
+RUN cd /go/src/apulisedge/cloud/cmd; GO111MODULE=${GO111MODULE} go build -v -o /go/bin/ApulisEdgeCloud
 
 FROM alpine:3.11 as server
 RUN apk --no-cache add ca-certificates libdrm

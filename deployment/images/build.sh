@@ -40,7 +40,7 @@ buildAgent()
 
 buildCloud()
 {
-    docker build . -f ${DOCKERFILE_DIR}/${APULISEDGE_CLOUD_DOCKERFLE} -t apulis/apulisedge-cloud:1.0
+    docker build . -f ${DOCKERFILE_DIR}/${APULISEDGE_CLOUD_DOCKERFLE} -t apulis/apulisedge-cloud:1.1
 }
 
 buildKubeedgeEdge()
