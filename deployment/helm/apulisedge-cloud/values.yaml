@@ -31,6 +31,19 @@ apulis:
       repository: harbor.apulis.cn:8443/apulisedge/mysql/mysql-server
       tag: "8.0"
 
+    dataClaimCapacity: 1000Mi
+    logClaimCapacity: 1000Mi
+
+    persistentVolumeType: nfs
+    nfsServer: 192.168.1.199
+    persistentVolumes:
+      - name: apulisedge-mysql-v1
+        capacity: 1000Mi
+        path: /data/nfs-share-dir/apulisedge/v1
+      - name: apulisedge-mysql-v2
+        capacity: 1000Mi
+        path: /data/nfs-share-dir/apulisedge/v2
+
 
 
 

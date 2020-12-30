@@ -23,9 +23,9 @@ Db:
   UserName: root
   Password: root@123
   Host: 127.0.0.1
-  Port: 3306
+  Port: 3366
   # ApulisEdgeCloudDB
-  Database: CloudDB
+  Database: kkdb
   MaxOpenConns: 10
   MaxIdleConns: 2
 

@@ -26,7 +26,10 @@ spec:
         - |
           set -ex
           cat > /docker-entrypoint-initdb.d/mysql-apulisedge-init.sql <<EOF
-          create database {{ .Values.apulis.cloud.config.database }} default character set utf8;
+          CREATE DATABASE {{ .Values.apulis.cloud.config.database }} DEFAULT CHARACTER SET UTF8;
+          CREATE USER '{{ .Values.apulis.mysql.dbUser }}'@'%' IDENTIFIED BY '{{ .Values.apulis.mysql.dbPass }}';
+          GRANT ALL ON *.* TO '{{ .Values.apulis.mysql.dbUser }}'@'%';
+          FLUSH PRIVILEGES;
           EOF
         volumeMounts:
         - name: mysql-initdb
@@ -34,11 +37,6 @@ spec:
       containers:
       - name: mysql
         image: "{{ .Values.apulis.mysql.image.repository }}:{{ .Values.apulis.mysql.image.tag }}"
-        env:
-        - name: MYSQL_ROOT_HOST
-          value: "{{ .Values.apulis.mysql.dbAppName }}.{{ .Values.apulis.namespace }}.svc.{{ .Values.clusterDomain }}"
-        - name: MYSQL_ROOT_PASSWORD
-          value: {{ .Values.apulis.mysql.dbPass }}
         ports:
         - name: mysql
           containerPort: 3306
@@ -53,11 +51,11 @@ spec:
       - name: svccred
       volumes:
       - name: mysql-storage
-        hostPath:
-          path: /var/lib/mysql
+        persistentVolumeClaim:
+          claimName: apulisedge-mysql-data-pvc
       - name: mysql-log
-        hostPath:
-          path: /var/log/mysql
+        persistentVolumeClaim:
+          claimName: apulisedge-mysql-log-pvc
       - name: mysql-initdb
         emptyDir: {}
       tolerations:
