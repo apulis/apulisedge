@@ -46,6 +46,24 @@ type DeleteEdgeNodeReq struct {
 type DeleteEdgeNodeRsp struct {
 }
 
+type CreateNodeOfBatchReq struct {
+	Name     string `json:"name" validate:"required"`
+	NodeType string `json:"nodeType" validate:"required"`
+	Arch     string `json:"arch" validate:"required"`
+	Address  string `json:"address" validate:"required"`
+	Port     string `json:"port" validate:"required"`
+	Sudoer   string `json:"sudoer" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+type ListNodeOfBatchReq struct {
+	PageSize int `json:"pageSize" validate:"required"`
+	PageNum  int `json:"pageNum" validate:"required"`
+}
+type ListNodeOfBatchRsp struct {
+	Status   string                       `json:"status"`
+	NodeList []nodeentity.NodeOfBatchInfo `json:"nodeList"`
+}
 type DeleteNodeOfBatchReq struct {
 	ID int64 `json:"id" validate:"required"`
 }

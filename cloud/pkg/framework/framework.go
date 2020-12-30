@@ -141,6 +141,7 @@ func (app *CloudApp) InitClusters() {
 func (app *CloudApp) InitTables() {
 	database.CreateTableIfNotExists(nodeentity.NodeBasicInfo{})
 	database.CreateTableIfNotExists(nodeentity.NodeOfBatchInfo{})
+	database.CreateTableIfNotExists(nodeentity.BatchTaskRecord{})
 	database.CreateTableIfNotExists(appentity.ApplicationBasicInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationVersionInfo{})
 	database.CreateTableIfNotExists(appentity.ApplicationDeployInfo{})

@@ -48,6 +48,19 @@ type NodeOfBatchInfo struct {
 	Port      string    `gorm:"column:Port" json:"port"`
 	Sudoer    string    `gorm:"column:Sudoer"                                         json:"sudoer"`
 	Password  string    `gorm:"column:Password" json:"password"`
+	IsConfirm bool      `gorm:"column:IsConfirm" json:"isConfirm"`
+	CreateAt  time.Time `gorm:"column:CreateAt;not null"                                json:"createAt"`
+	UpdateAt  time.Time `gorm:"column:UpdateAt;not null"                                json:"updateAt"`
+}
+
+type BatchTaskRecord struct {
+	ID        int64     `gorm:"column:Id;primary_key"                                   json:"id"`
+	ClusterId int64     `gorm:"uniqueIndex:user_node;column:ClusterId;not null"         json:"clusterId"`
+	GroupId   int64     `gorm:"uniqueIndex:user_node;column:GroupId;not null"           json:"groupId"`
+	UserId    int64     `gorm:"uniqueIndex:user_node;column:UserId;not null"            json:"userId"`
+	Status    string    `gorm:"column:Status" json:"status"`
+	ErrMsg    string    `gorm:"column:ErrMsg" json:"errMsg"`
+	FilePath  string    `gorm:"column:FilePath" json:"filePath"`
 	CreateAt  time.Time `gorm:"column:CreateAt;not null"                                json:"createAt"`
 	UpdateAt  time.Time `gorm:"column:UpdateAt;not null"                                json:"updateAt"`
 }
@@ -74,4 +87,16 @@ func CreateNodeOfBatch(nodeInfo *NodeOfBatchInfo) error {
 
 func DeleteNodeOfBatch(nodeInfo *NodeOfBatchInfo) error {
 	return apulisdb.Db.Delete(nodeInfo).Error
+}
+
+func ConfirmNodesBatch(nodeInfo *NodeOfBatchInfo) error {
+	return apulisdb.Db.Model(nodeInfo).Update("IsConfirm", true).Error
+}
+
+func CreateBatchTask(taskInfo *BatchTaskRecord) error {
+	return apulisdb.Db.Create(taskInfo).Error
+}
+
+func FinishBatchTask(taskInfo *BatchTaskRecord) error {
+	return apulisdb.Db.Model(taskInfo).Update("Status", "finish").Error
 }

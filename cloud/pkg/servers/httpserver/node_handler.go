@@ -28,6 +28,7 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group.POST("/listArchType", wrapper(ListArchType))
 
 	group.POST("/batchcsv", wrapper(UploadNodeFile))
+	group.POST("/batchnode", wrapper(AddBatchNode))
 	group.POST("/batch", wrapper(ConfirmNodesBatch))
 	group.GET("/batch", wrapper(GetTempNodesBatchList))
 	group.DELETE("/batch", wrapper(DeleteNodeOfBatch))
@@ -226,31 +227,63 @@ func UploadNodeFile(c *gin.Context) error {
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
-	go nodeservice.AnalyzeCSV(userInfo, csvPath)
+	err = nodeservice.AnalyzeCSV(userInfo, csvPath)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+
+	return SuccessResp(c, &req, data)
+}
+
+func AddBatchNode(c *gin.Context) error {
+	var req proto.Message
+	var reqContent nodemodule.CreateNodeOfBatchReq
+	data := "success"
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return errRsp
+	}
+	err := nodeservice.AddOneRecord(*userInfo, &reqContent)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
 
 	return SuccessResp(c, &req, data)
 }
 
 func GetTempNodesBatchList(c *gin.Context) error {
 	var req proto.Message
+	var reqContent nodemodule.ListNodeOfBatchReq
 	// get user info, user info comes from authentication
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return AppError(c, &req, APP_ERROR_CODE, errRsp.Error())
+	}
+	batchList, err := nodeservice.ListBatchList(userInfo, reqContent.PageSize, reqContent.PageNum)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+	rspContent := nodemodule.ListNodeOfBatchRsp{
+		Status:   "loaded",
+		NodeList: *batchList,
+	}
+
+	return SuccessResp(c, &req, rspContent)
+}
+
+func ConfirmNodesBatch(c *gin.Context) error {
+	var req proto.Message
+	data := "success"
 	userInfo := proto.ApulisHeader{}
 	var err error
 	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
-	batchList, err := nodeservice.ListBatchList(userInfo)
+	err = nodeservice.UpdateBatch(userInfo)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
-
-	return SuccessResp(c, &req, batchList)
-}
-
-func ConfirmNodesBatch(c *gin.Context) error {
-	var req proto.Message
-	data := "success"
 
 	return SuccessResp(c, &req, data)
 }
