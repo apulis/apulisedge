@@ -6,14 +6,17 @@ controller:
     tag: "v0.42.0"
     digest: sha256:2c775a0059ed95fe2ce6cfaa57f8430ab1a2e9b35591b454b03f264d8877c4ad
     pullPolicy: IfNotPresent
-  deployment:
-    replicas: 3
+  # DaemonSet or Deployment, DaemonSet use host network; Deployment use NodePort
+  kind: DaemonSet
+  #deployment:
+  #  replicas: 3
+
   nodeSelector:
     ingress-nginx: active
     archType: amd64
+
 webhooks:
   job:
     image:
       repository: docker.io/jettech/kube-webhook-certgen:v1.5.0
       pullPolicy: IfNotPresent
-

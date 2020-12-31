@@ -1,0 +1,11 @@
+kubeedge:
+  image:
+    name: kubeedge-cloud
+    repository: harbor.apulis.cn:8443/apulisedge/apulis/kubeedge-cloud
+    tag: "1.1"
+    pullPolicy: IfNotPresent
+
+  kubeedgeConfig:
+    cloudHubHttpsPort: 10002
+    cloudHubQuicPort: 10001
+    cloudHubWebsocketPort: 10000

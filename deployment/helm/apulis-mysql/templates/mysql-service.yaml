@@ -6,8 +6,14 @@ metadata:
 spec:
   selector:
     app: {{ .Values.mysql.dbAppName }}
+  {{- if .Values.mysql.exposePort.enable }}
+  type: NodePort
+  {{- end }}
   ports:
     - name: mysql
       port: 3306
       targetPort: 3306
       protocol: TCP
+      {{- if .Values.mysql.exposePort.enable }}
+      nodePort: {{ .Values.mysql.exposePort.port }}
+      {{- end }}

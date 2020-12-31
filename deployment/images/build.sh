@@ -50,7 +50,7 @@ buildKubeedgeEdge()
 
 buildKubeedgeCloud()
 {
-    docker build . -f ${DOCKERFILE_DIR}/${KUBEEDGE_CLOUD_DOCKERFLE} --build-arg downloadscript_path=${DOWNLOAD_KUBEEDGE_SCRIPT_PATH} -t apulis/kubeedge-cloud:1.0
+    docker build . -f ${DOCKERFILE_DIR}/${KUBEEDGE_CLOUD_DOCKERFLE} --build-arg downloadscript_path=${DOWNLOAD_KUBEEDGE_SCRIPT_PATH} -t apulis/kubeedge-cloud:1.1
 }
 
 buildAll()

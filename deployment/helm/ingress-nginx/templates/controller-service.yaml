@@ -9,7 +9,9 @@ metadata:
   name: ingress-nginx-controller
   namespace: {{ .Values.namespace }}
 spec:
+  {{- if (eq .Values.controller.kind "Deployment") }}
   type: NodePort
+  {{- end }}
   ports:
     - name: http
       port: 80
