@@ -183,6 +183,13 @@ func handleStatusNotInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 	newDbInfo.Arch = nodeK8sInfo.Status.NodeInfo.Architecture
 	newDbInfo.UpdateAt = time.Now()
 
+	// label一下，方便查看
+	err = clu.LabelNode(nodeK8sInfo, newDbInfo.ClusterId, newDbInfo.GroupId, newDbInfo.UserId, newDbInfo.NodeName)
+	if err != nil {
+		logger.Infof("NodeTicker label node failed, node = %s, uniq = %s, err = %v", dbInfo.NodeName, dbInfo.UniqueName, err)
+		return
+	}
+
 	err = nodeentity.UpdateNode(&newDbInfo)
 	if err != nil {
 		logger.Infof("NodeTicker install node failed, node = %s, uniq = %s, err = %v", dbInfo.NodeName, dbInfo.UniqueName, err)

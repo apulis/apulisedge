@@ -3,14 +3,18 @@
 package cluster
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	appsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"strconv"
 )
 
 // init kubeclient
@@ -111,4 +115,31 @@ func (c *Cluster) DeleteNode(node *v1.Node) error {
 	}
 
 	return nodeClient.Delete(context.Background(), node.Name, metav1.DeleteOptions{})
+}
+
+func (c *Cluster) LabelNode(node *v1.Node, clusterId, groupId, userId int64, nodeName string) error {
+	nodeClient, err := c.GetNodeClient()
+	if err != nil {
+		return err
+	}
+
+	patchData := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels: map[string]string{
+				"apulisedge/node-name": nodeName,
+				"apulisedge/cluster":   strconv.FormatInt(clusterId, 10),
+				"apulisedge/group":     strconv.FormatInt(groupId, 10),
+				"apulisedge/user":      strconv.FormatInt(userId, 10),
+			},
+		},
+	}
+
+	buf := new(bytes.Buffer)
+	err = json.NewEncoder(buf).Encode(patchData)
+	if err != nil {
+		return err
+	}
+
+	_, err = nodeClient.Patch(context.Background(), node.Name, types.MergePatchType, buf.Bytes(), metav1.PatchOptions{})
+	return err
 }
