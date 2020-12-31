@@ -2,10 +2,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kubeedge-cloud-cm
-  namespace: {{ .Values.apulis.namespace }}
+  namespace: {{ .Values.kubeedge.namespace }}
 data:
-  cloud.yaml: |+
-    {{- with .Values.apulis.cloud }}
+  cloudcore.yaml: |+
     apiVersion: cloudcore.config.kubeedge.io/v1alpha1
     kind: CloudCore
     kubeAPIConfig:
@@ -24,8 +23,10 @@ data:
       RetryPeriod: 2s
     modules:
       cloudHub:
+      {{- if (eq .Values.kubeedge.type "single") }}
         advertiseAddress:
-          - {{ .env.cloudIp }}
+        - {{ .Values.kubeedge.singleMode.advertiseAddress }}
+      {{- end }}
         edgeCertSigningDuration: 365
         enable: true
         https:
@@ -34,10 +35,6 @@ data:
           port: 10002
         keepaliveInterval: 30
         nodeLimit: 1000
-        quic:
-          address: 0.0.0.0
-          maxIncomingStreams: 10000
-          port: 10001
         tlsCAFile: /etc/kubeedge/ca/rootCA.crt
         tlsCAKeyFile: /etc/kubeedge/ca/rootCA.key
         tlsCertFile: /etc/kubeedge/certs/server.crt
@@ -50,16 +47,6 @@ data:
           enable: true
           port: 10000
         writeTimeout: 30
-      cloudStream:
-        enable: false
-        streamPort: 10003
-        tlsStreamCAFile: /etc/kubeedge/ca/streamCA.crt
-        tlsStreamCertFile: /etc/kubeedge/certs/stream.crt
-        tlsStreamPrivateKeyFile: /etc/kubeedge/certs/stream.key
-        tlsTunnelCAFile: /etc/kubeedge/ca/rootCA.crt
-        tlsTunnelCertFile: /etc/kubeedge/certs/server.crt
-        tlsTunnelPrivateKeyFile: /etc/kubeedge/certs/server.key
-        tunnelPort: 10004
       deviceController:
         buffer:
           deviceEvent: 1
@@ -112,4 +99,3 @@ data:
         nodeUpdateFrequency: 10
       syncController:
         enable: true
-    {{- end }}

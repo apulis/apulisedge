@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kubeedge-cloud
+  namespace: {{ .Values.kubeedge.namespace}}
+  labels:
+    system: apulisedge
+spec:
+  selector:
+    matchLabels:
+      app: kubeedge-cloud
+  template:
+    metadata:
+      labels:
+        app: kubeedge-cloud
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        apulisedge-cloud: active
+        archType: amd64
+      containers:
+      {{- with .Values.kubeedge.image }}
+      - name: {{ .name }}
+        image: "{{ .repository }}:{{ .tag }}"
+        imagePullPolicy: {{ .pullPolicy }}
+      {{- end }}
+      {{- with .Values.kubeedge.config }}
+        ports:
+        - name: hubhttps
+          containerPort: {{ .cloudHubHttpsPort }}
+          protocol: TCP
+        - name: hubquic
+          containerPort: {{ .cloudHubQuicPort }}
+          protocol: UDP
+        - name: hubwebsocket
+          containerPort: {{ .cloudHubWebsocketPort }}
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /root/.kube/config
+          name: kubeconf
+        - mountPath: /etc/kubeedge/config/cloudcore.yaml
+          name: appconfig
+          subPath: cloudcore.yaml
+        - mountPath: /etc/kubeedge/ca
+          name: caconfig
+        - mountPath: /etc/kubeedge/certs
+          name: certsconfig
+        - mountPath: /var/log/kubeedge
+          name: log
+      {{- end }}
+      volumes:
+      - name: kubeconf
+        hostPath:
+          path: /etc/kubernetes/admin.conf
+      - name: caconfig
+        hostPath:
+          path: /etc/kubeedge/ca
+      - name: certsconfig
+        hostPath:
+          path: /etc/kubeedge/certs
+      - name: log
+        hostPath:
+          path: /var/log/kubeedge
+      - name: appconfig
+        configMap:
+          name: kubeedge-cloud-cm
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
