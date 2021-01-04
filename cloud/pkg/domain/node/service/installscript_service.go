@@ -16,13 +16,6 @@ func GetInstallScripts(userInfo proto.ApulisHeader, req *nodemodule.GetInstallSc
 
 	targetArch := req.Arch
 
-	// get cluster
-	clu, err := cluster.GetCluster(userInfo.ClusterId)
-	if err != nil {
-		logger.Infof("GetInstallScripts, can`t find cluster %d", userInfo.ClusterId)
-		return "", cluster.ErrFindCluster
-	}
-
 	// get node
 	res := apulisdb.Db.
 		Where("ClusterId = ? and GroupId = ? and UserId = ? and NodeName = ?",
@@ -42,12 +35,29 @@ func GetInstallScripts(userInfo proto.ApulisHeader, req *nodemodule.GetInstallSc
 		return "", cluster.ErrArchTypeNotExist
 	}
 
+	script, err = CreateInstallScripts(nodeInfo, targetArch)
+	if err != nil {
+		return "", err
+	}
+
+	return script, err
+}
+
+func CreateInstallScripts(nodeInfo nodeentity.NodeBasicInfo, targetArch string) (string, error) {
+	var script string
+
 	var downloadTarget = "/tmp/apulisedge/"
 	var packageName = "apulisedge_" + targetArch
 	var fileName = packageName + ".tar.gz"
 	var pubKeyFileName = packageName + ".key"
 	var signFileName = packageName + ".sig"
 	var kubeedgeImageName = "apulisedge/apulis/kubeedge-edge:1.0-" + targetArch
+
+	clu, err := cluster.GetCluster(nodeInfo.ClusterId)
+	if err != nil {
+		logger.Infof("GetInstallScripts, can`t find cluster %d", nodeInfo.ClusterId)
+		return "", err
+	}
 
 	// clean env
 	script = "rm -rf " + downloadTarget + " && "
@@ -69,5 +79,5 @@ func GetInstallScripts(userInfo proto.ApulisHeader, req *nodemodule.GetInstallSc
 		" -l " + clu.HarborAddress + "/" + kubeedgeImageName +
 		" -h " + nodeInfo.UniqueName
 
-	return script, err
+	return script, nil
 }

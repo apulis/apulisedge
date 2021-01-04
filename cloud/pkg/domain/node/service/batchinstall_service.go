@@ -85,6 +85,7 @@ func csvParseTask(taskInfo *nodeentity.BatchTaskRecord) {
 		if err != nil {
 			taskInfo.Status = "error"
 			taskInfo.ErrMsg = err.Error()
+			break
 		}
 	}
 
@@ -122,8 +123,9 @@ func AddOneRecord(userInfo proto.ApulisHeader, content *nodemodule.CreateNodeOfB
 func ListBatchList(userInfo *proto.ApulisHeader, pageSize int, pageNum int) (*[]nodeentity.NodeOfBatchInfo, error) {
 	var batchInfos []nodeentity.NodeOfBatchInfo
 
-	res := apulisdb.Db.Offset(pageNum).Limit(pageSize).
+	res := apulisdb.Db.
 		Where("ClusterId = ? and GroupId = ? and UserId = ? and isConfirm = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, false).
+		Offset((pageNum - 1) * pageSize).Limit(pageSize).
 		Find(&batchInfos)
 
 	if res.Error != nil {
@@ -174,6 +176,7 @@ func UpdateBatch(userInfo proto.ApulisHeader) error {
 		if err != nil {
 			return err
 		}
+		batchInfo.NodeID = node.ID
 		nodeentity.ConfirmNodesBatch(&batchInfo)
 	}
 

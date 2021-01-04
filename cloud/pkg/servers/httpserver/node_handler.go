@@ -280,10 +280,7 @@ func ConfirmNodesBatch(c *gin.Context) error {
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
-	err = nodeservice.UpdateBatch(userInfo)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
+	go nodeservice.UpdateBatch(userInfo)
 
 	return SuccessResp(c, &req, data)
 }

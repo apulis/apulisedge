@@ -38,15 +38,16 @@ type NodeBasicInfo struct {
 // NodeOfBatchInfo is one case of batch before comfirmation
 type NodeOfBatchInfo struct {
 	ID        int64     `gorm:"column:Id;primary_key"                                   json:"id"`
+	NodeID    int64     `gorm:"uniqueIndex:user_node;column:NodeID;not null"         json:"NodeID"`
 	ClusterId int64     `gorm:"uniqueIndex:user_node;column:ClusterId;not null"         json:"clusterId"`
 	GroupId   int64     `gorm:"uniqueIndex:user_node;column:GroupId;not null"           json:"groupId"`
 	UserId    int64     `gorm:"uniqueIndex:user_node;column:UserId;not null"            json:"userId"`
 	NodeName  string    `gorm:"uniqueIndex:user_node;column:NodeName;size:255;not null" json:"name"`
 	NodeType  string    `gorm:"column:NodeType;size:128;not null"                       json:"nodeType"`
 	Arch      string    `gorm:"column:Arch;size:128;not null"                           json:"arch"`
-	Address   string    `gorm:"column:Address" json:"address"`
-	Port      string    `gorm:"column:Port" json:"port"`
-	Sudoer    string    `gorm:"column:Sudoer"                                         json:"sudoer"`
+	Address   string    `gorm:"uniqueIndex:user_node;column:Address" json:"address"`
+	Port      string    `gorm:"uniqueIndex:user_node;column:Port" json:"port"`
+	Sudoer    string    `gorm:"uniqueIndex:user_node;column:Sudoer"                                         json:"sudoer"`
 	Password  string    `gorm:"column:Password" json:"password"`
 	IsConfirm bool      `gorm:"column:IsConfirm" json:"isConfirm"`
 	CreateAt  time.Time `gorm:"column:CreateAt;not null"                                json:"createAt"`
@@ -55,9 +56,9 @@ type NodeOfBatchInfo struct {
 
 type BatchTaskRecord struct {
 	ID        int64     `gorm:"column:Id;primary_key"                                   json:"id"`
-	ClusterId int64     `gorm:"uniqueIndex:user_node;column:ClusterId;not null"         json:"clusterId"`
-	GroupId   int64     `gorm:"uniqueIndex:user_node;column:GroupId;not null"           json:"groupId"`
-	UserId    int64     `gorm:"uniqueIndex:user_node;column:UserId;not null"            json:"userId"`
+	ClusterId int64     `gorm:"column:ClusterId;not null"         json:"clusterId"`
+	GroupId   int64     `gorm:"column:GroupId;not null"           json:"groupId"`
+	UserId    int64     `gorm:"column:UserId;not null"            json:"userId"`
 	Status    string    `gorm:"column:Status" json:"status"`
 	ErrMsg    string    `gorm:"column:ErrMsg" json:"errMsg"`
 	FilePath  string    `gorm:"column:FilePath" json:"filePath"`
@@ -90,7 +91,12 @@ func DeleteNodeOfBatch(nodeInfo *NodeOfBatchInfo) error {
 }
 
 func ConfirmNodesBatch(nodeInfo *NodeOfBatchInfo) error {
-	return apulisdb.Db.Model(nodeInfo).Update("IsConfirm", true).Error
+	err := apulisdb.Db.Model(nodeInfo).Update("NodeID", nodeInfo.NodeID).Error
+	if err != nil {
+		return err
+	}
+	err = apulisdb.Db.Model(nodeInfo).Update("IsConfirm", true).Error
+	return err
 }
 
 func CreateBatchTask(taskInfo *BatchTaskRecord) error {
