@@ -20,6 +20,7 @@ func NewRouter() *gin.Engine {
 	r := gin.New()
 
 	r.GET("/swagger/*any", ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER"))
+	r.GET("/health", HandleProb)
 
 	store := cookie.NewStore([]byte("secret"))
 	r.Use(sessions.Sessions("mysession", store))

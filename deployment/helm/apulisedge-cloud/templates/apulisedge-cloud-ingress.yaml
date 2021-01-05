@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: apulisedge
+spec:
+  rules:
+    - host: edge.apulis.cn
+      http:
+        paths:
+        - path: /apulisEdge
+          backend:
+            serviceName: apulisedge-cloud
+            servicePort: 80

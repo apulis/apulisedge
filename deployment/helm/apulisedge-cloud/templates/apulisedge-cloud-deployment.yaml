@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apulisedge-cloud
+  namespace: {{ .Values.apulis.namespace}}
+  labels:
+    system: apulisedge
+spec:
+  {{- with .Values.apulis.cloud }}
+  replicas: {{ .replicas }}
+  selector:
+    matchLabels:
+      app: apulisedge-cloud
+  template:
+    metadata:
+      labels:
+        app: apulisedge-cloud
+    spec:
+      nodeSelector:
+        apulisedge-cloud: active
+        archType: amd64
+      hostAliases:
+      - ip: {{ .env.harborIp }}
+        hostnames:
+        - {{ .env.harborHostName }}
+        - {{ .env.cloudHostName }}
+      containers:
+      - name: {{ .image.name }}
+        image: "{{ .image.repository }}:{{ .image.tag }}"
+        imagePullPolicy: {{ .image.pullPolicy }}
+        ports:
+        - name: portal
+          containerPort: {{ .config.portalPort }}
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: portal
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: portal
+        volumeMounts:
+        - mountPath: /root/.kube/config
+          name: kubeconf
+        - mountPath: /etc/apulisedge/cloud/cloud.yaml
+          name: appconfig
+          subPath: cloud.yaml
+      volumes:
+      - name: kubeconf
+        hostPath:
+          path: /etc/kubernetes/admin.conf
+      - name: appconfig
+        configMap:
+          name: apulisedge-cloud-cm
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+  {{- end }}

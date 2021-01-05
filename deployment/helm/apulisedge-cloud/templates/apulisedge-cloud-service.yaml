@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apulisedge-cloud
+  namespace: {{ .Values.apulis.namespace }}
+spec:
+  selector:
+    app: apulisedge-cloud
+  ports:
+    - name: portal
+      port: 80
+      targetPort: 8080
+      protocol: TCP
