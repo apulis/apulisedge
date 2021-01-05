@@ -27,11 +27,12 @@ func NodeHandlerRoutes(r *gin.Engine) {
 	group.POST("/listType", wrapper(ListEdgeNodeType))
 	group.POST("/listArchType", wrapper(ListArchType))
 
-	group.POST("/batchcsv", wrapper(UploadNodeFile))
-	group.POST("/batchnode", wrapper(AddBatchNode))
-	group.POST("/batch", wrapper(ConfirmNodesBatch))
-	group.GET("/batch", wrapper(GetTempNodesBatchList))
-	group.DELETE("/batch", wrapper(DeleteNodeOfBatch))
+	// group.POST("/batchcsv", wrapper(UploadNodeFile))
+	// group.POST("/batchnode", wrapper(AddBatchNode))
+	// group.POST("/batch", wrapper(CreateNodeBatch))
+	// group.POST("/batchresult", wrapper(ConfirmNodesBatch))
+	// group.GET("/batch", wrapper(GetTempNodesBatchList))
+	// group.DELETE("/batch", wrapper(DeleteNodeOfBatch))
 }
 
 // @Summary create edge node
@@ -209,8 +210,33 @@ func ListArchType(c *gin.Context) error {
 	return SuccessResp(c, &req, data)
 }
 
+func CreateNodeBatch(c *gin.Context) error {
+	var req proto.Message
+	var err error
+
+	// get user info, user info comes from authentication
+	userInfo := proto.ApulisHeader{}
+	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+	batchID, err := nodeservice.CreateBatchTask(userInfo)
+	if err != nil {
+		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	}
+	data := nodemodule.CreateBatchRsp{
+		BatchID: batchID,
+	}
+	return SuccessResp(c, &req, data)
+}
+
 func UploadNodeFile(c *gin.Context) error {
 	var req proto.Message
+	var reqContent nodemodule.UploadBatchCSVReq
+	errRsp := c.ShouldBindQuery(&reqContent)
+	if errRsp != nil {
+		return AppError(c, &req, APP_ERROR_CODE, errRsp.Error())
+	}
 	data := "success"
 	file, err := c.FormFile("data")
 	if err != nil {
@@ -221,13 +247,7 @@ func UploadNodeFile(c *gin.Context) error {
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
-	// get user info, user info comes from authentication
-	userInfo := proto.ApulisHeader{}
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
-	}
-	err = nodeservice.AnalyzeCSV(userInfo, csvPath)
+	err = nodeservice.AnalyzeCSV(reqContent.BatchID, csvPath)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
@@ -259,12 +279,13 @@ func GetTempNodesBatchList(c *gin.Context) error {
 	if errRsp != nil {
 		return AppError(c, &req, APP_ERROR_CODE, errRsp.Error())
 	}
-	batchList, err := nodeservice.ListBatchList(userInfo, reqContent.PageSize, reqContent.PageNum)
+	batchTask, batchList, err := nodeservice.ListBatchList(userInfo, reqContent.BatchID, reqContent.PageSize, reqContent.PageNum)
 	if err != nil {
 		return AppError(c, &req, APP_ERROR_CODE, err.Error())
 	}
 	rspContent := nodemodule.ListNodeOfBatchRsp{
-		Status:   "loaded",
+		Status:   batchTask.Status,
+		ErrMsg:   batchTask.ErrMsg,
 		NodeList: *batchList,
 	}
 
@@ -273,14 +294,14 @@ func GetTempNodesBatchList(c *gin.Context) error {
 
 func ConfirmNodesBatch(c *gin.Context) error {
 	var req proto.Message
+	var reqContent nodemodule.ComfirmBatchReq
 	data := "success"
-	userInfo := proto.ApulisHeader{}
-	var err error
-	userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, err = GetUserInfo(c)
-	if err != nil {
-		return AppError(c, &req, APP_ERROR_CODE, err.Error())
+	// get user info, user info comes from authentication
+	userInfo, errRsp := PreHandler(c, &req, &reqContent)
+	if errRsp != nil {
+		return AppError(c, &req, APP_ERROR_CODE, errRsp.Error())
 	}
-	go nodeservice.UpdateBatch(userInfo)
+	go nodeservice.UpdateBatch(*userInfo, reqContent.ID)
 
 	return SuccessResp(c, &req, data)
 }

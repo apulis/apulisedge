@@ -26,47 +26,60 @@ func init() {
 	}
 }
 
-func AnalyzeCSV(userInfo proto.ApulisHeader, filePath string) error {
+func CreateBatchTask(userInfo proto.ApulisHeader) (int, error) {
 	batchTask := &nodeentity.BatchTaskRecord{
-		ClusterId: userInfo.ClusterId,
-		GroupId:   userInfo.GroupId,
-		UserId:    userInfo.UserId,
-		Status:    "parsing",
-		FilePath:  filePath,
-		CreateAt:  time.Now(),
-		UpdateAt:  time.Now(),
+		ClusterId:      userInfo.ClusterId,
+		GroupId:        userInfo.GroupId,
+		UserId:         userInfo.UserId,
+		Status:         "parsing",
+		ParsingFileNum: 0,
+		CreateAt:       time.Now(),
+		UpdateAt:       time.Now(),
 	}
-
 	err := nodeentity.CreateBatchTask(batchTask)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	go csvParseTask(batchTask)
+	return int(batchTask.ID), nil
+}
+
+func AnalyzeCSV(batchID int, filePath string) error {
+	nodeentity.BeginBatchTask(batchID)
+	go csvParseTask(batchID, filePath)
 
 	return nil
 }
 
-func csvParseTask(taskInfo *nodeentity.BatchTaskRecord) {
-	filePath := taskInfo.FilePath
+func csvParseTask(batchID int, filePath string) error {
+	taskInfo, err := nodeentity.GetBatchTaskByID(batchID)
+	if err != nil {
+		updateBatchErrorTask(err, &taskInfo)
+		logger.Errorln(err.Error())
+		return err
+	}
 	filein, err := ioutil.ReadFile(filePath)
 	if err != nil {
+		updateBatchErrorTask(err, &taskInfo)
 		logger.Errorln(err.Error())
-		// return err
+		return err
 	}
 	r := csv.NewReader(strings.NewReader(string(filein)))
 	records, err := r.ReadAll()
 	if err != nil {
+		updateBatchErrorTask(err, &taskInfo)
 		logger.Errorln(err.Error())
-		// return err
+		return err
 	}
 	titles := records[0]
 	titlesMap := make(map[string]int)
 	for i := 0; i < len(titles); i++ {
 		titlesMap[titles[i]] = i
 	}
+	logger.Infoln(records)
 	for i := 1; i < len(records); i++ {
 		line := records[i]
 		batchNode := &nodeentity.NodeOfBatchInfo{
+			BatchID:   int64(batchID),
 			ClusterId: taskInfo.ClusterId,
 			GroupId:   taskInfo.GroupId,
 			UserId:    taskInfo.UserId,
@@ -85,19 +98,30 @@ func csvParseTask(taskInfo *nodeentity.BatchTaskRecord) {
 		if err != nil {
 			taskInfo.Status = "error"
 			taskInfo.ErrMsg = err.Error()
+			logger.Errorln(err.Error())
 			break
 		}
 	}
 
-	err = nodeentity.FinishBatchTask(taskInfo)
+	err = nodeentity.FinishBatchTask(batchID)
 	if err != nil {
-		taskInfo.Status = "error"
-		taskInfo.ErrMsg = err.Error()
+		updateBatchErrorTask(err, &taskInfo)
+		logger.Errorln(err.Error())
+		return err
 	}
+	return nil
+}
+
+func updateBatchErrorTask(err error, taskInfo *nodeentity.BatchTaskRecord) error {
+	taskInfo.Status = "error"
+	taskInfo.ErrMsg = err.Error()
+	err = nodeentity.UpdateBatchTask(taskInfo)
+	return err
 }
 
 func AddOneRecord(userInfo proto.ApulisHeader, content *nodemodule.CreateNodeOfBatchReq) error {
 	batchNode := nodeentity.NodeOfBatchInfo{
+		BatchID:   int64(content.ID),
 		ClusterId: userInfo.ClusterId,
 		GroupId:   userInfo.GroupId,
 		UserId:    userInfo.UserId,
@@ -120,26 +144,32 @@ func AddOneRecord(userInfo proto.ApulisHeader, content *nodemodule.CreateNodeOfB
 	return nil
 }
 
-func ListBatchList(userInfo *proto.ApulisHeader, pageSize int, pageNum int) (*[]nodeentity.NodeOfBatchInfo, error) {
+func ListBatchList(userInfo *proto.ApulisHeader, batchID int, pageSize int, pageNum int) (*nodeentity.BatchTaskRecord, *[]nodeentity.NodeOfBatchInfo, error) {
 	var batchInfos []nodeentity.NodeOfBatchInfo
+	var batchTask nodeentity.BatchTaskRecord
 
 	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and isConfirm = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, false).
+		Where("BatchID = ? and ClusterId = ? and GroupId = ? and UserId = ? and isConfirm = ?", batchID, userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, false).
 		Offset((pageNum - 1) * pageSize).Limit(pageSize).
 		Find(&batchInfos)
 
 	if res.Error != nil {
-		return &batchInfos, res.Error
+		return &batchTask, &batchInfos, res.Error
 	}
 
-	return &batchInfos, nil
+	batchTask, err := nodeentity.GetBatchTaskByID(batchID)
+	if err != nil {
+		return &batchTask, &batchInfos, err
+	}
+
+	return &batchTask, &batchInfos, nil
 }
 
-func UpdateBatch(userInfo proto.ApulisHeader) error {
+func UpdateBatch(userInfo proto.ApulisHeader, id int) error {
 	var batchInfos []nodeentity.NodeOfBatchInfo
 
 	res := apulisdb.Db.
-		Where("ClusterId = ? and GroupId = ? and UserId = ? and isConfirm = ?", userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, false).
+		Where("ID = ? and ClusterId = ? and GroupId = ? and UserId = ? and isConfirm = ?", id, userInfo.ClusterId, userInfo.GroupId, userInfo.UserId, false).
 		Find(&batchInfos)
 	if res.Error != nil {
 		return res.Error
