@@ -5,12 +5,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/apulis/ApulisEdge/agent/pkg/agentSocket"
 	"github.com/apulis/ApulisEdge/agent/pkg/common/config"
 	"github.com/apulis/ApulisEdge/agent/pkg/common/database"
 	"github.com/apulis/ApulisEdge/agent/pkg/common/loggers"
+	wssclient "github.com/apulis/ApulisEdge/agent/pkg/wssClient"
+	"github.com/kubeedge/beehive/pkg/core"
 	"github.com/spf13/cobra"
 )
 
@@ -49,6 +50,8 @@ func run() error {
 
 	initDatabase()
 
+	registerModules()
+
 	logger.Infoln("app start, config showing bellow:")
 	logger.Infoln("============================== ")
 	logger.Infoln(config.AppConfig)
@@ -57,10 +60,7 @@ func run() error {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		for {
-			time.Sleep(time.Duration(1) * time.Second)
-			logger.Infoln("app still running ...")
-		}
+		core.Run()
 	}()
 
 	select {
@@ -73,6 +73,8 @@ func run() error {
 }
 
 func registerModules() error {
+	wssclient.Register(config.AppConfig.Modules.WssClient)
+
 	return nil
 }
 
@@ -81,7 +83,7 @@ func initConfig() {
 }
 
 func initLogger() {
-	loggers.InitLogger()
+	loggers.InitLogger(*config.AppConfig.Modules.Logger)
 
 }
 

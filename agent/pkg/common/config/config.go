@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 
+	"github.com/apulis/ApulisEdge/agent/pkg/common/loggers"
+	wssclient "github.com/apulis/ApulisEdge/agent/pkg/wssClient"
 	"github.com/spf13/viper"
 )
 
@@ -10,13 +12,14 @@ import (
 var ConfigFilePath string
 
 // AppConfig indicates runtime configuration
-var AppConfig AgentConfig
+var AppConfig AgentConfigType
 
-// AgentConfig indicates configuration structure
-type AgentConfig struct {
+// AgentConfigType indicates configuration structure
+type AgentConfigType struct {
 	Log      LogConfig      `yaml:"log"`
 	Database DatabaseConfig `yaml:"database"`
 	Server   ServerConfig   `yaml:"server"`
+	Modules  Modules
 }
 
 // LogConfig indicates log configuration structure
@@ -39,6 +42,11 @@ type ServerConfig struct {
 	Port    int    `yaml:"port"`
 }
 
+type Modules struct {
+	Logger    *loggers.LoggerConfigType
+	WssClient *wssclient.WssClientContext
+}
+
 func InitConfig() {
 	viper.SetConfigFile(ConfigFilePath)
 
@@ -52,6 +60,21 @@ func InitConfig() {
 
 	if err := viper.Unmarshal(&AppConfig); err != nil {
 		panic(fmt.Errorf("Fatal error convert config file: %s", err))
+	}
+	moduleInit()
+}
+
+func moduleInit() {
+	AppConfig.Modules.Logger = &loggers.LoggerConfigType{
+		Path:     AppConfig.Log.Path,
+		FileName: AppConfig.Log.FileName,
+	}
+
+	AppConfig.Modules.WssClient = &wssclient.WssClientContext{
+		Logger:   loggers.LogInstance(),
+		IsEnable: true,
+		Server:   AppConfig.Server.Address,
+		Port:     AppConfig.Server.Port,
 	}
 
 }
