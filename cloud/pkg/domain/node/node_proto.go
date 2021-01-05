@@ -3,7 +3,7 @@
 package node
 
 import (
-	"github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
+	nodeentity "github.com/apulis/ApulisEdge/cloud/pkg/domain/node/entity"
 )
 
 // TODO add param validate, like node.ListEdgeNodesReq
@@ -46,6 +46,43 @@ type DeleteEdgeNodeReq struct {
 type DeleteEdgeNodeRsp struct {
 }
 
+type CreateBatchRsp struct {
+	BatchID int `json:"batchID"`
+}
+
+type UploadBatchCSVReq struct {
+	BatchID int `form:"batchID"`
+}
+
+type CreateNodeOfBatchReq struct {
+	ID       int    `json:"id" validate:"required"`
+	Name     string `json:"name" validate:"required"`
+	NodeType string `json:"nodeType" validate:"required"`
+	Arch     string `json:"arch" validate:"required"`
+	Address  string `json:"address" validate:"required"`
+	Port     string `json:"port" validate:"required"`
+	Sudoer   string `json:"sudoer" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+type ListNodeOfBatchReq struct {
+	BatchID  int `json:"batchID" validate:"required"`
+	PageSize int `json:"pageSize" validate:"required"`
+	PageNum  int `json:"pageNum" validate:"required"`
+}
+type ListNodeOfBatchRsp struct {
+	ProceedingFile int                          `json:"proceedingFile"`
+	Status         string                       `json:"status"`
+	ErrMsg         string                       `json:"errMsg"`
+	NodeList       []nodeentity.NodeOfBatchInfo `json:"nodeList"`
+}
+type DeleteNodeOfBatchReq struct {
+	ID int64 `json:"id" validate:"required"`
+}
+
+type ComfirmBatchReq struct {
+	ID int `json:"id" validate:"required:"`
+}
 type GetInstallScriptReq struct {
 	Name string `json:"name" validate:"required"`
 	Arch string `json:"arch" validate:"required"`

@@ -4,15 +4,17 @@ package main
 
 import (
 	"context"
-	"github.com/apulis/ApulisEdge/cloud/pkg/channel"
-	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
-	"github.com/apulis/ApulisEdge/cloud/pkg/database"
-	applicationticker "github.com/apulis/ApulisEdge/cloud/ticker/domain/application"
-	nodeticker "github.com/apulis/ApulisEdge/cloud/ticker/domain/node"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/apulis/ApulisEdge/cloud/pkg/channel"
+	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
+	"github.com/apulis/ApulisEdge/cloud/pkg/database"
+	applicationticker "github.com/apulis/ApulisEdge/cloud/ticker/domain/application"
+	"github.com/apulis/ApulisEdge/cloud/ticker/domain/batchinstall"
+	nodeticker "github.com/apulis/ApulisEdge/cloud/ticker/domain/node"
 
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	"github.com/apulis/ApulisEdge/cloud/pkg/loggers"
@@ -94,6 +96,7 @@ func (app *CloudTicker) MainLoop() error {
 	// init ticker
 	go nodeticker.CreateNodeTickerLoop(app.tickerCtx, &app.cloudConfig)
 	go applicationticker.CreateApplicationTickerLoop(app.tickerCtx, &app.cloudConfig)
+	go batchinstall.CreateBatchInstallTicker(app.tickerCtx, &app.cloudConfig)
 
 	// quit when signal notifys
 	quit := make(chan os.Signal)

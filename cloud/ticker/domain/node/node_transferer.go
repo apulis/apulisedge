@@ -4,6 +4,9 @@ package nodeticker
 
 import (
 	"context"
+	"strings"
+	"time"
+
 	"github.com/apulis/ApulisEdge/cloud/pkg/cluster"
 	"github.com/apulis/ApulisEdge/cloud/pkg/configs"
 	apulisdb "github.com/apulis/ApulisEdge/cloud/pkg/database"
@@ -13,8 +16,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
-	"time"
 )
 
 var logger = loggers.LogInstance()
@@ -27,6 +28,7 @@ var statusHandlerMap = map[string]statusHandler{
 	constants.StatusOnline:       handleStatusOnline,
 	constants.StatusOffline:      handleStatusOffline,
 	constants.StatusDeleting:     handleStatusDelete,
+	constants.StatusInstalling:   handleStatusInstalling,
 }
 
 // CreateNodeCheckLoop transferer of edge node status
@@ -318,4 +320,7 @@ func handleStatusInstalled(dbInfo *nodeentity.NodeBasicInfo) {
 			}
 		}
 	}
+}
+
+func handleStatusInstalling(dbInfo *nodeentity.NodeBasicInfo) {
 }
