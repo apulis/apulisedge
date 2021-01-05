@@ -7,3 +7,4 @@ __pycache__
 venv
 *.sql
 *.json
+apulisedge_cloud.template.yaml
