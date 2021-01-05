@@ -4,9 +4,10 @@ package configs
 
 import (
 	"fmt"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"os"
+	"sigs.k8s.io/yaml"
 )
 
 type EdgeCloudConfig struct {
@@ -18,14 +19,6 @@ type EdgeCloudConfig struct {
 	Db             DbConfig
 	Authentication AuthConfig
 	Clusters       []ClusterConfig
-	ScriptConfig   DownloadServerConfig
-}
-
-type DownloadServerConfig struct {
-	DownloadAddress string `yaml:"address"`
-	DownloadPort    int    `yaml:"port"`
-	CloudServer     string `yaml:"cloudServer"`
-	ImageServer     string `yaml:"imageServer"`
 }
 
 type HttpConfig struct {
@@ -114,4 +107,74 @@ func InitConfig(configFile string, config *EdgeCloudConfig) {
 	fmt.Printf("Image config = %v\n", config.ContainerImage)
 	fmt.Printf("Websocket config = %v\n", config.CloudHub.Websocket)
 	fmt.Printf("Cluster config = %+v\n", config.Clusters)
+}
+
+func PrintMinConfigAndExitIfRequested(config interface{}) {
+	data, err := yaml.Marshal(config)
+	if err != nil {
+		fmt.Println("Marshal min config to yaml error %v", err)
+		os.Exit(1)
+	}
+	fmt.Println("# With --minconfig , you can easily used this configurations as reference.")
+	fmt.Println("# It's useful to users who are new to ApulisEdge, and you can modify/create your own configs accordingly. ")
+	fmt.Println("# This configuration is suitable for beginners.")
+	fmt.Printf("\n%v\n\n", string(data))
+	os.Exit(0)
+}
+
+// NewMinCloudCoreConfig returns a min ClusterConfig object
+func NewMinCloudConfig() *EdgeCloudConfig {
+	return &EdgeCloudConfig{
+		Portal: PortalConfig{
+			NodeCheckerInterval:        30,
+			ApplicationCheckerInterval: 30,
+			Http: HttpConfig{
+				Enable:  true,
+				Address: "0.0.0.0",
+				Port:    32769,
+			},
+		},
+		CloudHub: CloudHubConfig{
+			Websocket: WebsocketConfig{
+				Enable:  false,
+				Address: "0.0.0.0",
+				Port:    32768,
+			},
+		},
+		Log: LogConfig{
+			Level:     4,
+			WriteFile: true,
+			FileDir:   "/var/log/apulisedge",
+			FileName:  "apulis_edge_cloud.log",
+		},
+		Db: DbConfig{
+			Username:     "user",
+			Password:     "password",
+			Host:         "127.0.0.1",
+			Port:         3306,
+			Database:     "ApulisEdgeCloudDB",
+			MaxIdleConns: 2,
+			MaxOpenConns: 10,
+		},
+		Authentication: AuthConfig{
+			AuthType: "AiArts",
+			AiArtsAuth: AiArtsAuthConfig{
+				Key: "jwt sign key",
+			},
+		},
+		Clusters: []ClusterConfig{
+			{
+				Id:              0,
+				Desc:            "for test",
+				Domain:          "edge.yourcorp.com",
+				KubeMaster:      "https://c0.edge.yourcorp.com",
+				KubeConfFile:    "/root/.kube/config",
+				HarborAddress:   "harbor.yourcorp.com",
+				HarborProject:   "apulisedge",
+				HarborUser:      "user",
+				HarborPasswd:    "password",
+				DownloadAddress: "https://c0.download.yourcorp.com",
+			},
+		},
+	}
 }
