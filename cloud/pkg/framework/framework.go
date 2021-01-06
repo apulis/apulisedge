@@ -31,6 +31,7 @@ type CloudApp struct {
 	tickerCancelFunc context.CancelFunc
 	tickerCtx        context.Context
 	clusters         []configs.ClusterConfig
+	genMinConfig     bool
 }
 
 var once sync.Once
@@ -55,13 +56,17 @@ func (app *CloudApp) Init(appName string, appUsage string) error {
 			EnvVars:     []string{"APULIS_EDGE_CLOUD_CONFIG"},
 			Destination: &app.configFile,
 		},
+		&cli.BoolFlag{
+			Name:  "minconfig",
+			Usage: "Print min configuration for reference, users can refer to it to create their own configuration files, it is suitable for beginners.",
+		},
 	}
 
 	app.internalApp.Name = appName
 	app.internalApp.Usage = appUsage
 	app.internalApp.Flags = app.flags
 	app.internalApp.Action = func(c *cli.Context) error {
-		return app.MainLoop()
+		return app.MainLoop(c)
 	}
 
 	app.tickerCtx, app.tickerCancelFunc = context.WithCancel(context.Background())
@@ -76,7 +81,12 @@ func (app *CloudApp) Run(arguments []string) error {
 	return nil
 }
 
-func (app *CloudApp) MainLoop() error {
+func (app *CloudApp) MainLoop(c *cli.Context) error {
+	// generate min config
+	if c.Bool("minconfig") {
+		configs.PrintMinConfigAndExitIfRequested(configs.NewMinCloudConfig())
+	}
+
 	logger.Infof("PID = %d", os.Getpid())
 
 	// init config
